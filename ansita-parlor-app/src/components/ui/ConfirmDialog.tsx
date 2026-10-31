@@ -2,6 +2,7 @@ import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { getToneColors, useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Button } from './Button';
 import { Icon, type IconName } from './Icon';
@@ -74,7 +75,10 @@ export const ConfirmDialog = ({
             <Button
               title={confirmLabel}
               variant={tone === 'danger' ? 'danger' : 'primary'}
-              onPress={onConfirm}
+              onPress={() => {
+                if (tone === 'danger') haptics.warning();
+                onConfirm();
+              }}
               loading={loading}
               style={styles.action}
               fullWidth

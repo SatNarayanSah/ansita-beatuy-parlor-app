@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { Avatar, Badge, Card, FAB, ListItem, QueryState, Screen, SkeletonListItem } from '@/components/ui';
+import { Appear, Avatar, Badge, Card, FAB, ListItem, QueryState, Screen, SkeletonListItem } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, staffService } from '@/services';
@@ -43,26 +43,28 @@ export const StaffListScreen = ({ navigation }: Props) => {
       >
         {({ staff, todays }) => (
           <View style={{ gap: spacing.md }}>
-            {staff.map((member) => {
+            {staff.map((member, index) => {
               const count = todays.filter((a) => a.staffId === member.id).length;
               const working = selectIsStaffWorkingOn(member, today);
               return (
-                <Card key={member.id} padding="sm" onPress={() => navigation.navigate('StaffDetail', { staffId: member.id })} accessibilityLabel={member.name}>
-                  <ListItem
-                    title={member.name}
-                    subtitle={`${formatEnumLabel(member.role)} · ★ ${member.rating || '–'}`}
-                    description={!member.isActive ? 'Inactive' : working ? `${count} booking${count === 1 ? '' : 's'} today` : 'Day off today'}
-                    left={<Avatar name={member.name} uri={member.avatar} size="lg" />}
-                    right={
-                      member.isActive ? (
-                        <Badge label={working ? 'Working' : 'Off'} tone={working ? 'success' : 'neutral'} size="sm" dot />
-                      ) : (
-                        <Badge label="Inactive" tone="neutral" size="sm" />
-                      )
-                    }
-                    showChevron
-                  />
-                </Card>
+                <Appear key={member.id} index={index}>
+                  <Card padding="sm" onPress={() => navigation.navigate('StaffDetail', { staffId: member.id })} accessibilityLabel={member.name}>
+                    <ListItem
+                      title={member.name}
+                      subtitle={`${formatEnumLabel(member.role)} · ★ ${member.rating || '–'}`}
+                      description={!member.isActive ? 'Inactive' : working ? `${count} booking${count === 1 ? '' : 's'} today` : 'Day off today'}
+                      left={<Avatar name={member.name} uri={member.avatar} size="lg" />}
+                      right={
+                        member.isActive ? (
+                          <Badge label={working ? 'Working' : 'Off'} tone={working ? 'success' : 'neutral'} size="sm" dot />
+                        ) : (
+                          <Badge label="Inactive" tone="neutral" size="sm" />
+                        )
+                      }
+                      showChevron
+                    />
+                  </Card>
+                </Appear>
               );
             })}
           </View>

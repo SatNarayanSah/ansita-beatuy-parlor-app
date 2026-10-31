@@ -8,6 +8,7 @@ import { MultiChipSelect } from '@/components/admin/Pickers';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Button, DatePickerField, QueryState, Screen, SegmentedControl, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { customerService, getErrorMessage } from '@/services';
 import { useTheme } from '@/theme';
@@ -49,6 +50,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
     defaultValues: { name: '', phone: '', email: '', gender: 'female', dob: null, line1: '', city: 'Kathmandu', postalCode: '', notes: '', tags: ['new'] },
     mode: 'onTouched',
   });
+  const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   useEffect(() => {
     const c = query.data;
@@ -85,10 +87,12 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
       if (customerId) {
         await customerService.updateCustomer(customerId, input);
         toast.success('Customer updated');
+        allowLeave();
         navigation.goBack();
       } else {
         const created = await customerService.createCustomer(input);
         toast.success(`${created.name} added`);
+        allowLeave();
         navigation.replace('CustomerDetail', { customerId: created.id });
       }
     } catch (error) {
@@ -152,6 +156,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
           </View>
         )}
       </QueryState>
+      {dialog}
     </Screen>
   );
 };

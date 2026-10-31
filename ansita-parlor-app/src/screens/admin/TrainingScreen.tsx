@@ -4,10 +4,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
 import { COURSE_TYPE_META } from '@/components/customer/CourseCards';
 import {
+  Appear,
   Avatar,
   Badge,
   Button,
   Card,
+  EmptyState,
   FAB,
   FilterChips,
   ProgressBar,
@@ -162,29 +164,29 @@ export const TrainingScreen = ({ navigation, route }: Props) => {
           if (view === 'courses') {
             const today = todayISO();
             return courses.length === 0 ? (
-              <Text variant="bodySmall" tone="muted">
-                No courses yet. Tap + Course to add one.
-              </Text>
+              <EmptyState icon="school-outline" title="No courses yet" message="Create your first course, then add batches." actionLabel="New course" onAction={() => navigation.navigate('CourseForm')} />
             ) : (
               <View style={{ gap: spacing.md }}>
-                {courses.map((course) => {
+                {courses.map((course, index) => {
                   const active = enrollments.filter((e) => e.courseId === course.id && (e.status === 'active' || e.status === 'pending')).length;
                   const ongoing = course.batches.find((b) => b.startDate <= today && b.endDate >= today);
                   const meta = COURSE_TYPE_META[course.type];
                   return (
-                    <Card key={course.id} onPress={() => navigation.navigate('CourseManage', { courseId: course.id })} accessibilityLabel={course.title} style={{ gap: spacing.xs }}>
-                      <View style={styles.badges}>
-                        <Badge label={formatEnumLabel(course.type)} tone={meta.tone} icon={meta.icon} size="sm" />
-                        {!course.isActive ? <Badge label="Hidden" tone="neutral" size="sm" /> : null}
-                      </View>
-                      <Text variant="h4">{course.title}</Text>
-                      <Text variant="caption" tone="secondary">
-                        {formatCurrency(course.fee)} · {course.duration} · {staff.get(course.instructor)?.name ?? 'No instructor'}
-                      </Text>
-                      <Text variant="caption" tone={ongoing ? 'success' : 'muted'}>
-                        {active} enrolled · {course.batches.length} batches{ongoing ? ` · ${ongoing.name} running` : ''}
-                      </Text>
-                    </Card>
+                    <Appear key={course.id} index={index}>
+                      <Card onPress={() => navigation.navigate('CourseManage', { courseId: course.id })} accessibilityLabel={course.title} style={{ gap: spacing.xs }}>
+                        <View style={styles.badges}>
+                          <Badge label={formatEnumLabel(course.type)} tone={meta.tone} icon={meta.icon} size="sm" />
+                          {!course.isActive ? <Badge label="Hidden" tone="neutral" size="sm" /> : null}
+                        </View>
+                        <Text variant="h4">{course.title}</Text>
+                        <Text variant="caption" tone="secondary">
+                          {formatCurrency(course.fee)} · {course.duration} · {staff.get(course.instructor)?.name ?? 'No instructor'}
+                        </Text>
+                        <Text variant="caption" tone={ongoing ? 'success' : 'muted'}>
+                          {active} enrolled · {course.batches.length} batches{ongoing ? ` · ${ongoing.name} running` : ''}
+                        </Text>
+                      </Card>
+                    </Appear>
                   );
                 })}
               </View>
@@ -194,9 +196,13 @@ export const TrainingScreen = ({ navigation, route }: Props) => {
           if (view === 'students') {
             const list = enrollments.filter((e) => (status ? e.status === status : true));
             return list.length === 0 ? (
-              <Text variant="bodySmall" tone="muted">
-                No enrollments match.
-              </Text>
+              <EmptyState
+                icon="people-outline"
+                title={status ? 'No students with this status' : 'No students yet'}
+                message={status ? 'Try another filter.' : 'Enroll a student to get started.'}
+                actionLabel={status ? 'Show all' : 'Enroll student'}
+                onAction={status ? () => setStatus(null) : () => navigation.navigate('EnrollStudent')}
+              />
             ) : (
               <View style={{ gap: spacing.sm }}>{list.map((e) => enrollmentRow(e))}</View>
             );
@@ -218,9 +224,7 @@ export const TrainingScreen = ({ navigation, route }: Props) => {
                 </Text>
               </Card>
               {dues.length === 0 ? (
-                <Text variant="bodySmall" tone="muted">
-                  All fees are paid. 🎉
-                </Text>
+                <EmptyState compact icon="checkmark-done-outline" tone="success" title="All fees are paid" message="No student has a balance due." />
               ) : (
                 dues.map((e) =>
                   enrollmentRow(

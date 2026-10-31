@@ -1,16 +1,23 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
+import type { z } from 'zod';
 
 import { ChipSelect, MultiChipSelect, TimeStepper, WEEKDAY_OPTIONS } from '@/components/admin/Pickers';
-import { Button, ConfirmDialog, DatePickerField, Input, QueryState, Screen, SkeletonCard, Text, useToast } from '@/components/ui';
+import { FormInput } from '@/components/form/FormFields';
+import { Button, ConfirmDialog, DatePickerField, QueryState, Screen, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { courseService, getErrorMessage } from '@/services';
 import { useTheme } from '@/theme';
-import type { BatchStatus, ISODate, TimeString, Weekday } from '@/types';
+import type { BatchStatus, ISODate } from '@/types';
 import { addDaysISO, todayISO } from '@/utils/date';
+import { batchSchema } from '@/utils/formSchemas';
 
 type Props = RootStackScreenProps<'BatchForm'>;
+type Values = z.input<typeof batchSchema>;
 
 const STATUSES: readonly { value: BatchStatus; label: string }[] = [
   { value: 'upcoming', label: 'Upcoming' },
@@ -18,7 +25,7 @@ const STATUSES: readonly { value: BatchStatus; label: string }[] = [
   { value: 'completed', label: 'Completed' },
 ];
 
-/** Status that matches the dates, as a default suggestion. */
+/** Status that matches the dates, suggested until the admin picks one. */
 const statusFor = (start: ISODate, end: ISODate): BatchStatus => {
   const today = todayISO();
   if (today < start) return 'upcoming';
@@ -26,78 +33,77 @@ const statusFor = (start: ISODate, end: ISODate): BatchStatus => {
   return 'ongoing';
 };
 
+const FieldError = ({ message }: { message?: string }) =>
+  message ? (
+    <Text variant="caption" tone="danger">
+      {message}
+    </Text>
+  ) : null;
+
 export const BatchFormScreen = ({ navigation, route }: Props) => {
   const { spacing } = useTheme();
   const toast = useToast();
   const { courseId, batchId } = route.params;
+  const [statusTouched, setStatusTouched] = useState(Boolean(batchId));
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const query = useServiceQuery(() => courseService.getCourse(courseId), [courseId]);
 
-  const [name, setName] = useState('');
-  const [startDate, setStartDate] = useState<ISODate | null>(addDaysISO(todayISO(), 14));
-  const [endDate, setEndDate] = useState<ISODate | null>(addDaysISO(todayISO(), 56));
-  const [days, setDays] = useState<Weekday[]>(['sun', 'tue', 'thu']);
-  const [startTime, setStartTime] = useState<TimeString>('10:00');
-  const [endTime, setEndTime] = useState<TimeString>('13:00');
-  const [seats, setSeats] = useState('10');
-  const [status, setStatus] = useState<BatchStatus>('upcoming');
-  const [statusTouched, setStatusTouched] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { control, handleSubmit, reset, watch, setValue, formState } = useForm<Values, unknown, z.output<typeof batchSchema>>({
+    resolver: zodResolver(batchSchema),
+    defaultValues: {
+      name: '',
+      startDate: addDaysISO(todayISO(), 14),
+      endDate: addDaysISO(todayISO(), 56),
+      days: ['sun', 'tue', 'thu'],
+      startTime: '10:00',
+      endTime: '13:00',
+      seats: '10',
+      status: 'upcoming',
+    },
+    mode: 'onTouched',
+  });
+  const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   useEffect(() => {
     const course = query.data;
     if (!course) return;
     const batch = batchId ? course.batches.find((b) => b.id === batchId) : undefined;
-    if (batch) {
-      setName(batch.name);
-      setStartDate(batch.startDate);
-      setEndDate(batch.endDate);
-      setDays(batch.days);
-      setStartTime(batch.startTime);
-      setEndTime(batch.endTime);
-      setSeats(String(batch.seats));
-      setStatus(batch.status);
-      setStatusTouched(true);
-    } else {
-      setSeats(String(course.seats));
-    }
-  }, [query.data, batchId]);
+    if (batch) reset({ ...batch, seats: String(batch.seats) });
+    else reset({ ...watch(), seats: String(course.seats) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.data, batchId, reset]);
 
-  // Suggest the status from the dates until the admin picks one.
+  const [startDate, endDate, startTime, endTime] = watch(['startDate', 'endDate', 'startTime', 'endTime']);
   useEffect(() => {
-    if (!statusTouched && startDate && endDate) setStatus(statusFor(startDate, endDate));
-  }, [startDate, endDate, statusTouched]);
+    if (!statusTouched && startDate && endDate) setValue('status', statusFor(startDate, endDate));
+  }, [startDate, endDate, statusTouched, setValue]);
 
-  const valid = name.trim().length >= 2 && startDate && endDate && endDate >= startDate && days.length > 0 && Number(seats) > 0 && endTime > startTime;
-
-  const save = async (): Promise<void> => {
-    if (!valid || !startDate || !endDate) return;
-    setSaving(true);
-    const input = { name: name.trim(), startDate, endDate, days, startTime, endTime, seats: Number(seats), status };
+  const save = handleSubmit(async (values) => {
     try {
-      if (batchId) await courseService.updateBatch(courseId, batchId, input);
-      else await courseService.addBatch(courseId, input);
+      if (batchId) await courseService.updateBatch(courseId, batchId, values);
+      else await courseService.addBatch(courseId, values);
       toast.success(batchId ? 'Batch updated' : 'Batch added');
+      allowLeave();
       navigation.goBack();
     } catch (error) {
       toast.error(getErrorMessage(error));
-    } finally {
-      setSaving(false);
     }
-  };
+  });
 
   const remove = async (): Promise<void> => {
     if (!batchId) return;
-    setSaving(true);
+    setDeleting(true);
     try {
       await courseService.deleteBatch(courseId, batchId);
       toast.success('Batch deleted');
+      allowLeave();
       navigation.goBack();
     } catch (error) {
       toast.error(getErrorMessage(error));
       setDeleteOpen(false);
     } finally {
-      setSaving(false);
+      setDeleting(false);
     }
   };
 
@@ -109,43 +115,89 @@ export const BatchFormScreen = ({ navigation, route }: Props) => {
             <Text variant="bodySmall" tone="secondary">
               {course.title}
             </Text>
-            <Input label="Batch name" required value={name} onChangeText={setName} placeholder="e.g. Morning Batch" />
+            <FormInput control={control} name="name" label="Batch name" required placeholder="e.g. Morning Batch" />
             <View style={styles.row}>
-              <DatePickerField label="Starts" value={startDate} onChange={setStartDate} style={styles.flex} />
-              <DatePickerField label="Ends" value={endDate} onChange={setEndDate} minDate={startDate ?? undefined} style={styles.flex} error={startDate && endDate && endDate < startDate ? 'Before start' : null} />
-            </View>
-            <View style={{ gap: spacing.sm }}>
-              <Text variant="label" tone="secondary">
-                Class days
-              </Text>
-              <MultiChipSelect options={WEEKDAY_OPTIONS} value={days} onChange={setDays} />
-            </View>
-            <View style={styles.row}>
-              <View style={styles.flex}>
-                <TimeStepper label="Class starts" value={startTime} onChange={setStartTime} max={endTime} />
-              </View>
-              <View style={styles.flex}>
-                <TimeStepper label="Class ends" value={endTime} onChange={setEndTime} min={startTime} />
-              </View>
-            </View>
-            <Input label="Seats" value={seats} onChangeText={(t) => setSeats(t.replace(/\D/g, ''))} keyboardType="number-pad" helperText="Can't be lower than the number of students already enrolled." />
-            <View style={{ gap: spacing.sm }}>
-              <Text variant="label" tone="secondary">
-                Status
-              </Text>
-              <ChipSelect
-                options={STATUSES}
-                value={status}
-                onChange={(value) => {
-                  setStatusTouched(true);
-                  setStatus(value);
-                }}
+              <Controller
+                control={control}
+                name="startDate"
+                render={({ field, fieldState }) => (
+                  <DatePickerField label="Starts" required value={field.value || null} onChange={(v) => field.onChange(v ?? '')} error={fieldState.error?.message} style={styles.flex} />
+                )}
               />
-              <Text variant="caption" tone="muted">
-                Completed batches stop taking enrollments.
-              </Text>
+              <Controller
+                control={control}
+                name="endDate"
+                render={({ field, fieldState }) => (
+                  <DatePickerField
+                    label="Ends"
+                    required
+                    value={field.value || null}
+                    onChange={(v) => field.onChange(v ?? '')}
+                    minDate={startDate || undefined}
+                    error={fieldState.error?.message}
+                    style={styles.flex}
+                  />
+                )}
+              />
             </View>
-            <Button title={batchId ? 'Save batch' : 'Add batch'} size="lg" disabled={!valid} loading={saving} onPress={() => void save()} fullWidth />
+            <Controller
+              control={control}
+              name="days"
+              render={({ field, fieldState }) => (
+                <View style={{ gap: spacing.sm }}>
+                  <Text variant="label" tone="secondary">
+                    Class days
+                  </Text>
+                  <MultiChipSelect options={WEEKDAY_OPTIONS} value={field.value} onChange={field.onChange} />
+                  <FieldError message={fieldState.error?.message} />
+                </View>
+              )}
+            />
+            <View style={styles.row}>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="startTime"
+                  render={({ field }) => <TimeStepper label="Class starts" value={field.value} onChange={field.onChange} max={endTime} />}
+                />
+              </View>
+              <View style={styles.flex}>
+                <Controller
+                  control={control}
+                  name="endTime"
+                  render={({ field, fieldState }) => (
+                    <>
+                      <TimeStepper label="Class ends" value={field.value} onChange={field.onChange} min={startTime} />
+                      <FieldError message={fieldState.error?.message} />
+                    </>
+                  )}
+                />
+              </View>
+            </View>
+            <FormInput control={control} name="seats" label="Seats" required keyboardType="number-pad" helperText="Can't be lower than the number of students already enrolled." />
+            <Controller
+              control={control}
+              name="status"
+              render={({ field }) => (
+                <View style={{ gap: spacing.sm }}>
+                  <Text variant="label" tone="secondary">
+                    Status
+                  </Text>
+                  <ChipSelect
+                    options={STATUSES}
+                    value={field.value}
+                    onChange={(value) => {
+                      setStatusTouched(true);
+                      field.onChange(value);
+                    }}
+                  />
+                  <Text variant="caption" tone="muted">
+                    Completed batches stop taking enrollments.
+                  </Text>
+                </View>
+              )}
+            />
+            <Button title={batchId ? 'Save batch' : 'Add batch'} size="lg" loading={formState.isSubmitting} onPress={() => void save()} fullWidth />
             {batchId ? <Button title="Delete batch" variant="ghost" onPress={() => setDeleteOpen(true)} /> : null}
           </View>
         )}
@@ -156,10 +208,11 @@ export const BatchFormScreen = ({ navigation, route }: Props) => {
         title="Delete this batch?"
         message="Batches with enrolled students can't be deleted."
         confirmLabel="Delete"
-        loading={saving}
+        loading={deleting}
         onConfirm={() => void remove()}
         onCancel={() => setDeleteOpen(false)}
       />
+      {dialog}
     </Screen>
   );
 };

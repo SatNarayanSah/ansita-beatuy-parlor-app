@@ -1,7 +1,7 @@
-import { useLayoutEffect, useMemo } from 'react';
+import { memo, useLayoutEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Button, Icon, QueryState, Screen, SectionHeader, SkeletonListItem, Text, useToast, type IconName } from '@/components/ui';
+import { Button, Icon, ListScreen, SectionHeader, SkeletonListItem, Text, useToast, type IconName } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
@@ -10,6 +10,7 @@ import { selectCurrentUser, useAuthStore, useNotificationStore } from '@/store';
 import { getToneColors, useTheme, type Tone } from '@/theme';
 import type { Notification, NotificationType } from '@/types';
 import { formatTimeAgo } from '@/utils/date';
+import { sameDataProps } from '@/utils/memo';
 
 type Props = RootStackScreenProps<'Notifications'>;
 
@@ -24,7 +25,9 @@ const TYPE_META: Record<NotificationType, { icon: IconName; tone: Tone }> = {
   system: { icon: 'sparkles-outline', tone: 'info' },
 };
 
-const NotificationRow = ({ notification, onPress }: { notification: Notification; onPress: () => void }) => {
+type Row = { kind: 'header'; key: string; title: string } | { kind: 'item'; key: string; notification: Notification };
+
+const NotificationRowBase = ({ notification, onPress }: { notification: Notification; onPress: () => void }) => {
   const { colors, radius, spacing } = useTheme();
   const meta = TYPE_META[notification.type];
   const tone = getToneColors(colors, meta.tone);
@@ -65,6 +68,8 @@ const NotificationRow = ({ notification, onPress }: { notification: Notification
   );
 };
 
+const NotificationRow = memo(NotificationRowBase, sameDataProps);
+
 /** Booking updates, reminders and offers. Tapping one marks it read and opens the related screen. */
 export const NotificationsScreen = ({ navigation }: Props) => {
   const { spacing } = useTheme();
@@ -91,12 +96,17 @@ export const NotificationsScreen = ({ navigation }: Props) => {
     });
   }, [navigation, unread, t, toast]);
 
-  const groups = useMemo(() => {
+  // "New" / "Earlier" headings are rows in the flat, virtualised list.
+  const rows = useMemo<Row[]>(() => {
     const list = query.data ?? [];
+    const fresh = list.filter((n) => !n.isRead);
+    const earlier = list.filter((n) => n.isRead);
     return [
-      { key: 'new', title: 'New', items: list.filter((n) => !n.isRead) },
-      { key: 'earlier', title: 'Earlier', items: list.filter((n) => n.isRead) },
-    ].filter((group) => group.items.length > 0);
+      ...(fresh.length ? [{ kind: 'header' as const, key: 'h-new', title: 'New' }] : []),
+      ...fresh.map((notification) => ({ kind: 'item' as const, key: notification.id, notification })),
+      ...(earlier.length ? [{ kind: 'header' as const, key: 'h-earlier', title: 'Earlier' }] : []),
+      ...earlier.map((notification) => ({ kind: 'item' as const, key: notification.id, notification })),
+    ];
   }, [query.data]);
 
   const open = (notification: Notification): void => {
@@ -139,34 +149,24 @@ export const NotificationsScreen = ({ navigation }: Props) => {
     }
   };
 
+  const renderItem = (row: Row) =>
+    row.kind === 'header' ? <SectionHeader title={row.title} compact /> : <NotificationRow notification={row.notification} onPress={() => open(row.notification)} />;
+
   return (
-    <Screen refreshing={query.refreshing} onRefresh={() => void query.refetch()}>
-      <QueryState
-        query={query}
-        skeleton={
-          <View style={{ gap: spacing.md }}>
-            {Array.from({ length: 6 }, (_, i) => (
-              <SkeletonListItem key={i} />
-            ))}
-          </View>
-        }
-        isEmpty={(list) => list.length === 0}
-        empty={{ icon: 'notifications-off-outline', title: "You're all caught up", message: 'Booking updates, reminders and offers will appear here.' }}
-      >
-        {() => (
-          <View style={{ gap: spacing.lg }}>
-            {groups.map((group) => (
-              <View key={group.key} style={{ gap: spacing.sm }}>
-                <SectionHeader title={group.title} compact />
-                {group.items.map((notification) => (
-                  <NotificationRow key={notification.id} notification={notification} onPress={() => open(notification)} />
-                ))}
-              </View>
-            ))}
-          </View>
-        )}
-      </QueryState>
-    </Screen>
+    <ListScreen
+      query={query}
+      items={rows}
+      keyExtractor={(row) => row.key}
+      renderItem={renderItem}
+      skeleton={
+        <View style={{ gap: spacing.md }}>
+          {Array.from({ length: 6 }, (_, i) => (
+            <SkeletonListItem key={i} />
+          ))}
+        </View>
+      }
+      empty={{ icon: 'notifications-off-outline', title: "You're all caught up", message: 'Booking updates, reminders and offers will appear here.' }}
+    />
   );
 };
 

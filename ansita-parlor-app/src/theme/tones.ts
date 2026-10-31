@@ -19,7 +19,7 @@ export const getToneColors = (colors: ThemeColors, tone: Tone): ToneColors => {
     case 'accent':
       return { fg: colors.accent, bg: colors.accentSoft, on: colors.onAccent };
     case 'highlight':
-      return { fg: colors.highlight, bg: colors.highlightSoft, on: colors.textInverse };
+      return { fg: colors.highlightText, bg: colors.highlightSoft, on: colors.textInverse };
     case 'success':
       return { fg: colors.success, bg: colors.successSoft, on: colors.textInverse };
     case 'warning':

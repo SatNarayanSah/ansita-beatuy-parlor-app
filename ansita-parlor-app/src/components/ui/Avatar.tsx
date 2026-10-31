@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
 import { getInitials } from '@/utils/format';
@@ -53,6 +54,11 @@ export const Avatar = ({ name, uri, size = 'md', ring = false, editable = false,
       {showImage && uri ? (
         <Image
           source={{ uri }}
+          // Cached on disk so avatars don't re-download on every list render.
+          cachePolicy="memory-disk"
+          recyclingKey={uri}
+          contentFit="cover"
+          transition={150}
           onError={() => setFailedUri(uri)}
           style={{ width: '100%', height: '100%', borderRadius: dimension / 2 }}
           accessibilityIgnoresInvertColors

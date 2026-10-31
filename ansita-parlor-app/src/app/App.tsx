@@ -1,13 +1,20 @@
 import { useFonts } from 'expo-font';
+import * as NativeSplash from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 
+import { OfflineBanner } from '@/components/layout/OfflineBanner';
 import { useStoresHydrated } from '@/hooks/useStoresHydrated';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { fontAssets, useTheme } from '@/theme';
 
 import { AppProviders } from './AppProviders';
+import { ErrorBoundary } from './ErrorBoundary';
 import { SplashScreen } from './SplashScreen';
+
+// Keep the native splash up until the animated one has drawn its first frame,
+// so there is no blank flash between them. Both share the same background.
+NativeSplash.preventAutoHideAsync().catch(() => undefined);
 
 /**
  * Mounts the navigator as soon as fonts and persisted stores are ready, under
@@ -22,12 +29,16 @@ const AppContent = () => {
   const ready = hydrated && fontsReady;
   const [splashDone, setSplashDone] = useState(false);
   const finishSplash = useCallback(() => setSplashDone(true), []);
+  const hideNativeSplash = useCallback(() => {
+    NativeSplash.hideAsync().catch(() => undefined);
+  }, []);
 
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      {ready ? <RootNavigator /> : null}
-      {splashDone ? null : <SplashScreen fontsReady={fontsReady} appReady={ready} onFinish={finishSplash} />}
+      <ErrorBoundary>{ready ? <RootNavigator /> : null}</ErrorBoundary>
+      <OfflineBanner />
+      {splashDone ? null : <SplashScreen fontsReady={fontsReady} appReady={ready} onFinish={finishSplash} onFirstFrame={hideNativeSplash} />}
     </>
   );
 };

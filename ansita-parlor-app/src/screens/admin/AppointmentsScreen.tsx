@@ -7,10 +7,10 @@ import { Timeline, type TimelineColumn } from '@/components/admin/Timeline';
 import {
   Button,
   Card,
-  EmptyState,
   FAB,
   FilterChips,
   IconButton,
+  ListScreen,
   QueryState,
   Screen,
   SectionHeader,
@@ -33,6 +33,8 @@ import { addDaysISO, formatDisplayDate, formatRelativeDay, parseISODate, todayIS
 type Props = AdminTabScreenProps<'Appointments'>;
 
 type ListRange = 'upcoming' | 'today' | 'week' | 'past' | 'all';
+
+type ListRow = { kind: 'header'; key: string; title: string } | { kind: 'item'; key: string; appointment: Appointment };
 
 const VIEW_OPTIONS: readonly SegmentOption<AppointmentsView>[] = [
   { value: 'day', label: 'Day', icon: 'today-outline' },
@@ -161,75 +163,75 @@ export const AppointmentsScreen = ({ navigation, route }: Props) => {
     </View>
   );
 
-  return (
-    <Screen
-      refreshing={query.refreshing}
-      onRefresh={() => void query.refetch()}
-      overlay={<FAB label="New" icon="add" accessibilityLabel="New appointment" onPress={() => newBooking(view === 'list' ? undefined : { date })} />}
-    >
+  const filters = (
+    <>
       <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={setView} />
-      {view === 'list' ? (
-        <FilterChips options={RANGE_OPTIONS} value={range} onChange={setRange} allLabel="All dates" />
-      ) : (
-        dateBar
-      )}
+      {view === 'list' ? <FilterChips options={RANGE_OPTIONS} value={range} onChange={setRange} allLabel="All dates" /> : dateBar}
       <FilterChips options={STATUS_OPTIONS} value={status} onChange={setStatus} allLabel="All statuses" />
       <FilterChips options={staffOptions} value={staffId} onChange={setStaffId} allLabel="All staff" />
+    </>
+  );
+  const fab = <FAB label="New" icon="add" accessibilityLabel="New appointment" onPress={() => newBooking(view === 'list' ? undefined : { date })} />;
 
-      <QueryState
+  // List view is virtualised: date headings are rows alongside the bookings.
+  if (view === 'list') {
+    const rows: ListRow[] = listGroups.flatMap(([day, items]) => [
+      { kind: 'header' as const, key: `h-${day}`, title: `${formatRelativeDay(day)} · ${items.length}` },
+      ...items.map((appointment) => ({ kind: 'item' as const, key: appointment.id, appointment })),
+    ]);
+    return (
+      <ListScreen
         query={query}
+        items={rows}
+        keyExtractor={(row) => row.key}
+        renderItem={(row) =>
+          row.kind === 'header' ? (
+            <SectionHeader title={row.title} compact style={{ marginTop: spacing.sm }} />
+          ) : (
+            <AdminAppointmentRow
+              appointment={row.appointment}
+              customer={customers.get(row.appointment.customerId)}
+              services={services}
+              staff={staffMap}
+              onPress={() => openDetail(row.appointment)}
+            />
+          )
+        }
+        header={filters}
         skeleton={
-          view === 'list' ? (
-            <View style={{ gap: spacing.sm }}>
-              {Array.from({ length: 5 }, (_, i) => (
-                <SkeletonListItem key={i} />
-              ))}
-            </View>
-          ) : (
-            <Skeleton height={420} radius={12} />
-          )
+          <View style={{ gap: spacing.sm }}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <SkeletonListItem key={i} />
+            ))}
+          </View>
         }
-      >
-        {() =>
-          view === 'list' ? (
-            listGroups.length === 0 ? (
-              <EmptyState icon="calendar-clear-outline" title="No appointments" message="Nothing matches these filters." actionLabel="New appointment" onAction={() => newBooking()} />
-            ) : (
-              <View style={{ gap: spacing.lg }}>
-                {listGroups.map(([day, items]) => (
-                  <View key={day} style={{ gap: spacing.sm }}>
-                    <SectionHeader title={`${formatRelativeDay(day)} · ${items.length}`} compact />
-                    {items.map((appointment) => (
-                      <AdminAppointmentRow
-                        key={appointment.id}
-                        appointment={appointment}
-                        customer={customers.get(appointment.customerId)}
-                        services={services}
-                        staff={staffMap}
-                        onPress={() => openDetail(appointment)}
-                      />
-                    ))}
-                  </View>
-                ))}
-              </View>
-            )
-          ) : (
-            <Card padding="sm">
-              <Timeline
-                columns={view === 'day' ? dayColumns : weekColumns}
-                start={profile.openTime}
-                end={profile.closeTime}
-                customers={customers}
-                onPressAppointment={openDetail}
-                onPressSlot={(key, time) => newBooking(view === 'day' ? { date, staffId: key, time } : { date: key, time })}
-                nowColumnKeys={view === 'day' ? (date === today ? dayColumns.map((column) => column.key) : []) : [today]}
-              />
-              <Text variant="caption" tone="muted" style={{ padding: spacing.sm }}>
-                Tap an empty slot to book it · colours show status
-              </Text>
-            </Card>
-          )
-        }
+        empty={{ icon: 'calendar-clear-outline', title: 'No appointments', message: 'Nothing matches these filters.', actionLabel: 'New appointment', onAction: () => newBooking() }}
+        overlay={fab}
+      />
+    );
+  }
+
+  return (
+    <Screen refreshing={query.refreshing} onRefresh={() => void query.refetch()} overlay={fab}>
+      {filters}
+
+      <QueryState query={query} skeleton={<Skeleton height={420} radius={12} />}>
+        {() => (
+          <Card padding="sm">
+            <Timeline
+              columns={view === 'day' ? dayColumns : weekColumns}
+              start={profile.openTime}
+              end={profile.closeTime}
+              customers={customers}
+              onPressAppointment={openDetail}
+              onPressSlot={(key, time) => newBooking(view === 'day' ? { date, staffId: key, time } : { date: key, time })}
+              nowColumnKeys={view === 'day' ? (date === today ? dayColumns.map((column) => column.key) : []) : [today]}
+            />
+            <Text variant="caption" tone="muted" style={{ padding: spacing.sm }}>
+              Tap an empty slot to book it · colours show status
+            </Text>
+          </Card>
+        )}
       </QueryState>
     </Screen>
   );

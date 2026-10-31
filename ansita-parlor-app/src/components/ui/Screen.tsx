@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme, type SpacingKey } from '@/theme';
+
+/** Content wider than this (tablets, landscape) is centred instead of stretched. */
+export const MAX_CONTENT_WIDTH = 760;
 
 export interface ScreenProps {
   children: ReactNode;
@@ -20,7 +23,10 @@ export interface ScreenProps {
   contentStyle?: StyleProp<ViewStyle>;
 }
 
-/** Standard screen container: background, safe area, padding and optional pull-to-refresh. */
+/**
+ * Standard screen container: background, safe area, padding, keyboard
+ * insets, tablet width cap and optional pull-to-refresh.
+ */
 export const Screen = ({
   children,
   scroll = true,
@@ -37,10 +43,18 @@ export const Screen = ({
 
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: colors.background }]}>
+      {/*
+        Keyboard: iOS uses automaticallyAdjustKeyboardInsets (insets + scroll to the
+        focused field); Android resizes the window itself. Wrapping this in a
+        KeyboardAvoidingView as well would compensate twice.
+      */}
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[inner, { paddingBottom: spacing.huge * 2 }, contentStyle]}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          // Scrolls the focused input above the keyboard on iOS.
+          automaticallyAdjustKeyboardInsets
+          contentContainerStyle={[inner, styles.capped, { paddingBottom: spacing.huge * 2 }, contentStyle]}
           refreshControl={
             onRefresh ? (
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
@@ -50,7 +64,7 @@ export const Screen = ({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.root, inner, contentStyle]}>{children}</View>
+        <View style={[styles.root, inner, styles.capped, contentStyle]}>{children}</View>
       )}
       {overlay}
     </SafeAreaView>
@@ -59,4 +73,5 @@ export const Screen = ({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  capped: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' },
 });

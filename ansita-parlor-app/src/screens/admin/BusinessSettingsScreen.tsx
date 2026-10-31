@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, Switch, View } from 'react-native';
+import type { z } from 'zod';
 
 import { TimeStepper } from '@/components/admin/Pickers';
-import { Button, Card, DatePickerField, Divider, IconButton, Input, ListItem, PhoneInput, Screen, SectionHeader, Text, useToast } from '@/components/ui';
+import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
+import { Button, Card, DatePickerField, Divider, IconButton, ListItem, Screen, SectionHeader, Text, useToast } from '@/components/ui';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { businessService, getErrorMessage } from '@/services';
 import { selectPointsFor, useBusinessStore } from '@/store';
 import { useTheme } from '@/theme';
-import type { AdminAlerts, BusinessProfile, ISODate } from '@/types';
+import type { AdminAlerts } from '@/types';
 import { formatDisplayDate, todayISO } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
+import { businessProfileSchema, holidaySchema, loyaltySchema } from '@/utils/formSchemas';
 
 type Props = RootStackScreenProps<'BusinessSettings'>;
 
@@ -20,33 +26,44 @@ const ALERTS: readonly { key: keyof AdminAlerts; title: string; subtitle: string
   { key: 'enrollments', title: 'Course enrollments', subtitle: 'New students and drop-outs' },
 ];
 
+const EXAMPLE_BILL = 2500;
+
 /** Parlour profile, opening hours, holidays, loyalty rules and admin alerts. Changes apply app-wide. */
 export const BusinessSettingsScreen = (_props: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
   const { profile, holidays, loyalty, alerts } = useBusinessStore();
 
-  const [draft, setDraft] = useState<BusinessProfile>(profile);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [holidayDate, setHolidayDate] = useState<ISODate | null>(null);
-  const [holidayName, setHolidayName] = useState('');
-  const [addingHoliday, setAddingHoliday] = useState(false);
-  const [rupeesPerPoint, setRupeesPerPoint] = useState(String(loyalty.rupeesPerPoint));
-  const [pointValue, setPointValue] = useState(String(loyalty.pointValue));
-  const [savingLoyalty, setSavingLoyalty] = useState(false);
+  const profileForm = useForm<z.input<typeof businessProfileSchema>, unknown, z.output<typeof businessProfileSchema>>({
+    resolver: zodResolver(businessProfileSchema),
+    defaultValues: profile,
+    mode: 'onTouched',
+  });
+  const holidayForm = useForm<z.input<typeof holidaySchema>, unknown, z.output<typeof holidaySchema>>({
+    resolver: zodResolver(holidaySchema),
+    defaultValues: { date: '', name: '' },
+    mode: 'onTouched',
+  });
+  const loyaltyForm = useForm<z.input<typeof loyaltySchema>, unknown, z.output<typeof loyaltySchema>>({
+    resolver: zodResolver(loyaltySchema),
+    defaultValues: { rupeesPerPoint: String(loyalty.rupeesPerPoint), pointValue: String(loyalty.pointValue) },
+    mode: 'onTouched',
+  });
 
   // Pick up external changes (e.g. demo reset) while the screen is open.
-  useEffect(() => setDraft(profile), [profile]);
-  useEffect(() => {
-    setRupeesPerPoint(String(loyalty.rupeesPerPoint));
-    setPointValue(String(loyalty.pointValue));
-  }, [loyalty]);
+  const resetProfile = profileForm.reset;
+  const resetLoyalty = loyaltyForm.reset;
+  useEffect(() => resetProfile(profile), [profile, resetProfile]);
+  useEffect(() => resetLoyalty({ rupeesPerPoint: String(loyalty.rupeesPerPoint), pointValue: String(loyalty.pointValue) }), [loyalty, resetLoyalty]);
 
-  const profileDirty = JSON.stringify(draft) !== JSON.stringify(profile);
-  const loyaltyDirty = rupeesPerPoint !== String(loyalty.rupeesPerPoint) || pointValue !== String(loyalty.pointValue);
+  const dirty = profileForm.formState.isDirty || loyaltyForm.formState.isDirty;
+  const { dialog } = useUnsavedChangesGuard(dirty && !profileForm.formState.isSubmitting && !loyaltyForm.formState.isSubmitting);
 
-  const run = async (setBusy: (busy: boolean) => void, action: () => Promise<unknown>, success: string): Promise<boolean> => {
-    setBusy(true);
+  const [openTime, closeTime] = useWatch({ control: profileForm.control, name: ['openTime', 'closeTime'] });
+  const [rupeesText, valueText] = useWatch({ control: loyaltyForm.control, name: ['rupeesPerPoint', 'pointValue'] });
+  const examplePoints = selectPointsFor({ ...loyalty, enabled: true, rupeesPerPoint: Number(rupeesText) || 1 }, EXAMPLE_BILL);
+
+  const attempt = async (action: () => Promise<unknown>, success: string): Promise<boolean> => {
     try {
       await action();
       toast.success(success);
@@ -54,31 +71,55 @@ export const BusinessSettingsScreen = (_props: Props) => {
     } catch (error) {
       toast.error(getErrorMessage(error));
       return false;
-    } finally {
-      setBusy(false);
     }
   };
 
+  const saveProfile = profileForm.handleSubmit(async (values) => {
+    await attempt(() => businessService.updateProfile(values), 'Business profile saved');
+  });
+  const addHoliday = holidayForm.handleSubmit(async (values) => {
+    if (await attempt(() => businessService.addHoliday(values), 'Holiday added')) holidayForm.reset({ date: '', name: '' });
+  });
+  const saveLoyalty = loyaltyForm.handleSubmit(async (values) => {
+    await attempt(() => businessService.updateLoyalty(values), 'Loyalty rules saved');
+  });
+
   const upcoming = holidays.filter((h) => h.date >= todayISO());
-  const exampleBill = 2500;
 
   return (
     <Screen gap="xl">
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Business profile" subtitle="Shown to customers under Help & contact" compact />
         <Card style={{ gap: spacing.md }}>
-          <Input label="Business name" value={draft.name} onChangeText={(name) => setDraft({ ...draft, name })} />
-          <Input label="Tagline" value={draft.tagline} onChangeText={(tagline) => setDraft({ ...draft, tagline })} />
-          <PhoneInput label="Phone" value={draft.phone} onChangeText={(phone) => setDraft({ ...draft, phone })} />
-          <PhoneInput label="WhatsApp" value={draft.whatsapp} onChangeText={(whatsapp) => setDraft({ ...draft, whatsapp })} />
-          <Input label="Email" value={draft.email} onChangeText={(email) => setDraft({ ...draft, email })} keyboardType="email-address" autoCapitalize="none" />
-          <Input label="Address" value={draft.address} onChangeText={(address) => setDraft({ ...draft, address })} multiline />
+          <FormInput control={profileForm.control} name="name" label="Business name" required />
+          <FormInput control={profileForm.control} name="tagline" label="Tagline" />
+          <FormPhoneInput control={profileForm.control} name="phone" label="Phone" required />
+          <FormPhoneInput control={profileForm.control} name="whatsapp" label="WhatsApp" required />
+          <FormInput control={profileForm.control} name="email" label="Email" required keyboardType="email-address" autoCapitalize="none" />
+          <FormInput control={profileForm.control} name="address" label="Address" required multiline />
           <View style={styles.row}>
             <View style={styles.flex}>
-              <TimeStepper label="Opens" value={draft.openTime} onChange={(openTime) => setDraft({ ...draft, openTime })} max={draft.closeTime} />
+              <Controller
+                control={profileForm.control}
+                name="openTime"
+                render={({ field }) => <TimeStepper label="Opens" value={field.value} onChange={field.onChange} max={closeTime} />}
+              />
             </View>
             <View style={styles.flex}>
-              <TimeStepper label="Closes" value={draft.closeTime} onChange={(closeTime) => setDraft({ ...draft, closeTime })} min={draft.openTime} />
+              <Controller
+                control={profileForm.control}
+                name="closeTime"
+                render={({ field, fieldState }) => (
+                  <>
+                    <TimeStepper label="Closes" value={field.value} onChange={field.onChange} min={openTime} />
+                    {fieldState.error ? (
+                      <Text variant="caption" tone="danger">
+                        {fieldState.error.message}
+                      </Text>
+                    ) : null}
+                  </>
+                )}
+              />
             </View>
           </View>
           <Text variant="caption" tone="muted">
@@ -86,9 +127,9 @@ export const BusinessSettingsScreen = (_props: Props) => {
           </Text>
           <Button
             title="Save profile"
-            disabled={!profileDirty}
-            loading={savingProfile}
-            onPress={() => void run(setSavingProfile, () => businessService.updateProfile(draft), 'Business profile saved')}
+            disabled={!profileForm.formState.isDirty}
+            loading={profileForm.formState.isSubmitting}
+            onPress={() => void saveProfile()}
             fullWidth
           />
         </Card>
@@ -115,31 +156,29 @@ export const BusinessSettingsScreen = (_props: Props) => {
                   <IconButton
                     icon="trash-outline"
                     accessibilityLabel={`Remove ${holiday.name}`}
-                    onPress={() => void run(() => undefined, () => businessService.removeHoliday(holiday.date), 'Holiday removed')}
+                    onPress={() => void attempt(() => businessService.removeHoliday(holiday.date), 'Holiday removed')}
                   />
                 </View>
               </View>
             ))
           )}
           <Divider spacing="sm" />
-          <DatePickerField label="Add a holiday" value={holidayDate} onChange={setHolidayDate} minDate={todayISO()} placeholder="Pick a date" />
-          <Input label="Name" value={holidayName} onChangeText={setHolidayName} placeholder="e.g. Laxmi Puja" />
-          <Button
-            title="Add holiday"
-            variant="secondary"
-            leftIcon="add"
-            disabled={!holidayDate || holidayName.trim().length < 2}
-            loading={addingHoliday}
-            onPress={() =>
-              void run(setAddingHoliday, () => businessService.addHoliday({ date: holidayDate ?? '', name: holidayName }), 'Holiday added').then((ok) => {
-                if (ok) {
-                  setHolidayDate(null);
-                  setHolidayName('');
-                }
-              })
-            }
-            fullWidth
+          <Controller
+            control={holidayForm.control}
+            name="date"
+            render={({ field, fieldState }) => (
+              <DatePickerField
+                label="Add a holiday"
+                value={field.value || null}
+                onChange={(value) => field.onChange(value ?? '')}
+                minDate={todayISO()}
+                placeholder="Pick a date"
+                error={fieldState.error?.message}
+              />
+            )}
           />
+          <FormInput control={holidayForm.control} name="name" label="Name" placeholder="e.g. Laxmi Puja" />
+          <Button title="Add holiday" variant="secondary" leftIcon="add" loading={holidayForm.formState.isSubmitting} onPress={() => void addHoliday()} fullWidth />
           <Text variant="caption" tone="muted">
             A day that already has bookings can't be closed until they're moved or cancelled.
           </Text>
@@ -157,27 +196,25 @@ export const BusinessSettingsScreen = (_props: Props) => {
             right={
               <Switch
                 value={loyalty.enabled}
-                onValueChange={(enabled) => void run(() => undefined, () => businessService.updateLoyalty({ enabled }), enabled ? 'Loyalty programme on' : 'Loyalty programme paused')}
+                onValueChange={(enabled) => void attempt(() => businessService.updateLoyalty({ enabled }), enabled ? 'Loyalty programme on' : 'Loyalty programme paused')}
                 trackColor={{ true: colors.primary, false: colors.borderStrong }}
                 thumbColor={colors.surface}
+                accessibilityLabel="Loyalty programme"
               />
             }
           />
           <View style={styles.row}>
-            <Input label="Spend per point (Rs.)" value={rupeesPerPoint} onChangeText={(t) => setRupeesPerPoint(t.replace(/\D/g, ''))} keyboardType="number-pad" containerStyle={styles.flex} />
-            <Input label="Point value (Rs.)" value={pointValue} onChangeText={(t) => setPointValue(t.replace(/[^\d.]/g, ''))} keyboardType="decimal-pad" containerStyle={styles.flex} />
+            <FormInput control={loyaltyForm.control} name="rupeesPerPoint" label="Spend per point (Rs.)" keyboardType="number-pad" containerStyle={styles.flex} />
+            <FormInput control={loyaltyForm.control} name="pointValue" label="Point value (Rs.)" keyboardType="decimal-pad" containerStyle={styles.flex} />
           </View>
           <Text variant="caption" tone="muted">
-            Example: a {formatCurrency(exampleBill)} visit earns {selectPointsFor({ ...loyalty, enabled: true, rupeesPerPoint: Number(rupeesPerPoint) || 1 }, exampleBill)} points, worth{' '}
-            {formatCurrency(Math.round(selectPointsFor({ ...loyalty, enabled: true, rupeesPerPoint: Number(rupeesPerPoint) || 1 }, exampleBill) * (Number(pointValue) || 0)))} when redeemed.
+            Example: a {formatCurrency(EXAMPLE_BILL)} visit earns {examplePoints} points, worth {formatCurrency(Math.round(examplePoints * (Number(valueText) || 0)))} when redeemed.
           </Text>
           <Button
             title="Save rules"
-            disabled={!loyaltyDirty}
-            loading={savingLoyalty}
-            onPress={() =>
-              void run(setSavingLoyalty, () => businessService.updateLoyalty({ rupeesPerPoint: Number(rupeesPerPoint), pointValue: Number(pointValue) }), 'Loyalty rules saved')
-            }
+            disabled={!loyaltyForm.formState.isDirty}
+            loading={loyaltyForm.formState.isSubmitting}
+            onPress={() => void saveLoyalty()}
             fullWidth
           />
         </Card>
@@ -206,11 +243,12 @@ export const BusinessSettingsScreen = (_props: Props) => {
           ))}
         </Card>
       </View>
+      {dialog}
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   flex: { flex: 1 },
 });

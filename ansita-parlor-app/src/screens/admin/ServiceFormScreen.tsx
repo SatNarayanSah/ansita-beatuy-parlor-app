@@ -8,27 +8,20 @@ import { ChipSelect } from '@/components/admin/Pickers';
 import { FormInput } from '@/components/form/FormFields';
 import { Button, Card, ConfirmDialog, ListItem, QueryState, Screen, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { catalogService, getErrorMessage } from '@/services';
 import { useTheme } from '@/theme';
+import { wholeNumberText } from '@/utils/formSchemas';
 import { durationSchema, priceSchema } from '@/utils/validators';
 
 type Props = RootStackScreenProps<'ServiceForm'>;
 
-/** Text field holding a whole number, validated by a numeric schema. */
-const wholeNumber = (schema: z.ZodNumber, label: string) =>
-  z
-    .string()
-    .trim()
-    .regex(/^\d+$/, { error: `Enter ${label} as a whole number` })
-    .transform(Number)
-    .pipe(schema);
-
 const schema = z.object({
   name: z.string().trim().min(2, { error: 'Enter a service name' }).max(60),
   categoryId: z.string().min(1, { error: 'Choose a category' }),
-  duration: wholeNumber(durationSchema, 'the duration'),
-  price: wholeNumber(priceSchema, 'the price'),
+  duration: wholeNumberText(durationSchema, 'the duration'),
+  price: wholeNumberText(priceSchema, 'the price'),
   description: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
   isActive: z.boolean(),
 });
@@ -52,6 +45,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
     defaultValues: { name: '', categoryId: route.params?.categoryId ?? '', duration: '30', price: '', description: '', isActive: true },
     mode: 'onTouched',
   });
+  const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   useEffect(() => {
     const s = query.data?.service;
@@ -67,6 +61,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
         await catalogService.createService({ ...values, image: null });
         toast.success(`${values.name} added`);
       }
+      allowLeave();
       navigation.goBack();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -79,6 +74,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
     try {
       await catalogService.deleteService(serviceId);
       toast.success('Service deleted');
+      allowLeave();
       navigation.goBack();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -150,6 +146,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
         onConfirm={() => void remove()}
         onCancel={() => setDeleteOpen(false)}
       />
+      {dialog}
     </Screen>
   );
 };

@@ -24,13 +24,15 @@ interface SplashScreenProps {
   /** Fonts and persisted stores are loaded; the splash may fade out. */
   appReady: boolean;
   onFinish: () => void;
+  /** Called once this view is laid out, to hand over from the native splash. */
+  onFirstFrame?: () => void;
 }
 
 /**
  * Animated brand intro drawn over the app while it loads: the logo springs in,
  * a halo pulses behind it, then the wordmark rises. Fades out once the app is ready.
  */
-export const SplashScreen = ({ fontsReady, appReady, onFinish }: SplashScreenProps) => {
+export const SplashScreen = ({ fontsReady, appReady, onFinish, onFirstFrame }: SplashScreenProps) => {
   const { colors } = useTheme();
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
@@ -67,6 +69,7 @@ export const SplashScreen = ({ fontsReady, appReady, onFinish }: SplashScreenPro
     <Animated.View
       style={[StyleSheet.absoluteFill, styles.root, { backgroundColor: colors.background }, rootStyle]}
       accessibilityLabel="Loading Ansita"
+      onLayout={onFirstFrame}
     >
       {fontsReady ? (
         <View style={styles.center}>

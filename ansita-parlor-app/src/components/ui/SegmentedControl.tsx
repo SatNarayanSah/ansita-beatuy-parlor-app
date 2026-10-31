@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -32,7 +33,11 @@ export const SegmentedControl = <T extends string>({ options, value, onChange, s
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             accessibilityLabel={option.label}
-            onPress={() => onChange(option.value)}
+            onPress={() => {
+              if (!selected) haptics.selection();
+              onChange(option.value);
+            }}
+            hitSlop={{ top: 4, bottom: 4 }}
             style={[
               styles.segment,
               { borderRadius: radius.pill },

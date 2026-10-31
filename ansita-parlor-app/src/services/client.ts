@@ -60,7 +60,10 @@ export const simulateRequest = async <T>(
   { neverFail = false }: RequestOptions = {},
 ): Promise<T> => {
   await wait(randomLatency());
-  const { simulateErrors, errorRate } = getApiConfig();
+  const { simulateErrors, errorRate, offline } = getApiConfig();
+  if (!neverFail && offline) {
+    throw new ApiError('NETWORK', 'You are offline. Check your connection and try again.');
+  }
   if (!neverFail && simulateErrors && Math.random() < errorRate) {
     throw new ApiError('NETWORK');
   }

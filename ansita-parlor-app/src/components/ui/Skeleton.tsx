@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
-import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View, type DimensionValue, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -19,34 +21,57 @@ export interface SkeletonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Pulsing placeholder block shown while data loads. */
+const SHIMMER_MS = 1200;
+
+/** Placeholder block with a light sweeping across it. Static when the OS asks for reduced motion. */
 export const Skeleton = ({ width = '100%', height = 14, radius, circle = false, style }: SkeletonProps) => {
-  const { colors, radius: radii } = useTheme();
+  const { colors, radius: radii, isDark } = useTheme();
+  const reduceMotion = useReducedMotion();
+  const [blockWidth, setBlockWidth] = useState(0);
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withRepeat(withTiming(1, { duration: 850, easing: Easing.inOut(Easing.ease) }), -1, true);
+    if (reduceMotion || blockWidth === 0) return undefined;
+    progress.value = 0;
+    progress.value = withRepeat(withTiming(1, { duration: SHIMMER_MS, easing: Easing.inOut(Easing.ease) }), -1, false);
     return () => cancelAnimation(progress);
-  }, [progress]);
+  }, [progress, reduceMotion, blockWidth]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: 0.55 + progress.value * 0.45 }));
+  // The highlight band travels from fully left of the block to fully right of it.
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -blockWidth + progress.value * blockWidth * 2 }],
+  }));
+
   const size = circle && typeof height === 'number' ? height : undefined;
+  const highlight = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.65)';
 
   return (
-    <Animated.View
+    <View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
+      onLayout={(event: LayoutChangeEvent) => setBlockWidth(event.nativeEvent.layout.width)}
       style={[
         {
           width: size ?? width,
           height,
           borderRadius: circle && size ? size / 2 : (radius ?? radii.sm),
-          backgroundColor: colors.skeletonHighlight,
+          backgroundColor: colors.skeleton,
+          overflow: 'hidden',
         },
-        animatedStyle,
         style,
       ]}
-    />
+    >
+      {reduceMotion ? null : (
+        <Animated.View style={[StyleSheet.absoluteFill, shimmerStyle]}>
+          <LinearGradient
+            colors={['transparent', highlight, 'transparent']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+    </View>
   );
 };
 

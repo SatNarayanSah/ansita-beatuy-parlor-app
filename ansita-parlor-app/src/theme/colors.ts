@@ -40,7 +40,10 @@ export interface ThemeColors {
   accentSoft: string;
   onAccent: string;
 
+  /** Gold for icons and decoration (3:1 on surfaces). */
   highlight: string;
+  /** Gold dark enough for text (4.5:1 on surfaces and highlightSoft). */
+  highlightText: string;
   highlightSoft: string;
 
   background: string;
@@ -77,9 +80,13 @@ export interface ThemeColors {
   avatar: readonly string[];
 }
 
+/**
+ * Light text/fill tokens are tuned to WCAG AA (4.5:1) against the surfaces they
+ * sit on. The brand rose (palette.rose500) is kept for the logo and icons.
+ */
 export const lightColors: ThemeColors = {
-  primary: palette.rose500,
-  primaryDark: palette.rose700,
+  primary: '#A44A67',
+  primaryDark: '#84374F',
   primarySoft: palette.rose100,
   primaryMuted: palette.rose200,
   onPrimary: palette.white,
@@ -88,7 +95,8 @@ export const lightColors: ThemeColors = {
   accentSoft: palette.plum100,
   onAccent: palette.white,
 
-  highlight: palette.gold500,
+  highlight: '#B08B3E',
+  highlightText: '#84682F',
   highlightSoft: palette.gold100,
 
   background: palette.ivory,
@@ -100,15 +108,15 @@ export const lightColors: ThemeColors = {
   overlay: 'rgba(43, 37, 40, 0.48)',
 
   text: palette.charcoal,
-  textSecondary: '#6B6166',
-  textMuted: '#9A8F94',
+  textSecondary: '#5C5357',
+  textMuted: '#726A6E',
   textInverse: palette.white,
 
-  success: '#2F8F63',
+  success: '#287B55',
   successSoft: '#E3F3EA',
-  warning: '#B7791F',
+  warning: '#966319',
   warningSoft: '#FBF0DA',
-  danger: '#C9443B',
+  danger: '#B93F36',
   dangerSoft: '#FBE4E1',
   info: '#3768B5',
   infoSoft: '#E3ECF8',
@@ -120,10 +128,10 @@ export const lightColors: ThemeColors = {
   shadow: palette.plum900,
 
   status: {
-    pending: { fg: '#A86A12', bg: '#FBF0DA' },
+    pending: { fg: '#966319', bg: '#FBF0DA' },
     confirmed: { fg: '#3768B5', bg: '#E3ECF8' },
-    completed: { fg: '#2F8F63', bg: '#E3F3EA' },
-    cancelled: { fg: '#C9443B', bg: '#FBE4E1' },
+    completed: { fg: '#287B55', bg: '#E3F3EA' },
+    cancelled: { fg: '#B93F36', bg: '#FBE4E1' },
     no_show: { fg: '#6B6166', bg: '#EFEAE7' },
   },
   avatar: ['#F8E1E8', '#EFE3EC', '#F7EDD8', '#E3F3EA', '#E3ECF8', '#F4E4DA'],
@@ -141,6 +149,7 @@ export const darkColors: ThemeColors = {
   onAccent: '#24131F',
 
   highlight: palette.gold300,
+  highlightText: palette.gold300,
   highlightSoft: palette.gold900,
 
   background: '#161114',
@@ -153,7 +162,7 @@ export const darkColors: ThemeColors = {
 
   text: '#F4ECEF',
   textSecondary: '#C2B5BB',
-  textMuted: '#8F8288',
+  textMuted: '#94888D',
   textInverse: palette.charcoal,
 
   success: '#5CC28F',

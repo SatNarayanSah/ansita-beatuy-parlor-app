@@ -1,6 +1,6 @@
 import { usePreventRemove } from '@react-navigation/native';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInRight } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -407,44 +407,53 @@ export const BookingScreen = ({ navigation, route }: Props) => {
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm }}>
-        <Stepper steps={STEP_KEYS.map((key) => t(key))} current={step} />
-      </View>
-
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.huge }}>
-        <Animated.View key={step} entering={FadeInRight.duration(220)}>
-          {bodies[step]}
-        </Animated.View>
-      </ScrollView>
-
-      <View style={[styles.footer, shadows.lg, { backgroundColor: colors.surface, borderTopColor: colors.border, padding: spacing.lg, gap: spacing.sm }]}>
-        {footerHint ? (
-          <View style={styles.inline}>
-            {step === 0 && serviceIds.length > 0 && qualified.length === 0 ? <Badge label="Can't combine" tone="warning" size="sm" /> : null}
-            <Text variant="caption" tone={step === 0 && serviceIds.length > 0 && qualified.length === 0 ? 'warning' : 'secondary'} style={styles.flex}>
-              {footerHint}
-            </Text>
-          </View>
-        ) : null}
-        <View style={styles.buttons}>
-          {step > 0 ? <Button title={t('common.back')} variant="outline" onPress={() => setStep(step - 1)} /> : null}
-          <Button
-            title={step === LAST_STEP ? t('booking.confirm') : t('common.next')}
-            rightIcon={step === LAST_STEP ? 'checkmark' : 'arrow-forward'}
-            disabled={!canContinue}
-            loading={submitting}
-            onPress={next}
-            style={styles.flex}
-            fullWidth
-          />
+      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <View style={[styles.capped, { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm }]}>
+          <Stepper steps={STEP_KEYS.map((key) => t(key))} current={step} />
         </View>
-      </View>
+
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          contentContainerStyle={[styles.capped, { padding: spacing.lg, paddingBottom: spacing.huge }]}
+        >
+          <Animated.View key={step} entering={FadeInRight.duration(220)}>
+            {bodies[step]}
+          </Animated.View>
+        </ScrollView>
+
+        <View style={[styles.footer, shadows.lg, { backgroundColor: colors.surface, borderTopColor: colors.border, padding: spacing.lg, gap: spacing.sm }]}>
+          <View style={[styles.capped, { gap: spacing.sm }]}>
+            {footerHint ? (
+              <View style={styles.inline}>
+                {step === 0 && serviceIds.length > 0 && qualified.length === 0 ? <Badge label="Can't combine" tone="warning" size="sm" /> : null}
+                <Text variant="caption" tone={step === 0 && serviceIds.length > 0 && qualified.length === 0 ? 'warning' : 'secondary'} style={styles.flex}>
+                  {footerHint}
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.buttons}>
+              {step > 0 ? <Button title={t('common.back')} variant="outline" onPress={() => setStep(step - 1)} /> : null}
+              <Button
+                title={step === LAST_STEP ? t('booking.confirm') : t('common.next')}
+                rightIcon={step === LAST_STEP ? 'checkmark' : 'arrow-forward'}
+                disabled={!canContinue}
+                loading={submitting}
+                onPress={next}
+                style={styles.flex}
+                fullWidth
+              />
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  capped: { width: '100%', maxWidth: 760, alignSelf: 'center' },
   flex: { flex: 1 },
   option: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5 },
   anyIcon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

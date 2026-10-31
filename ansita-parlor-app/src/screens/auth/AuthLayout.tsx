@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,35 +25,36 @@ export const AuthLayout = ({ title, subtitle, onBack, showLogo = false, children
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom', 'left', 'right']}>
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[styles.content, { padding: spacing.xxl, gap: spacing.xxl }]}
-          showsVerticalScrollIndicator={false}
-        >
-          {onBack ? (
-            <IconButton icon="arrow-back" accessibilityLabel="Go back" variant="soft" onPress={onBack} style={styles.back} />
-          ) : null}
+      {/* iOS keyboard handled by automaticallyAdjustKeyboardInsets; Android resizes the window. */}
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        contentContainerStyle={[styles.content, { padding: spacing.xxl, gap: spacing.xxl }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {onBack ? (
+          <IconButton icon="arrow-back" accessibilityLabel="Go back" variant="soft" onPress={onBack} style={styles.back} />
+        ) : null}
 
-          <Animated.View entering={FadeInDown.duration(400)} style={[showLogo && styles.centered, { gap: spacing.sm }]}>
-            {showLogo ? <BrandLogo size={76} style={{ marginBottom: spacing.md }} /> : null}
-            <Text variant="h1" align={showLogo ? 'center' : 'left'} accessibilityRole="header">
-              {title}
+        <Animated.View entering={FadeInDown.duration(400)} style={[showLogo && styles.centered, { gap: spacing.sm }]}>
+          {showLogo ? <BrandLogo size={76} style={{ marginBottom: spacing.md }} /> : null}
+          <Text variant="h1" align={showLogo ? 'center' : 'left'} accessibilityRole="header">
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text variant="body" tone="secondary" align={showLogo ? 'center' : 'left'}>
+              {subtitle}
             </Text>
-            {subtitle ? (
-              <Text variant="body" tone="secondary" align={showLogo ? 'center' : 'left'}>
-                {subtitle}
-              </Text>
-            ) : null}
-          </Animated.View>
+          ) : null}
+        </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(80).duration(400)} style={{ gap: spacing.lg }}>
-            {children}
-          </Animated.View>
+        <Animated.View entering={FadeInDown.delay(80).duration(400)} style={{ gap: spacing.lg }}>
+          {children}
+        </Animated.View>
 
-          {footer ? <View style={[styles.footer, { paddingTop: spacing.md }]}>{footer}</View> : null}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        {footer ? <View style={[styles.footer, { paddingTop: spacing.md }]}>{footer}</View> : null}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -79,7 +80,8 @@ export const FormErrorBanner = ({ message }: { message: string | null }) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { flexGrow: 1 },
+  // Forms read best at phone width; on tablets they are centred.
+  content: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center' },
   back: { alignSelf: 'flex-start' },
   centered: { alignItems: 'center', marginTop: 24 },
   footer: { marginTop: 'auto', alignItems: 'center' },

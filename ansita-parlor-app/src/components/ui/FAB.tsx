@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -58,7 +59,10 @@ export const FAB = ({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label ?? 'Add'}
-        onPress={onPress}
+        onPress={() => {
+          haptics.tap();
+          onPress();
+        }}
         onPressIn={() => {
           pressed.value = withTiming(0.94, { duration: 90 });
         }}

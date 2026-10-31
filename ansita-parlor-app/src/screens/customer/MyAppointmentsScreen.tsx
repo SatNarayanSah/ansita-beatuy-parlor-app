@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
 import { CancelAppointmentSheet, ReviewSheet } from '@/components/customer/AppointmentSheets';
-import { QueryState, Screen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
+import { ListScreen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
 import { serviceNames, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
@@ -76,11 +76,28 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
     navigation.navigate('Booking', { serviceIds: appointment.serviceIds, staffId: appointment.staffId });
 
   return (
-    <Screen refreshing={query.refreshing} onRefresh={() => void query.refetch()}>
-      <SegmentedControl options={options} value={tab} onChange={setTab} />
-
-      <QueryState
+    <>
+      <ListScreen
         query={query}
+        items={lists[tab]}
+        keyExtractor={(appointment) => appointment.id}
+        renderItem={(appointment) => {
+          const isUpcoming = tab === 'upcoming';
+          const review = query.data?.reviews.get(appointment.id) ?? null;
+          return (
+            <AppointmentCard
+              appointment={appointment}
+              services={services}
+              staff={staff}
+              review={review}
+              onReschedule={isUpcoming ? () => navigation.navigate('Reschedule', { appointmentId: appointment.id }) : undefined}
+              onCancel={isUpcoming ? () => setCancelling(appointment) : undefined}
+              onReview={appointment.status === 'completed' && !review ? () => setReviewing(appointment) : undefined}
+              onRebook={isUpcoming ? undefined : rebook(appointment)}
+            />
+          );
+        }}
+        header={<SegmentedControl options={options} value={tab} onChange={setTab} />}
         skeleton={
           <View style={{ gap: spacing.md }}>
             <SkeletonCard />
@@ -88,38 +105,14 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
             <SkeletonCard />
           </View>
         }
-        isEmpty={() => lists[tab].length === 0}
         empty={{
           ...EMPTY[tab],
           actionLabel: tab === 'cancelled' ? undefined : 'Book an appointment',
           onAction: tab === 'cancelled' ? undefined : () => navigation.navigate('Booking'),
         }}
-      >
-        {({ reviews }) => (
-          <View style={{ gap: spacing.md }}>
-            {lists[tab].map((appointment) => {
-              const isUpcoming = tab === 'upcoming';
-              const review = reviews.get(appointment.id) ?? null;
-              return (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  services={services}
-                  staff={staff}
-                  review={review}
-                  onReschedule={isUpcoming ? () => navigation.navigate('Reschedule', { appointmentId: appointment.id }) : undefined}
-                  onCancel={isUpcoming ? () => setCancelling(appointment) : undefined}
-                  onReview={appointment.status === 'completed' && !review ? () => setReviewing(appointment) : undefined}
-                  onRebook={isUpcoming ? undefined : rebook(appointment)}
-                />
-              );
-            })}
-          </View>
-        )}
-      </QueryState>
-
+      />
       <CancelAppointmentSheet appointment={cancelling} summary={summary(cancelling)} onClose={() => setCancelling(null)} />
       <ReviewSheet appointment={reviewing} summary={summary(reviewing)} onClose={() => setReviewing(null)} />
-    </Screen>
+    </>
   );
 };

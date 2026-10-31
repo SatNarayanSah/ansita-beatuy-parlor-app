@@ -20,6 +20,7 @@ import { appointmentService } from '@/services';
 import { useTheme } from '@/theme';
 import { formatDisplayDate, formatTimeRange } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
+import { haptics } from '@/utils/haptics';
 
 type Props = RootStackScreenProps<'BookingSuccess'>;
 
@@ -52,6 +53,7 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
   const burst = useSharedValue(0);
 
   useEffect(() => {
+    haptics.success();
     check.value = withSpring(1, { damping: 9, stiffness: 140 });
     ring.value = withDelay(120, withTiming(1, { duration: 700 }));
     burst.value = withDelay(200, withTiming(1, { duration: 900 }));

@@ -220,9 +220,16 @@ export const DashboardScreen = ({ navigation }: Props) => {
               <View style={{ gap: spacing.md }}>
                 <SectionHeader title="Still to come today" actionLabel="Calendar" onAction={() => navigation.navigate('Appointments', { view: 'day', date: today })} />
                 {view.upcomingToday.length === 0 ? (
-                  <Text variant="bodySmall" tone="muted">
-                    No more confirmed bookings today.
-                  </Text>
+                  <Card variant="outlined" padding="none">
+                    <EmptyState
+                      compact
+                      icon="cafe-outline"
+                      title="Nothing else today"
+                      message="No more confirmed bookings for today."
+                      actionLabel="Book a walk-in"
+                      onAction={() => navigation.navigate('AppointmentForm', { date: today })}
+                    />
+                  </Card>
                 ) : (
                   view.upcomingToday.slice(0, 5).map((appointment) => (
                     <AdminAppointmentRow

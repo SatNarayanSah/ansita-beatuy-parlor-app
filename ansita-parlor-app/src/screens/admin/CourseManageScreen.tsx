@@ -9,6 +9,7 @@ import {
   Card,
   ConfirmDialog,
   Divider,
+  EmptyState,
   ListItem,
   QueryState,
   Screen,
@@ -113,9 +114,16 @@ export const CourseManageScreen = ({ navigation, route }: Props) => {
               <View style={{ gap: spacing.md }}>
                 <SectionHeader title="Batches" actionLabel="Add batch" onAction={() => navigation.navigate('BatchForm', { courseId })} />
                 {availability.length === 0 ? (
-                  <Text variant="bodySmall" tone="muted">
-                    No batches yet.
-                  </Text>
+                  <Card variant="outlined" padding="none">
+                    <EmptyState
+                      compact
+                      icon="calendar-outline"
+                      title="No batches yet"
+                      message="Add a batch so students can enroll."
+                      actionLabel="Add batch"
+                      onAction={() => navigation.navigate('BatchForm', { courseId })}
+                    />
+                  </Card>
                 ) : (
                   availability.map(({ batch, seatsTaken, seatsLeft }) => {
                     const started = batch.startDate <= today;

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { ratingsByService, ServiceRow } from '@/components/customer/ServiceCards';
-import { FAB, FilterChips, QueryState, Screen, SearchBar, SkeletonListItem, Text, type FilterOption } from '@/components/ui';
+import { FAB, FilterChips, ListScreen, SearchBar, SkeletonListItem, Text, type FilterOption } from '@/components/ui';
+import { isIconName } from '@/components/ui/Icon';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
 import type { CustomerTabScreenProps } from '@/navigation/types';
@@ -10,7 +11,6 @@ import { catalogService, reviewService } from '@/services';
 import { useReviewStore, useServiceStore } from '@/store';
 import { useTheme } from '@/theme';
 import type { ID } from '@/types';
-import { isIconName } from '@/components/ui/Icon';
 
 type Props = CustomerTabScreenProps<'Book'>;
 
@@ -60,52 +60,47 @@ export const ServicesScreen = ({ navigation, route }: Props) => {
   const categoryMap = useMemo(() => new Map((data.data?.categories ?? []).map((c) => [c.id, c])), [data.data]);
 
   return (
-    <Screen
-      refreshing={data.refreshing}
-      onRefresh={() => void data.refetch()}
-      overlay={<FAB icon="calendar" label={t('booking.title')} onPress={() => navigation.navigate('Booking')} />}
-    >
-      <SearchBar value={query} onChangeText={setQuery} placeholder={t('services.search')} />
-      <FilterChips options={options} value={categoryId} onChange={setCategoryId} allLabel={t('services.all')} />
-
-      <QueryState
-        query={data}
-        skeleton={
-          <View style={{ gap: spacing.md }}>
-            {Array.from({ length: 6 }, (_, i) => (
-              <SkeletonListItem key={i} />
-            ))}
-          </View>
-        }
-        isEmpty={() => visible.length === 0}
-        empty={{
-          icon: 'search-outline',
-          title: 'No services found',
-          message: query ? `Nothing matches “${query}”. Try another word.` : 'No services in this category yet.',
-          actionLabel: 'Clear filters',
-          onAction: () => {
-            setQuery('');
-            setCategoryId(null);
-          },
-        }}
-      >
-        {({ ratings }) => (
-          <View style={{ gap: spacing.md }}>
+    <ListScreen
+      query={data}
+      items={visible}
+      keyExtractor={(service) => service.id}
+      renderItem={(service) => (
+        <ServiceRow
+          service={service}
+          category={categoryMap.get(service.categoryId)}
+          rating={data.data?.ratings.get(service.id)}
+          onPress={() => navigation.navigate('ServiceDetail', { serviceId: service.id })}
+        />
+      )}
+      header={
+        <>
+          <SearchBar value={query} onChangeText={setQuery} placeholder={t('services.search')} />
+          <FilterChips options={options} value={categoryId} onChange={setCategoryId} allLabel={t('services.all')} />
+          {data.data ? (
             <Text variant="caption" tone="muted">
               {visible.length} services
             </Text>
-            {visible.map((service) => (
-              <ServiceRow
-                key={service.id}
-                service={service}
-                category={categoryMap.get(service.categoryId)}
-                rating={ratings.get(service.id)}
-                onPress={() => navigation.navigate('ServiceDetail', { serviceId: service.id })}
-              />
-            ))}
-          </View>
-        )}
-      </QueryState>
-    </Screen>
+          ) : null}
+        </>
+      }
+      skeleton={
+        <View style={{ gap: spacing.md }}>
+          {Array.from({ length: 6 }, (_, i) => (
+            <SkeletonListItem key={i} />
+          ))}
+        </View>
+      }
+      empty={{
+        icon: 'search-outline',
+        title: 'No services found',
+        message: query ? `Nothing matches “${query}”. Try another word.` : 'No services in this category yet.',
+        actionLabel: 'Clear filters',
+        onAction: () => {
+          setQuery('');
+          setCategoryId(null);
+        },
+      }}
+      overlay={<FAB icon="calendar" label={t('booking.title')} onPress={() => navigation.navigate('Booking')} />}
+    />
   );
 };

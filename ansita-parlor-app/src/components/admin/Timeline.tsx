@@ -116,7 +116,9 @@ export const Timeline = ({ columns, start, end, customers, onPressAppointment, o
             <Pressable
               key={column.key}
               onPress={column.closed ? undefined : slotPress(column.key)}
-              accessibilityLabel={`${column.title} schedule`}
+              accessibilityRole={column.closed ? undefined : 'button'}
+              accessibilityLabel={`${column.title} schedule${column.closed ? `, ${column.closed}` : ''}`}
+              accessibilityHint={column.closed ? undefined : 'Tap an empty time to start a booking'}
               style={[
                 styles.column,
                 {

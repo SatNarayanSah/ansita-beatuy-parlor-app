@@ -8,6 +8,7 @@ import { PhotoSheet } from '@/components/customer/PhotoSheet';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Avatar, Button, DatePickerField, QueryState, Screen, SegmentedControl, SkeletonCard, Text, useToast, type SegmentOption } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { authService, customerService, getErrorMessage } from '@/services';
@@ -52,6 +53,7 @@ export const EditProfileScreen = ({ navigation }: Props) => {
     defaultValues: { name: '', email: '', phone: '', gender: 'female', dob: null, addressLine: '', city: '' },
     mode: 'onTouched',
   });
+  const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   // Fill the form once the profile has loaded.
   useEffect(() => {
@@ -82,6 +84,7 @@ export const EditProfileScreen = ({ navigation }: Props) => {
         address: { ...customer.address, line1: values.addressLine, city: values.city },
       });
       toast.success('Profile saved');
+      allowLeave();
       navigation.goBack();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -136,6 +139,7 @@ export const EditProfileScreen = ({ navigation }: Props) => {
         )}
       </QueryState>
       <PhotoSheet visible={photoOpen} hasPhoto={Boolean(user.avatar)} onClose={() => setPhotoOpen(false)} />
+      {dialog}
     </Screen>
   );
 };

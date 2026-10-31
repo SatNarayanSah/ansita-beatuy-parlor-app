@@ -4,6 +4,7 @@ import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme, type ThemeColors } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -48,6 +49,11 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const hide = useCallback(() => setToast(null), []);
 
   const show = useCallback((options: ToastOptions) => {
+    // Every toast doubles as feedback for the action that caused it.
+    const type = options.type ?? 'info';
+    if (type === 'success') haptics.success();
+    else if (type === 'error') haptics.error();
+    else if (type === 'warning') haptics.warning();
     nextId.current += 1;
     setToast({
       id: nextId.current,

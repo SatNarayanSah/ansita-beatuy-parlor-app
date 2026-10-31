@@ -1,9 +1,11 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card, Icon, isIconName, RatingStars, Text } from '@/components/ui';
 import { useTheme } from '@/theme';
 import type { Review, Service, ServiceCategory } from '@/types';
 import { formatCurrency, formatDuration, roundRating } from '@/utils/format';
+import { sameDataProps } from '@/utils/memo';
 
 export interface ServiceRating {
   average: number;
@@ -44,7 +46,7 @@ interface ServiceRowProps {
 }
 
 /** Full-width service card for lists. */
-export const ServiceRow = ({ service, category, rating, onPress, selected }: ServiceRowProps) => {
+const ServiceRowBase = ({ service, category, rating, onPress, selected }: ServiceRowProps) => {
   const { colors, spacing, radius } = useTheme();
   const selectable = selected !== undefined;
 
@@ -102,6 +104,8 @@ export const ServiceRow = ({ service, category, rating, onPress, selected }: Ser
     </Pressable>
   );
 };
+
+export const ServiceRow = memo(ServiceRowBase, sameDataProps);
 
 interface ServiceTileProps {
   service: Service;

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChipSelect, MultiChipSelect, SelectSheet } from '@/components/admin/Pickers';
+import { QuickCustomerForm } from '@/components/admin/QuickCustomerForm';
 import {
   Avatar,
   Button,
@@ -11,7 +12,6 @@ import {
   Icon,
   Input,
   ListItem,
-  PhoneInput,
   QueryState,
   Screen,
   SectionHeader,
@@ -25,8 +25,9 @@ import { isIconName } from '@/components/ui/Icon';
 import { useQualifiedStaff } from '@/hooks/useBookingAvailability';
 import { useCategoryMap, useCustomerMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
-import { appointmentService, customerService, getErrorMessage } from '@/services';
+import { appointmentService, getErrorMessage } from '@/services';
 import {
   ACTIVE_APPOINTMENT_STATUSES,
   selectHolidayOn,
@@ -40,7 +41,7 @@ import { useTheme } from '@/theme';
 import type { Customer, ID, ISODate, TimeString } from '@/types';
 import { addMinutesToTime, formatTime12, formatTimeRange, timeRangesOverlap, todayISO } from '@/utils/date';
 import { formatCurrency, formatDuration } from '@/utils/format';
-import { formatPhone, isValidPhone } from '@/utils/phone';
+import { formatPhone } from '@/utils/phone';
 
 type Props = RootStackScreenProps<'AppointmentForm'>;
 
@@ -71,7 +72,7 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
   const [notes, setNotes] = useState('');
   const [category, setCategory] = useState<ID | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [newCustomer, setNewCustomer] = useState<{ name: string; phone: string } | null>(null);
+  const [newCustomer, setNewCustomer] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -86,6 +87,13 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
     setTime(a.startTime);
     setNotes(a.notes);
   }, [existing.data]);
+
+  // Dirty when anything differs from how the form started (prefill or the booking being edited).
+  const original = existing.data;
+  const dirty = original
+    ? serviceIds.join(',') !== original.serviceIds.join(',') || staffId !== original.staffId || date !== original.date || time !== original.startTime || notes !== original.notes
+    : serviceIds.length > 0 || notes.trim() !== '' || (customerId !== null && customerId !== (params.customerId ?? null));
+  const { dialog, allowLeave } = useUnsavedChangesGuard(dirty && !saving);
 
   const qualified = useQualifiedStaff(serviceIds);
   const selected = serviceIds.map((id) => services.get(id)).filter((s) => s !== undefined);
@@ -130,28 +138,6 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
 
   const canSave = Boolean(customerId && serviceIds.length && staffMember && date && time && !holiday && !staffOff && clashes.length === 0);
 
-  const createCustomer = async (): Promise<void> => {
-    if (!newCustomer) return;
-    try {
-      const created = await customerService.createCustomer({
-        name: newCustomer.name,
-        phone: newCustomer.phone,
-        email: '',
-        gender: 'female',
-        dob: null,
-        address: { line1: '', line2: '', city: 'Kathmandu', province: 'Bagmati', postalCode: '' },
-        notes: '',
-        avatar: null,
-        tags: ['new'],
-      });
-      setCustomerId(created.id);
-      setNewCustomer(null);
-      setPickerOpen(false);
-      toast.success(`${created.name} added`);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  };
 
   const save = async (): Promise<void> => {
     if (!customerId || !staffId || !date || !time) return;
@@ -161,10 +147,12 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
       if (editingId) {
         await appointmentService.updateAppointment(editingId, { serviceIds, staffId, date, startTime: time, notes });
         toast.success('Appointment updated. The customer has been notified.');
+        allowLeave();
         navigation.goBack();
       } else {
         const created = await appointmentService.createAppointment({ customerId, serviceIds, staffId, date, startTime: time, notes });
         toast.success('Appointment booked and confirmed');
+        allowLeave();
         navigation.replace('AppointmentDetail', { appointmentId: created.id });
       }
     } catch (error) {
@@ -175,7 +163,6 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
   };
 
   const customer = customerId ? customers.get(customerId) : undefined;
-  const newCustomerValid = newCustomer !== null && newCustomer.name.trim().length >= 2 && isValidPhone(newCustomer.phone);
 
   return (
     <Screen>
@@ -299,7 +286,7 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
         visible={pickerOpen}
         onClose={() => {
           setPickerOpen(false);
-          setNewCustomer(null);
+          setNewCustomer(false);
         }}
         title="Customer"
         placeholder="Search name or phone"
@@ -323,20 +310,20 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
         )}
         header={
           newCustomer ? (
-            <Card variant="filled" style={{ gap: spacing.md }}>
-              <Text variant="label">New customer</Text>
-              <Input label="Full name" value={newCustomer.name} onChangeText={(name) => setNewCustomer({ ...newCustomer, name })} />
-              <PhoneInput value={newCustomer.phone} onChangeText={(phone) => setNewCustomer({ ...newCustomer, phone })} />
-              <View style={styles.row}>
-                <Button title="Cancel" variant="ghost" onPress={() => setNewCustomer(null)} />
-                <Button title="Add & select" disabled={!newCustomerValid} onPress={() => void createCustomer()} style={styles.flex} fullWidth />
-              </View>
-            </Card>
+            <QuickCustomerForm
+              onCreated={(created) => {
+                setCustomerId(created.id);
+                setNewCustomer(false);
+                setPickerOpen(false);
+              }}
+              onCancel={() => setNewCustomer(false)}
+            />
           ) : (
-            <Button title="New customer" leftIcon="person-add-outline" variant="outline" onPress={() => setNewCustomer({ name: '', phone: '' })} fullWidth />
+            <Button title="New customer" leftIcon="person-add-outline" variant="outline" onPress={() => setNewCustomer(true)} fullWidth />
           )
         }
       />
+      {dialog}
     </Screen>
   );
 };

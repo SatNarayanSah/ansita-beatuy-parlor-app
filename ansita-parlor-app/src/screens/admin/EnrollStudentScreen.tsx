@@ -1,9 +1,13 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
+import { z } from 'zod';
 
 import { ChipSelect, SelectSheet } from '@/components/admin/Pickers';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
-import { Avatar, Button, Card, Input, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
+import { FormInput } from '@/components/form/FormFields';
+import { Avatar, Button, Card, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useCustomerMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
@@ -13,6 +17,7 @@ import { useTheme } from '@/theme';
 import type { Customer, ID, PaymentMethod } from '@/types';
 import { formatShortDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
+import { optionalWholeNumberText } from '@/utils/formSchemas';
 import { formatPhone } from '@/utils/phone';
 
 type Props = RootStackScreenProps<'EnrollStudent'>;
@@ -28,7 +33,6 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
   const [studentId, setStudentId] = useState<ID | null>(route.params?.customerId ?? null);
   const [courseId, setCourseId] = useState<ID | null>(route.params?.courseId ?? null);
   const [batchId, setBatchId] = useState<ID | null>(null);
-  const [amount, setAmount] = useState('');
   const [method, setMethod] = useState<PaymentMethod>('cash');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,12 +48,20 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
     setBatchId(open[0]?.batch.id ?? null);
   }, [open]);
 
-  const paid = amount === '' ? 0 : Number(amount);
-  const amountError = course && paid > course.fee ? `Cannot exceed the fee (${formatCurrency(course.fee)})` : null;
+  // Optional first instalment, capped at the selected course's fee.
+  const schema = useMemo(() => z.object({ amount: optionalWholeNumberText('the amount', course?.fee ?? 0) }), [course?.fee]);
+  const { control, handleSubmit, reset } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { amount: '' },
+    mode: 'onChange',
+  });
+  useEffect(() => reset({ amount: '' }), [courseId, reset]);
+  const amountText = useWatch({ control, name: 'amount' });
+  const paid = /^\d+$/.test(amountText) ? Number(amountText) : 0;
   const student = studentId ? customers.get(studentId) : undefined;
-  const valid = Boolean(studentId && courseId && batchId) && amountError === null;
+  const valid = Boolean(studentId && courseId && batchId);
 
-  const save = async (): Promise<void> => {
+  const save = handleSubmit(async ({ amount }) => {
     if (!studentId || !courseId || !batchId) return;
     setSaving(true);
     try {
@@ -57,16 +69,16 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
         studentId,
         courseId,
         batchId,
-        initialPayment: paid > 0 ? { amount: paid, method } : undefined,
+        initialPayment: amount > 0 ? { amount, method } : undefined,
       });
-      toast.success(`${student?.name ?? 'Student'} enrolled${paid > 0 ? ` · ${formatCurrency(paid)} received` : ''}`);
+      toast.success(`${student?.name ?? 'Student'} enrolled${amount > 0 ? ` · ${formatCurrency(amount)} received` : ''}`);
       navigation.replace('EnrollmentDetail', { enrollmentId: enrollment.id });
     } catch (error) {
       toast.error(getErrorMessage(error));
     } finally {
       setSaving(false);
     }
-  };
+  });
 
   return (
     <Screen>
@@ -126,14 +138,13 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
                     {formatCurrency(course.fee)}
                   </Text>
                 </View>
-                <Input
+                <FormInput
+                  control={control}
+                  name="amount"
                   label="Paid now (optional)"
-                  value={amount}
-                  onChangeText={(text) => setAmount(text.replace(/\D/g, ''))}
                   keyboardType="number-pad"
                   leftIcon="cash-outline"
-                  error={amountError}
-                  helperText={paid > 0 && !amountError ? `${formatCurrency(course.fee - paid)} will remain due` : 'Without a payment the seat is reserved as "fee pending".'}
+                  helperText={paid > 0 && paid <= course.fee ? `${formatCurrency(course.fee - paid)} will remain due` : 'Without a payment the seat is reserved as "fee pending".'}
                 />
                 {paid > 0 ? <ChipSelect options={METHODS} value={method} onChange={setMethod} /> : null}
               </Card>

@@ -3,13 +3,13 @@ import { Linking, StyleSheet, View } from 'react-native';
 
 import { AdminAppointmentRow } from '@/components/admin/AdminAppointmentRow';
 import { MultiChipSelect } from '@/components/admin/Pickers';
+import { PointsAdjustSheet } from '@/components/admin/PointsAdjustSheet';
 import { EnrollmentCard } from '@/components/customer/EnrollmentCard';
 import {
   Avatar,
-  BottomSheet,
   Button,
   Card,
-  Chip,
+  EmptyState,
   ConfirmDialog,
   Input,
   QueryState,
@@ -45,7 +45,6 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
   const staff = useStaffMap();
   const courses = useCourseMap();
   const [pointsOpen, setPointsOpen] = useState(false);
-  const [pointsDelta, setPointsDelta] = useState('');
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -84,8 +83,6 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
     <Screen refreshing={query.refreshing} onRefresh={() => void query.refetch()}>
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ customer, stats, appointments, enrollments }) => {
-          const delta = Number(pointsDelta);
-          const validDelta = /^-?\d+$/.test(pointsDelta) && delta !== 0;
           return (
             <View style={{ gap: spacing.xl }}>
               <Card style={[styles.center, { gap: spacing.sm }]}>
@@ -117,10 +114,7 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
                   icon="diamond-outline"
                   tone="accent"
                   caption="Tap to adjust"
-                  onPress={() => {
-                    setPointsDelta('');
-                    setPointsOpen(true);
-                  }}
+                  onPress={() => setPointsOpen(true)}
                   style={styles.cell}
                 />
                 <StatCard label="Upcoming" value={stats.upcomingCount} icon="calendar-outline" tone="info" caption={`${stats.activeEnrollments} active course`} style={styles.cell} />
@@ -162,9 +156,16 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
               <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Visit history" subtitle={`${appointments.length} bookings`} compact />
                 {appointments.length === 0 ? (
-                  <Text variant="bodySmall" tone="muted">
-                    No bookings yet.
-                  </Text>
+                  <Card variant="outlined" padding="none">
+                    <EmptyState
+                      compact
+                      icon="calendar-clear-outline"
+                      title="No bookings yet"
+                      message="Book this customer's first visit."
+                      actionLabel="New booking"
+                      onAction={() => navigation.navigate('AppointmentForm', { customerId })}
+                    />
+                  </Card>
                 ) : (
                   appointments.slice(0, 15).map((appointment) => (
                     <AdminAppointmentRow
@@ -199,37 +200,7 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
                 <Button title="Delete customer" variant="ghost" onPress={() => setDeleteOpen(true)} style={styles.centerSelf} />
               </View>
 
-              <BottomSheet
-                visible={pointsOpen}
-                onClose={() => setPointsOpen(false)}
-                title="Adjust loyalty points"
-                subtitle={`Current balance: ${formatNumber(customer.loyaltyPoints)}`}
-                footer={
-                  <Button
-                    title={validDelta ? `${delta > 0 ? 'Add' : 'Deduct'} ${Math.abs(delta)} points` : 'Enter points'}
-                    disabled={!validDelta}
-                    loading={busy}
-                    onPress={() => void act(() => customerService.adjustLoyaltyPoints(customerId, delta), 'Points updated').then((ok) => ok && setPointsOpen(false))}
-                    style={styles.flex}
-                    fullWidth
-                  />
-                }
-              >
-                <View style={{ gap: spacing.md }}>
-                  <View style={styles.row}>
-                    {[-100, -50, 50, 100, 250].map((value) => (
-                      <Chip key={value} label={value > 0 ? `+${value}` : String(value)} selected={delta === value} onPress={() => setPointsDelta(String(value))} />
-                    ))}
-                  </View>
-                  <Input
-                    label="Points (use minus to deduct, e.g. -200 for a redemption)"
-                    value={pointsDelta}
-                    onChangeText={(text) => setPointsDelta(text.replace(/[^\d-]/g, ''))}
-                    keyboardType="numbers-and-punctuation"
-                    helperText={validDelta ? `New balance: ${formatNumber(Math.max(0, customer.loyaltyPoints + delta))}` : undefined}
-                  />
-                </View>
-              </BottomSheet>
+              <PointsAdjustSheet customer={customer} visible={pointsOpen} onClose={() => setPointsOpen(false)} />
 
               <ConfirmDialog
                 visible={deleteOpen}

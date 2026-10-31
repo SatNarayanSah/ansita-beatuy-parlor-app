@@ -7,6 +7,8 @@ export interface ApiConfig {
   simulateErrors: boolean;
   /** Probability (0-1) that a request fails when `simulateErrors` is on. */
   errorRate: number;
+  /** Demo "airplane mode": every request fails with a NETWORK error. */
+  offline: boolean;
 }
 
 const DEFAULT_CONFIG: ApiConfig = {
@@ -14,6 +16,7 @@ const DEFAULT_CONFIG: ApiConfig = {
   maxLatencyMs: 700,
   simulateErrors: false,
   errorRate: 0.2,
+  offline: false,
 };
 
 let currentConfig: ApiConfig = { ...DEFAULT_CONFIG };

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle 
 import { useTheme } from '@/theme';
 
 import { Icon } from './Icon';
+import { MAX_FONT_SCALE } from './Text';
 
 export interface SearchBarProps {
   value: string;
@@ -27,6 +28,7 @@ export const SearchBar = ({ value, onChangeText, placeholder = 'Search', onSubmi
     >
       <Icon name="search" size={18} color={colors.textMuted} />
       <TextInput
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

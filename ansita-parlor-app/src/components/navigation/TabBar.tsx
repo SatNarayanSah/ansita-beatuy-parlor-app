@@ -5,7 +5,9 @@ import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withSprin
 
 import { CountBadge } from '@/components/ui/Badge';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { MAX_FONT_SCALE } from '@/components/ui/Text';
 import { useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 /** `tabBarIcon` helper: outline glyph when idle, filled when active. */
 export const tabIcon =
@@ -63,7 +65,7 @@ const TabItem = ({ label, focused, options, onPress, onLongPress }: TabItemProps
           </View>
         ) : null}
       </View>
-      <Animated.Text numberOfLines={1} style={[typography.caption, styles.label, focused && { fontFamily: typography.label.fontFamily }, labelStyle]}>
+      <Animated.Text numberOfLines={1} maxFontSizeMultiplier={MAX_FONT_SCALE} style={[typography.caption, styles.label, focused && { fontFamily: typography.label.fontFamily }, labelStyle]}>
         {label}
       </Animated.Text>
     </Pressable>
@@ -97,7 +99,10 @@ export const TabBar = ({ state, descriptors, navigation, insets }: BottomTabBarP
 
         const onPress = (): void => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+          if (!focused && !event.defaultPrevented) {
+            haptics.selection();
+            navigation.navigate(route.name, route.params);
+          }
         };
         const onLongPress = (): void => {
           navigation.emit({ type: 'tabLongPress', target: route.key });

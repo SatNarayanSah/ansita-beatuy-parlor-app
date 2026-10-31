@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, StatusPill, Text } from '@/components/ui';
@@ -6,6 +7,7 @@ import { useTheme } from '@/theme';
 import type { Appointment, Customer, ID, Service, Staff } from '@/types';
 import { formatTime12 } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
+import { sameDataProps } from '@/utils/memo';
 
 interface AdminAppointmentRowProps {
   appointment: Appointment;
@@ -20,7 +22,7 @@ interface AdminAppointmentRowProps {
 }
 
 /** Compact booking row: time, customer, services, stylist, status. */
-export const AdminAppointmentRow = ({ appointment, customer, services, staff, onPress, onConfirm, confirming, showDate }: AdminAppointmentRowProps) => {
+const AdminAppointmentRowBase = ({ appointment, customer, services, staff, onPress, onConfirm, confirming, showDate }: AdminAppointmentRowProps) => {
   const { colors, radius, spacing } = useTheme();
   const status = colors.status[appointment.status];
 
@@ -65,6 +67,8 @@ export const AdminAppointmentRow = ({ appointment, customer, services, staff, on
     </Pressable>
   );
 };
+
+export const AdminAppointmentRow = memo(AdminAppointmentRowBase, sameDataProps);
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', borderLeftWidth: 4 },

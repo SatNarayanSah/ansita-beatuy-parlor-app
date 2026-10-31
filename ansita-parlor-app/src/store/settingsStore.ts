@@ -24,6 +24,7 @@ interface SettingsData {
   hasSeenOnboarding: boolean;
   language: Language;
   preferences: CustomerPreferences;
+  hapticsEnabled: boolean;
 }
 
 interface SettingsActions {
@@ -31,6 +32,7 @@ interface SettingsActions {
   setHasSeenOnboarding: (seen: boolean) => void;
   setLanguage: (language: Language) => void;
   updatePreferences: (patch: Partial<CustomerPreferences>) => void;
+  setHapticsEnabled: (enabled: boolean) => void;
 }
 
 export type SettingsState = SettingsData & SettingsActions;
@@ -40,6 +42,7 @@ const createInitialData = (): SettingsData => ({
   hasSeenOnboarding: false,
   language: 'en',
   preferences: { favoriteStaffId: null, paymentMethod: 'cash', reminder: '1d', offerAlerts: true },
+  hapticsEnabled: true,
 });
 
 /**
@@ -54,17 +57,19 @@ export const useSettingsStore = create<SettingsState>()(
       setHasSeenOnboarding: (hasSeenOnboarding) => set({ hasSeenOnboarding }),
       setLanguage: (language) => set({ language }),
       updatePreferences: (patch) => set((state) => ({ preferences: { ...state.preferences, ...patch } })),
+      setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
     }),
     {
       name: 'ansita/settings',
       storage: persistStorage,
       version: STORE_VERSION,
       migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ themeMode, hasSeenOnboarding, language, preferences }): SettingsData => ({
+      partialize: ({ themeMode, hasSeenOnboarding, language, preferences, hapticsEnabled }): SettingsData => ({
         themeMode,
         hasSeenOnboarding,
         language,
         preferences,
+        hapticsEnabled,
       }),
     },
   ),

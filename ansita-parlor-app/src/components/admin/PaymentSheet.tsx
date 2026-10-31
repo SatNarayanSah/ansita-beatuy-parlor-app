@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useMemo } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { View } from 'react-native';
+import type { z } from 'zod';
 
+import { FormInput } from '@/components/form/FormFields';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
-import { BottomSheet, Button, Input, Text } from '@/components/ui';
+import { BottomSheet, Button, Text } from '@/components/ui';
 import { useTheme } from '@/theme';
 import type { PaymentMethod } from '@/types';
 import { formatCurrency } from '@/utils/format';
+import { paymentSchema } from '@/utils/formSchemas';
 
 import { ChipSelect } from './Pickers';
 
@@ -26,6 +31,7 @@ interface PaymentSheetProps {
   onSkip?: () => void;
   submitLabel?: string;
   loading?: boolean;
+  /** Server error from the last submit. */
   error?: string | null;
   onSubmit: (amount: number, method: PaymentMethod) => void;
   onClose: () => void;
@@ -47,18 +53,21 @@ export const PaymentSheet = ({
   onClose,
 }: PaymentSheetProps) => {
   const { spacing } = useTheme();
-  const [amount, setAmount] = useState(String(due));
-  const [method, setMethod] = useState<PaymentMethod>(defaultMethod ?? 'cash');
+  const schema = useMemo(() => paymentSchema(due), [due]);
+  const { control, handleSubmit, reset } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { amount: String(due), method: defaultMethod ?? 'cash' },
+    mode: 'onChange',
+  });
+  const amountText = useWatch({ control, name: 'amount' });
 
   useEffect(() => {
-    if (visible) {
-      setAmount(String(due));
-      setMethod(defaultMethod ?? 'cash');
-    }
-  }, [visible, due, defaultMethod]);
+    if (visible) reset({ amount: String(due), method: defaultMethod ?? 'cash' });
+  }, [visible, due, defaultMethod, reset]);
 
-  const value = Number(amount);
-  const invalid = !/^\d+$/.test(amount) || value <= 0 || value > due;
+  const submit = handleSubmit(({ amount, method }) => onSubmit(amount, method));
+  const amount = Number(amountText);
+  const remaining = Number.isFinite(amount) && amount > 0 && amount < due ? due - amount : 0;
 
   return (
     <BottomSheet
@@ -69,7 +78,7 @@ export const PaymentSheet = ({
       footer={
         <>
           {onSkip ? <Button title={skipLabel ?? 'Skip'} variant="outline" onPress={onSkip} disabled={loading} style={{ flex: 1 }} fullWidth /> : null}
-          <Button title={submitLabel} loading={loading} disabled={invalid} onPress={() => onSubmit(value, method)} style={{ flex: 1 }} fullWidth />
+          <Button title={submitLabel} loading={loading} onPress={() => void submit()} style={{ flex: 1 }} fullWidth />
         </>
       }
     >
@@ -77,23 +86,30 @@ export const PaymentSheet = ({
         <Text variant="bodySmall" tone="secondary">
           Balance due: <Text variant="label">{formatCurrency(due)}</Text>
         </Text>
-        <Input
+        <FormInput
+          control={control}
+          name="amount"
           label="Amount received (Rs.)"
-          value={amount}
-          onChangeText={(text) => setAmount(text.replace(/\D/g, ''))}
           keyboardType="number-pad"
           leftIcon="cash-outline"
-          error={amount !== '' && value > due ? `Cannot exceed ${formatCurrency(due)}` : null}
-          helperText={value > 0 && value < due ? `${formatCurrency(due - value)} will remain due` : undefined}
+          helperText={remaining > 0 ? `${formatCurrency(remaining)} will remain due` : undefined}
+          returnKeyType="done"
+          onSubmitEditing={() => void submit()}
         />
-        <View style={{ gap: spacing.sm }}>
-          <Text variant="label" tone="secondary">
-            Method
-          </Text>
-          <ChipSelect options={METHOD_OPTIONS} value={method} onChange={setMethod} />
-        </View>
+        <Controller
+          control={control}
+          name="method"
+          render={({ field }) => (
+            <View style={{ gap: spacing.sm }}>
+              <Text variant="label" tone="secondary">
+                Method
+              </Text>
+              <ChipSelect options={METHOD_OPTIONS} value={field.value} onChange={field.onChange} />
+            </View>
+          )}
+        />
         {error ? (
-          <Text variant="bodySmall" tone="danger">
+          <Text variant="bodySmall" tone="danger" accessibilityLiveRegion="polite">
             {error}
           </Text>
         ) : null}

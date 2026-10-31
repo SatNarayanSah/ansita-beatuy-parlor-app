@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -49,7 +50,10 @@ export const RatingStars = ({ value, max = 5, size = 18, onChange, showValue = f
         return interactive ? (
           <Pressable
             key={position}
-            onPress={() => onChange(position)}
+            onPress={() => {
+              haptics.selection();
+              onChange(position);
+            }}
             hitSlop={6}
             importantForAccessibility="no"
             style={({ pressed }) => pressed && styles.pressed}

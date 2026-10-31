@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Card, Icon, RatingStars, StatusPill, Text } from '@/components/ui';
@@ -8,6 +9,7 @@ import { useTheme } from '@/theme';
 import type { Appointment, ID, Review, Service, Staff } from '@/types';
 import { formatTimeRange, parseISODate } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
+import { sameDataProps } from '@/utils/memo';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -22,7 +24,7 @@ interface AppointmentCardProps {
 }
 
 /** Booking summary with a date block, status and the actions that apply to its state. */
-export const AppointmentCard = ({ appointment, services, staff, review, onReschedule, onCancel, onRebook, onReview }: AppointmentCardProps) => {
+const AppointmentCardBase = ({ appointment, services, staff, review, onReschedule, onCancel, onRebook, onReview }: AppointmentCardProps) => {
   const { colors, radius, spacing } = useTheme();
   const t = useT();
   const date = parseISODate(appointment.date);
@@ -98,6 +100,8 @@ export const AppointmentCard = ({ appointment, services, staff, review, onResche
     </Card>
   );
 };
+
+export const AppointmentCard = memo(AppointmentCardBase, sameDataProps);
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },

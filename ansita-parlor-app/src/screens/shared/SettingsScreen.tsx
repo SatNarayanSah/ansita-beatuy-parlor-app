@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 
 import { SignOutItem } from '@/components/layout/SignOutItem';
 import {
@@ -16,8 +16,9 @@ import {
   useToast,
   type SegmentOption,
 } from '@/components/ui';
+import { useApiConfig } from '@/hooks/useApiConfig';
 import type { RootStackScreenProps } from '@/navigation/types';
-import { authService, demoService, getErrorMessage } from '@/services';
+import { authService, configureApi, demoService, getErrorMessage } from '@/services';
 import { selectCurrentUser, useAuthStore, useSettingsStore } from '@/store';
 import { useTheme } from '@/theme';
 import type { UserRole } from '@/types';
@@ -31,7 +32,10 @@ type Props = RootStackScreenProps<'Settings'>;
 
 /** Appearance, demo tools (role switcher, data reset) and account. Shared by both roles. */
 export const SettingsScreen = ({ navigation }: Props) => {
-  const { spacing } = useTheme();
+  const { colors, spacing } = useTheme();
+  const { offline } = useApiConfig();
+  const hapticsEnabled = useSettingsStore((state) => state.hapticsEnabled);
+  const setHapticsEnabled = useSettingsStore((state) => state.setHapticsEnabled);
   const toast = useToast();
   const user = useAuthStore(selectCurrentUser);
   const setHasSeenOnboarding = useSettingsStore((state) => state.setHasSeenOnboarding);
@@ -69,6 +73,22 @@ export const SettingsScreen = ({ navigation }: Props) => {
             Choose a theme, or follow your phone's setting.
           </Text>
           <ThemeModeSelector />
+          <ListItem
+            title="Haptic feedback"
+            subtitle="Gentle vibrations on taps and confirmations"
+            leftIcon="phone-portrait-outline"
+            leftIconTone="neutral"
+            compact
+            right={
+              <Switch
+                value={hapticsEnabled}
+                onValueChange={setHapticsEnabled}
+                trackColor={{ true: colors.primary, false: colors.borderStrong }}
+                thumbColor={colors.surface}
+                accessibilityLabel="Haptic feedback"
+              />
+            }
+          />
         </Card>
       </View>
 
@@ -104,6 +124,24 @@ export const SettingsScreen = ({ navigation }: Props) => {
           />
         </Card>
         <Card padding="sm">
+          <ListItem
+            title="Simulate offline"
+            subtitle="Every request fails, to show error states"
+            leftIcon="cloud-offline-outline"
+            leftIconTone="danger"
+            right={
+              <Switch
+                value={offline}
+                onValueChange={(value) => {
+                  configureApi({ offline: value });
+                }}
+                trackColor={{ true: colors.primary, false: colors.borderStrong }}
+                thumbColor={colors.surface}
+                accessibilityLabel="Simulate offline"
+              />
+            }
+          />
+          <Divider inset={56} />
           <ListItem
             title="Reset demo data"
             subtitle="Restore fresh sample bookings, customers and courses"

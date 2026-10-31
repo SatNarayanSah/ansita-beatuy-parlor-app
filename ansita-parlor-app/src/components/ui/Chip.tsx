@@ -1,6 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/theme';
+import { haptics } from '@/utils/haptics';
 
 import { Icon, type IconName } from './Icon';
 import { Text } from './Text';
@@ -27,8 +28,16 @@ export const Chip = ({ label, selected = false, onPress, icon, count, onRemove, 
       accessibilityRole={onPress ? 'button' : 'text'}
       accessibilityState={{ selected, disabled }}
       accessibilityLabel={count !== undefined ? `${label}, ${count}` : label}
-      onPress={onPress}
+      onPress={
+        onPress
+          ? () => {
+              haptics.selection();
+              onPress();
+            }
+          : undefined
+      }
       disabled={disabled || !onPress}
+      hitSlop={4}
       style={({ pressed }) => [
         styles.chip,
         {

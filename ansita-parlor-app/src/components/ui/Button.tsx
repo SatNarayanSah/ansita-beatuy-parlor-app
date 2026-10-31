@@ -84,6 +84,8 @@ export const Button = ({
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         disabled={inactive}
+        // Small buttons are 36pt tall; extend the touch area to the 44pt minimum.
+        hitSlop={dimensions.height < 44 ? (44 - dimensions.height) / 2 : undefined}
         style={({ pressed }) => [
           styles.base,
           {

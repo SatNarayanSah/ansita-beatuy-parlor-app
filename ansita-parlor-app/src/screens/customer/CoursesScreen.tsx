@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { CourseCard } from '@/components/customer/CourseCards';
 import { EnrollmentCard } from '@/components/customer/EnrollmentCard';
-import { QueryState, Screen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
+import { Appear, QueryState, Screen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
 import { useCourseMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
@@ -67,14 +67,15 @@ export const CoursesScreen = ({ navigation, route }: Props) => {
         >
           {(list) => (
             <View style={{ gap: spacing.md }}>
-              {list.map(({ course, availability }) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  availability={availability}
-                  instructorName={staff.get(course.instructor)?.name}
-                  onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
-                />
+              {list.map(({ course, availability }, index) => (
+                <Appear key={course.id} index={index}>
+                  <CourseCard
+                    course={course}
+                    availability={availability}
+                    instructorName={staff.get(course.instructor)?.name}
+                    onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
+                  />
+                </Appear>
               ))}
             </View>
           )}
@@ -94,13 +95,14 @@ export const CoursesScreen = ({ navigation, route }: Props) => {
         >
           {(list) => (
             <View style={{ gap: spacing.md }}>
-              {list.map((enrollment) => (
-                <EnrollmentCard
-                  key={enrollment.id}
-                  enrollment={enrollment}
-                  course={courseMap.get(enrollment.courseId)}
-                  onPress={() => navigation.navigate('CourseDetail', { courseId: enrollment.courseId })}
-                />
+              {list.map((enrollment, index) => (
+                <Appear key={enrollment.id} index={index}>
+                  <EnrollmentCard
+                    enrollment={enrollment}
+                    course={courseMap.get(enrollment.courseId)}
+                    onPress={() => navigation.navigate('CourseDetail', { courseId: enrollment.courseId })}
+                  />
+                </Appear>
               ))}
             </View>
           )}

@@ -13,6 +13,7 @@ import {
 import { useTheme } from '@/theme';
 
 import { FieldWrapper } from './FieldWrapper';
+import { MAX_FONT_SCALE } from './Text';
 import { Icon, type IconName } from './Icon';
 
 export interface InputProps extends Omit<TextInputProps, 'style' | 'editable'> {
@@ -94,6 +95,7 @@ export const Input = ({
         {leftIcon ? <Icon name={leftIcon} size={18} color={focused ? colors.primary : colors.textMuted} /> : null}
         <TextInput
           ref={ref}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
           {...inputProps}
           value={value}
           maxLength={maxLength}
