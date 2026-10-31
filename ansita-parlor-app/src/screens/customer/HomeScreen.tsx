@@ -38,6 +38,7 @@ import {
   selectUpcomingAppointments,
   useAppointmentStore,
   useAuthStore,
+  useBusinessStore,
   useCustomerStore,
   useNotificationStore,
   useOfferStore,
@@ -72,6 +73,7 @@ export const HomeScreen = ({ navigation }: Props) => {
   const categories = useCategoryMap();
   const staff = useStaffMap();
   const customerId = user?.customerId ?? '';
+  const loyalty = useBusinessStore((state) => state.loyalty);
 
   // One parallel fetch so the whole screen has a single loading state.
   const query = useServiceQuery(
@@ -137,7 +139,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                   {formatNumber(data.customer.loyaltyPoints)}
                 </Text>
                 <Text variant="caption" color={colors.onAccent} style={styles.dim}>
-                  1 point for every Rs. 100 · Tap for history
+                  {loyalty.enabled ? `1 point for every Rs. ${loyalty.rupeesPerPoint}` : 'Programme paused'} · Tap for history
                 </Text>
               </View>
               <Icon name="diamond" size={44} color={colors.highlight} />

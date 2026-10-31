@@ -7,26 +7,31 @@ import { appointmentService, reviewService } from '@/services';
 import { useTheme } from '@/theme';
 import type { Appointment, ReviewRating } from '@/types';
 
-const CANCEL_REASONS = ['Change of plans', 'Feeling unwell', 'Booked by mistake', 'Found another time', 'Other'] as const;
+const CUSTOMER_REASONS: readonly string[] = ['Change of plans', 'Feeling unwell', 'Booked by mistake', 'Found another time', 'Other'];
+
+/** Reasons offered when the parlour cancels. */
+export const ADMIN_CANCEL_REASONS: readonly string[] = ['Customer called to cancel', 'Stylist unavailable', 'Double booking', 'Parlour closed', 'Other'];
 
 interface CancelSheetProps {
   appointment: Appointment | null;
   /** e.g. "Hair Spa on Sat, 2 Nov at 11:00 AM" */
   summary: string;
   onClose: () => void;
+  /** Defaults to customer-facing reasons; "Other" should be last. */
+  reasons?: readonly string[];
 }
 
-/** Cancel confirmation with a reason, sent to the parlour. */
-export const CancelAppointmentSheet = ({ appointment, summary, onClose }: CancelSheetProps) => {
+/** Cancel confirmation with a reason. The other side is notified. */
+export const CancelAppointmentSheet = ({ appointment, summary, onClose, reasons = CUSTOMER_REASONS }: CancelSheetProps) => {
   const { spacing } = useTheme();
   const toast = useToast();
-  const [reason, setReason] = useState<string>(CANCEL_REASONS[0]);
+  const [reason, setReason] = useState<string>(reasons[0] ?? 'Other');
   const [details, setDetails] = useState('');
   const cancel = useAsyncAction(appointmentService.updateStatus);
 
   useEffect(() => {
     if (appointment) {
-      setReason(CANCEL_REASONS[0]);
+      setReason(reasons[0] ?? 'Other');
       setDetails('');
       cancel.reset();
     }
@@ -58,10 +63,10 @@ export const CancelAppointmentSheet = ({ appointment, summary, onClose }: Cancel
     >
       <View style={{ gap: spacing.lg }}>
         <Text variant="label" tone="secondary">
-          Why are you cancelling?
+          Reason for cancelling
         </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-          {CANCEL_REASONS.map((item) => (
+          {reasons.map((item) => (
             <Chip key={item} label={item} selected={reason === item} onPress={() => setReason(item)} />
           ))}
         </View>

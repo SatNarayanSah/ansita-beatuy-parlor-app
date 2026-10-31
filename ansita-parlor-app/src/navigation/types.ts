@@ -2,7 +2,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { ID } from '@/types';
+import type { AppointmentStatus, ID, ISODate, TimeString } from '@/types';
 
 /** Root stack. Guest and signed-in screens are mutually exclusive groups. */
 export type RootStackParamList = {
@@ -32,16 +32,40 @@ export type RootStackParamList = {
   Preferences: undefined;
   LoyaltyHistory: undefined;
   HelpContact: undefined;
+  // Admin
+  AppointmentDetail: { appointmentId: ID };
+  /** New booking (optionally prefilled) or, with `appointmentId`, edit/reschedule. */
+  AppointmentForm: { appointmentId?: ID; customerId?: ID; staffId?: ID; date?: ISODate; time?: TimeString } | undefined;
+  CustomerDetail: { customerId: ID };
+  CustomerForm: { customerId?: ID } | undefined;
+  ManageServices: undefined;
+  ServiceForm: { serviceId?: ID; categoryId?: ID } | undefined;
+  CategoryForm: { categoryId?: ID } | undefined;
+  StaffList: undefined;
+  StaffDetail: { staffId: ID };
+  StaffForm: { staffId?: ID } | undefined;
+  CourseManage: { courseId: ID };
+  CourseForm: { courseId?: ID } | undefined;
+  BatchForm: { courseId: ID; batchId?: ID };
+  BatchAttendance: { courseId: ID; batchId: ID };
+  EnrollmentDetail: { enrollmentId: ID };
+  EnrollStudent: { courseId?: ID; customerId?: ID } | undefined;
+  Reports: undefined;
+  BusinessSettings: undefined;
 };
 
 export type AppointmentsTab = 'upcoming' | 'past' | 'cancelled';
 export type CoursesView = 'all' | 'mine';
 
+export type AppointmentsView = 'day' | 'week' | 'list';
+export type TrainingView = 'courses' | 'students' | 'dues';
+
 export type AdminTabParamList = {
   Dashboard: undefined;
-  Appointments: undefined;
+  /** `status` opens the list filtered, e.g. pending approvals. */
+  Appointments: { view?: AppointmentsView; date?: ISODate; status?: AppointmentStatus } | undefined;
   Customers: undefined;
-  Training: undefined;
+  Training: { view?: TrainingView } | undefined;
   More: undefined;
 };
 

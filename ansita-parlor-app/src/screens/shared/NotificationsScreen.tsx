@@ -102,8 +102,25 @@ export const NotificationsScreen = ({ navigation }: Props) => {
   const open = (notification: Notification): void => {
     if (!notification.isRead) void notificationService.markAsRead(notification.id).catch(() => undefined);
     const link = notification.link;
-    // Admin screens for these links arrive in a later phase.
-    if (!link || user?.role !== 'customer') return;
+    if (!link) return;
+    if (user?.role === 'admin') {
+      switch (link.kind) {
+        case 'appointment':
+          navigation.navigate('AppointmentDetail', { appointmentId: link.id });
+          return;
+        case 'enrollment':
+          navigation.navigate('EnrollmentDetail', { enrollmentId: link.id });
+          return;
+        case 'customer':
+          navigation.navigate('CustomerDetail', { customerId: link.id });
+          return;
+        case 'course':
+          navigation.navigate('CourseManage', { courseId: link.id });
+          return;
+        case 'offer':
+          return;
+      }
+    }
     switch (link.kind) {
       case 'appointment':
         navigation.navigate('CustomerTabs', { screen: 'MyAppointments' });

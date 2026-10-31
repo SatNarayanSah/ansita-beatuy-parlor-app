@@ -3,6 +3,24 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 
 import { useT } from '@/i18n';
+import { AppointmentDetailScreen } from '@/screens/admin/AppointmentDetailScreen';
+import { AppointmentFormScreen } from '@/screens/admin/AppointmentFormScreen';
+import { BatchAttendanceScreen } from '@/screens/admin/BatchAttendanceScreen';
+import { BatchFormScreen } from '@/screens/admin/BatchFormScreen';
+import { BusinessSettingsScreen } from '@/screens/admin/BusinessSettingsScreen';
+import { CategoryFormScreen } from '@/screens/admin/CategoryFormScreen';
+import { CourseFormScreen } from '@/screens/admin/CourseFormScreen';
+import { CourseManageScreen } from '@/screens/admin/CourseManageScreen';
+import { CustomerDetailScreen } from '@/screens/admin/CustomerDetailScreen';
+import { CustomerFormScreen } from '@/screens/admin/CustomerFormScreen';
+import { EnrollmentDetailScreen } from '@/screens/admin/EnrollmentDetailScreen';
+import { EnrollStudentScreen } from '@/screens/admin/EnrollStudentScreen';
+import { ManageServicesScreen } from '@/screens/admin/ManageServicesScreen';
+import { ReportsScreen } from '@/screens/admin/ReportsScreen';
+import { ServiceFormScreen } from '@/screens/admin/ServiceFormScreen';
+import { StaffDetailScreen } from '@/screens/admin/StaffDetailScreen';
+import { StaffFormScreen } from '@/screens/admin/StaffFormScreen';
+import { StaffListScreen } from '@/screens/admin/StaffListScreen';
 import { ForgotPasswordScreen } from '@/screens/auth/ForgotPasswordScreen';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
 import { OnboardingScreen } from '@/screens/auth/OnboardingScreen';
@@ -67,7 +85,35 @@ export const RootNavigator = () => {
         ) : (
           <Stack.Group navigationKey={user.id}>
             {user.role === 'admin' ? (
-              <Stack.Screen name="AdminTabs" component={AdminTabs} options={{ headerShown: false, animation: 'fade' }} />
+              <>
+                <Stack.Screen name="AdminTabs" component={AdminTabs} options={{ headerShown: false, animation: 'fade' }} />
+                <Stack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} options={{ title: 'Appointment' }} />
+                <Stack.Screen
+                  name="AppointmentForm"
+                  component={AppointmentFormScreen}
+                  options={({ route }) => ({ title: route.params?.appointmentId ? 'Edit appointment' : 'New appointment' })}
+                />
+                <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} options={{ title: 'Customer' }} />
+                <Stack.Screen
+                  name="CustomerForm"
+                  component={CustomerFormScreen}
+                  options={({ route }) => ({ title: route.params?.customerId ? 'Edit customer' : 'New customer' })}
+                />
+                <Stack.Screen name="ManageServices" component={ManageServicesScreen} options={{ title: 'Services & prices' }} />
+                <Stack.Screen name="ServiceForm" component={ServiceFormScreen} options={({ route }) => ({ title: route.params?.serviceId ? 'Edit service' : 'New service' })} />
+                <Stack.Screen name="CategoryForm" component={CategoryFormScreen} options={({ route }) => ({ title: route.params?.categoryId ? 'Edit category' : 'New category' })} />
+                <Stack.Screen name="StaffList" component={StaffListScreen} options={{ title: 'Staff' }} />
+                <Stack.Screen name="StaffDetail" component={StaffDetailScreen} options={{ title: 'Staff member' }} />
+                <Stack.Screen name="StaffForm" component={StaffFormScreen} options={({ route }) => ({ title: route.params?.staffId ? 'Edit staff' : 'New staff member' })} />
+                <Stack.Screen name="CourseManage" component={CourseManageScreen} options={{ title: 'Course' }} />
+                <Stack.Screen name="CourseForm" component={CourseFormScreen} options={({ route }) => ({ title: route.params?.courseId ? 'Edit course' : 'New course' })} />
+                <Stack.Screen name="BatchForm" component={BatchFormScreen} options={({ route }) => ({ title: route.params.batchId ? 'Edit batch' : 'New batch' })} />
+                <Stack.Screen name="BatchAttendance" component={BatchAttendanceScreen} options={{ title: 'Attendance' }} />
+                <Stack.Screen name="EnrollmentDetail" component={EnrollmentDetailScreen} options={{ title: 'Enrollment' }} />
+                <Stack.Screen name="EnrollStudent" component={EnrollStudentScreen} options={{ title: 'Enroll student' }} />
+                <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reports' }} />
+                <Stack.Screen name="BusinessSettings" component={BusinessSettingsScreen} options={{ title: 'Business settings' }} />
+              </>
             ) : (
               <>
                 <Stack.Screen name="CustomerTabs" component={CustomerTabs} options={{ headerShown: false, animation: 'fade' }} />

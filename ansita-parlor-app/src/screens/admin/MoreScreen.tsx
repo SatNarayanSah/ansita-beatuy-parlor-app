@@ -1,69 +1,75 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
 import { SignOutItem } from '@/components/layout/SignOutItem';
-import { Card, Divider, ListItem, Screen, SectionHeader, useToast, type IconName } from '@/components/ui';
-import type { AdminTabScreenProps } from '@/navigation/types';
-import type { Tone } from '@/theme';
-import { useTheme } from '@/theme';
+import { Card, CountBadge, Divider, ListItem, Screen, SectionHeader, type IconName } from '@/components/ui';
+import type { AdminTabScreenProps, RootStackParamList } from '@/navigation/types';
+import { selectCurrentUser, selectUnreadCount, useAuthStore, useNotificationStore } from '@/store';
+import { useTheme, type Tone } from '@/theme';
 
 type Props = AdminTabScreenProps<'More'>;
 
-interface ManageItem {
+type MoreRoute = 'ManageServices' | 'StaffList' | 'Reports' | 'BusinessSettings' | 'Notifications' | 'Settings';
+
+interface MenuItem {
   title: string;
   subtitle: string;
   icon: IconName;
   tone: Tone;
+  route: MoreRoute & keyof RootStackParamList;
 }
 
-/** Management areas that don't get their own tab. Screens arrive in later phases. */
-const MANAGE_ITEMS: readonly ManageItem[] = [
-  { title: 'Services & prices', subtitle: 'Categories, durations and prices', icon: 'pricetags-outline', tone: 'primary' },
-  { title: 'Staff', subtitle: 'Team, specialties and working hours', icon: 'people-circle-outline', tone: 'accent' },
-  { title: 'Offers', subtitle: 'Promotions and promo codes', icon: 'gift-outline', tone: 'highlight' },
-  { title: 'Reviews', subtitle: 'Customer feedback and replies', icon: 'star-outline', tone: 'warning' },
-  { title: 'Reports', subtitle: 'Revenue, services and staff performance', icon: 'bar-chart-outline', tone: 'success' },
-  { title: 'Notifications', subtitle: 'Booking requests and payments', icon: 'notifications-outline', tone: 'info' },
+const MANAGE: readonly MenuItem[] = [
+  { title: 'Services & prices', subtitle: 'Categories, durations, prices, availability', icon: 'pricetags-outline', tone: 'primary', route: 'ManageServices' },
+  { title: 'Staff', subtitle: 'Team, schedules, days off, performance', icon: 'people-circle-outline', tone: 'accent', route: 'StaffList' },
+  { title: 'Reports', subtitle: 'Revenue, services, staff, retention', icon: 'bar-chart-outline', tone: 'success', route: 'Reports' },
+];
+
+const APP: readonly MenuItem[] = [
+  { title: 'Business settings', subtitle: 'Profile, hours, holidays, loyalty, alerts', icon: 'storefront-outline', tone: 'highlight', route: 'BusinessSettings' },
+  { title: 'Notifications', subtitle: 'Booking requests, payments, reviews', icon: 'notifications-outline', tone: 'info', route: 'Notifications' },
+  { title: 'App settings', subtitle: 'Theme, demo role switcher, reset data', icon: 'settings-outline', tone: 'neutral', route: 'Settings' },
 ];
 
 export const MoreScreen = ({ navigation }: Props) => {
   const { spacing } = useTheme();
-  const toast = useToast();
+  const user = useAuthStore(selectCurrentUser);
+  const unread = useNotificationStore((state) => (user ? selectUnreadCount(state.notifications, user.id) : 0));
+
+  const section = (title: string, items: readonly MenuItem[], footer?: ReactNode) => (
+    <View style={{ gap: spacing.md }}>
+      <SectionHeader title={title} compact />
+      <Card padding="sm">
+        {items.map((item, index) => (
+          <View key={item.route}>
+            {index > 0 ? <Divider inset={56} /> : null}
+            <ListItem
+              title={item.title}
+              subtitle={item.subtitle}
+              leftIcon={item.icon}
+              leftIconTone={item.tone}
+              right={item.route === 'Notifications' && unread > 0 ? <CountBadge count={unread} /> : undefined}
+              showChevron
+              onPress={() => navigation.navigate(item.route)}
+            />
+          </View>
+        ))}
+        {footer}
+      </Card>
+    </View>
+  );
 
   return (
     <Screen gap="xl">
-      <View style={{ gap: spacing.md }}>
-        <SectionHeader title="Manage" compact />
-        <Card padding="sm">
-          {MANAGE_ITEMS.map((item, index) => (
-            <View key={item.title}>
-              {index > 0 ? <Divider inset={56} /> : null}
-              <ListItem
-                title={item.title}
-                subtitle={item.subtitle}
-                leftIcon={item.icon}
-                leftIconTone={item.tone}
-                showChevron
-                onPress={() => toast.info(`${item.title} arrives in a later phase`)}
-              />
-            </View>
-          ))}
-        </Card>
-      </View>
-      <View style={{ gap: spacing.md }}>
-        <SectionHeader title="App" compact />
-        <Card padding="sm">
-          <ListItem
-            title="Settings"
-            subtitle="Theme, demo role switcher, reset data"
-            leftIcon="settings-outline"
-            leftIconTone="neutral"
-            showChevron
-            onPress={() => navigation.navigate('Settings')}
-          />
+      {section('Manage', MANAGE)}
+      {section(
+        'App',
+        APP,
+        <>
           <Divider inset={56} />
           <SignOutItem />
-        </Card>
-      </View>
+        </>,
+      )}
     </Screen>
   );
 };

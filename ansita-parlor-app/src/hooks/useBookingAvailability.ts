@@ -4,6 +4,7 @@ import { appointmentService } from '@/services';
 import { selectActiveStaff, selectIsStaffWorkingOn, useStaffStore } from '@/store/staffStore';
 import { useServiceStore } from '@/store/serviceStore';
 import { useAppointmentStore } from '@/store/appointmentStore';
+import { selectHolidayOn, useBusinessStore } from '@/store/businessStore';
 import type { ID, ISODate, Staff, TimeSlot, TimeString } from '@/types';
 
 import { useServiceQuery } from './useServiceQuery';
@@ -29,12 +30,15 @@ export const useQualifiedStaff = (serviceIds: readonly ID[]): Staff[] => {
 const candidatesFor = (choice: StaffChoice | null, qualified: readonly Staff[]): Staff[] =>
   choice === ANY_STAFF ? [...qualified] : qualified.filter((member) => member.id === choice);
 
-/** Calendar predicate: true when nobody in the choice works that day. */
-export const useIsDayOff = (choice: StaffChoice | null, qualified: readonly Staff[]) =>
-  useMemo(() => {
+/** Calendar predicate: true on parlour holidays or when nobody in the choice works that day. */
+export const useIsDayOff = (choice: StaffChoice | null, qualified: readonly Staff[]) => {
+  const holidays = useBusinessStore((state) => state.holidays);
+  return useMemo(() => {
     const candidates = candidatesFor(choice, qualified);
-    return (date: ISODate): boolean => !candidates.some((member) => selectIsStaffWorkingOn(member, date));
-  }, [choice, qualified]);
+    return (date: ISODate): boolean =>
+      selectHolidayOn(holidays, date) !== undefined || !candidates.some((member) => selectIsStaffWorkingOn(member, date));
+  }, [choice, qualified, holidays]);
+};
 
 /** A free start time and who would take it. */
 export interface FreeSlot extends TimeSlot {

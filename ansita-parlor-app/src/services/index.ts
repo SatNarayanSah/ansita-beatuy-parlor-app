@@ -9,6 +9,7 @@ export {
 
 export * from './appointmentService';
 export * from './authService';
+export * from './businessService';
 export * from './catalogService';
 export * from './courseService';
 export * from './customerService';

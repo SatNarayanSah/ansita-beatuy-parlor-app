@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 
 import { useCourseStore } from '@/store/courseStore';
+import { useCustomerStore } from '@/store/customerStore';
 import { useServiceStore } from '@/store/serviceStore';
 import { useStaffStore } from '@/store/staffStore';
-import type { Course, ID, Service, ServiceCategory, Staff } from '@/types';
+import type { Course, Customer, ID, Service, ServiceCategory, Staff } from '@/types';
 
 /**
  * Id -> entity lookups for public catalogue data (services, categories,
@@ -18,6 +19,9 @@ export const useServiceMap = (): ReadonlyMap<ID, Service> => useMap(useServiceSt
 export const useCategoryMap = (): ReadonlyMap<ID, ServiceCategory> => useMap(useServiceStore((state) => state.categories));
 
 export const useStaffMap = (): ReadonlyMap<ID, Staff> => useMap(useStaffStore((state) => state.staff));
+
+/** Admin screens only: customers are private to the parlour. */
+export const useCustomerMap = (): ReadonlyMap<ID, Customer> => useMap(useCustomerStore((state) => state.customers));
 
 export const useCourseMap = (): ReadonlyMap<ID, Course> => useMap(useCourseStore((state) => state.courses));
 

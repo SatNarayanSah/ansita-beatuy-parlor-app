@@ -72,6 +72,19 @@ export const SettingsScreen = ({ navigation }: Props) => {
         </Card>
       </View>
 
+      {user?.role === 'admin' ? (
+        <Card padding="sm">
+          <ListItem
+            title="Business settings"
+            subtitle="Profile, opening hours, holidays, loyalty rules, admin alerts"
+            leftIcon="storefront-outline"
+            leftIconTone="highlight"
+            showChevron
+            onPress={() => navigation.navigate('BusinessSettings')}
+          />
+        </Card>
+      ) : null}
+
       <View style={{ gap: spacing.md }}>
         <View style={styles.headerRow}>
           <SectionHeader title="Demo" compact style={styles.flex} />

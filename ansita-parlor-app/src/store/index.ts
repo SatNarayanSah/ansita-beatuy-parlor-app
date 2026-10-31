@@ -1,5 +1,6 @@
 import { useAppointmentStore } from './appointmentStore';
 import { useAuthStore } from './authStore';
+import { useBusinessStore } from './businessStore';
 import { useCourseStore } from './courseStore';
 import { useCustomerStore } from './customerStore';
 import { useNotificationStore } from './notificationStore';
@@ -11,6 +12,7 @@ import { useStaffStore } from './staffStore';
 
 export * from './appointmentStore';
 export * from './authStore';
+export * from './businessStore';
 export * from './courseStore';
 export * from './customerStore';
 export * from './notificationStore';
@@ -31,6 +33,7 @@ export const persistedStores = [
   useNotificationStore,
   useReviewStore,
   useOfferStore,
+  useBusinessStore,
 ] as const;
 
 /**

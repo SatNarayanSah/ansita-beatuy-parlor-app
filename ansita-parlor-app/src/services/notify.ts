@@ -1,5 +1,6 @@
 import { newEntityMeta } from '@/store/entityHelpers';
 import { selectUserByCustomerId, selectUsersByRole, useAuthStore } from '@/store/authStore';
+import { selectAlertEnabled, useBusinessStore } from '@/store/businessStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import type { ID, Notification, NotificationLink, NotificationType } from '@/types';
 
@@ -35,7 +36,9 @@ export const notifyCustomer = (customerId: ID, payload: NotificationPayload): vo
   if (user) notifyUser(user.id, payload);
 };
 
+/** Skipped when the parlour has switched off alerts of this type in Settings. */
 export const notifyAdmins = (payload: NotificationPayload, exceptUserId?: ID): void => {
+  if (!selectAlertEnabled(useBusinessStore.getState().alerts, payload.type)) return;
   selectUsersByRole(useAuthStore.getState().users, 'admin')
     .filter((admin) => admin.id !== exceptUserId)
     .forEach((admin) => notifyUser(admin.id, payload));

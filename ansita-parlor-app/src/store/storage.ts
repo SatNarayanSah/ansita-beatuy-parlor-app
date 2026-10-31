@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   notifications: 'ansita/notifications',
   reviews: 'ansita/reviews',
   offers: 'ansita/offers',
+  business: 'ansita/business',
 } as const;
 
 /** Persist `migrate` handler: any version mismatch resets to the current initial state. */

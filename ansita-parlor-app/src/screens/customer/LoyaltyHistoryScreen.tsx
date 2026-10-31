@@ -5,15 +5,12 @@ import { serviceNames, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, customerService } from '@/services';
-import { selectCurrentUser, useAppointmentStore, useAuthStore, useCustomerStore } from '@/store';
+import { selectCurrentUser, selectPointsFor, useAppointmentStore, useAuthStore, useBusinessStore, useCustomerStore } from '@/store';
 import { useTheme } from '@/theme';
 import { formatShortDate } from '@/utils/date';
 import { formatNumber } from '@/utils/format';
 
 type Props = RootStackScreenProps<'LoyaltyHistory'>;
-
-/** Same rule appointmentService uses when a visit is completed. */
-const RUPEES_PER_POINT = 100;
 
 const TIERS = [
   { name: 'Silver', min: 0 },
@@ -35,6 +32,8 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
   const services = useServiceMap();
   const user = useAuthStore(selectCurrentUser);
   const customerId = user?.customerId ?? '';
+  // Same rule appointmentService applies when a visit is completed.
+  const loyalty = useBusinessStore((state) => state.loyalty);
 
   const query = useServiceQuery(
     async () => {
@@ -45,12 +44,12 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
       // Newest first.
       const entries = [...appointments].reverse().map((appointment) => ({
         appointment,
-        points: Math.floor(appointment.totalPrice / RUPEES_PER_POINT),
+        points: selectPointsFor(loyalty, appointment.totalPrice),
       }));
       const earnedHere = entries.reduce((sum, entry) => sum + entry.points, 0);
       return { customer, entries, earlier: Math.max(0, customer.loyaltyPoints - earnedHere) };
     },
-    [customerId],
+    [customerId, loyalty],
     { refetchOn: [useCustomerStore, useAppointmentStore] },
   );
 
@@ -97,7 +96,9 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
               <Card variant="filled" style={{ gap: spacing.xs }}>
                 <Text variant="label">How it works</Text>
                 <Text variant="bodySmall" tone="secondary">
-                  Earn 1 point for every Rs. {RUPEES_PER_POINT} spent on completed visits. Redeem points at the front desk.
+                  {loyalty.enabled
+                    ? `Earn 1 point for every Rs. ${loyalty.rupeesPerPoint} spent on completed visits. Each point is worth Rs. ${loyalty.pointValue} at the front desk.`
+                    : 'The loyalty programme is paused. Points you have already earned stay on your account.'}
                 </Text>
               </Card>
 

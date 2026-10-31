@@ -7,8 +7,9 @@ import { useCourseStore } from '@/store/courseStore';
 import { newEntityMeta } from '@/store/entityHelpers';
 import { selectReviewsByStaff, useReviewStore } from '@/store/reviewStore';
 import { selectActiveStaff, selectFilteredStaff, useStaffStore } from '@/store/staffStore';
-import type { Appointment, ID, ISODate, Review, Staff } from '@/types';
-import { todayISO } from '@/utils/date';
+import type { Appointment, ID, ISODate, Review, Staff, WorkingHours } from '@/types';
+import { timeToMinutes, todayISO, weekdayOf } from '@/utils/date';
+import { formatEnumLabel } from '@/utils/format';
 import { normalizePhone } from '@/utils/phone';
 
 import { ApiError, ensureFound, simulateRequest } from './client';
@@ -24,6 +25,37 @@ export interface StaffFilter {
   activeOnly?: boolean;
 }
 
+const validateHours = (hours: readonly WorkingHours[]): void => {
+  const bad = hours.find((day) => !day.isOff && timeToMinutes(day.end) <= timeToMinutes(day.start));
+  if (bad) throw new ApiError('VALIDATION', `Shift on ${formatEnumLabel(bad.day)} must end after it starts.`);
+  if (hours.every((day) => day.isOff)) throw new ApiError('VALIDATION', 'Set at least one working day.');
+};
+
+/** Upcoming active bookings that would fall outside these hours (or on a day off). */
+const bookingsOutside = (staffId: ID, hours: readonly WorkingHours[]): Appointment[] => {
+  const today = todayISO();
+  return useAppointmentStore.getState().appointments.filter((appointment) => {
+    if (appointment.staffId !== staffId || appointment.date < today || !ACTIVE_APPOINTMENT_STATUSES.includes(appointment.status)) return false;
+    const day = hours.find((entry) => entry.day === weekdayOf(appointment.date));
+    return (
+      !day ||
+      day.isOff ||
+      timeToMinutes(appointment.startTime) < timeToMinutes(day.start) ||
+      timeToMinutes(appointment.endTime) > timeToMinutes(day.end)
+    );
+  });
+};
+
+const assertNoStrandedBookings = (staffId: ID, hours: readonly WorkingHours[]): void => {
+  const stranded = bookingsOutside(staffId, hours);
+  if (stranded.length > 0) {
+    throw new ApiError(
+      'CONFLICT',
+      `${stranded.length} upcoming booking${stranded.length === 1 ? ' falls' : 's fall'} outside the new hours (first on ${stranded[0]?.date}). Reschedule ${stranded.length === 1 ? 'it' : 'them'} first.`,
+    );
+  }
+};
+
 export const staffService = {
   listStaff: ({ query = '', activeOnly = false }: StaffFilter = {}): Promise<Staff[]> =>
     simulateRequest(() => {
@@ -38,6 +70,9 @@ export const staffService = {
   createStaff: (input: StaffInput): Promise<Staff> =>
     simulateRequest(() => {
       requireAdmin();
+      if (input.name.trim().length < 2) throw new ApiError('VALIDATION', 'Enter the staff member’s name.');
+      if (input.specialties.length === 0) throw new ApiError('VALIDATION', 'Choose at least one specialty.');
+      validateHours(input.workingHours);
       const member: Staff = {
         ...newEntityMeta('stf'),
         ...input,
@@ -53,6 +88,11 @@ export const staffService = {
     simulateRequest(() => {
       requireAdmin();
       ensureFound(useStaffStore.getState().getStaffById(id), 'Staff member');
+      if (input.specialties !== undefined && input.specialties.length === 0) throw new ApiError('VALIDATION', 'Choose at least one specialty.');
+      if (input.workingHours) {
+        validateHours(input.workingHours);
+        assertNoStrandedBookings(id, input.workingHours);
+      }
       const patch: Partial<StaffInput> = {
         ...input,
         ...(input.phone !== undefined ? { phone: normalizePhone(input.phone) } : {}),
@@ -61,10 +101,17 @@ export const staffService = {
       return ensureFound(useStaffStore.getState().getStaffById(id), 'Staff member');
     }),
 
+  /** Deactivating is refused while the member has upcoming bookings. */
   setStaffActive: (id: ID, isActive: boolean): Promise<Staff> =>
     simulateRequest(() => {
       requireAdmin();
       ensureFound(useStaffStore.getState().getStaffById(id), 'Staff member');
+      if (!isActive) {
+        const upcoming = bookingsOutside(id, []);
+        if (upcoming.length > 0) {
+          throw new ApiError('CONFLICT', `Reassign or cancel ${upcoming.length} upcoming booking${upcoming.length === 1 ? '' : 's'} before deactivating.`);
+        }
+      }
       useStaffStore.getState().updateStaff(id, { isActive });
       return ensureFound(useStaffStore.getState().getStaffById(id), 'Staff member');
     }),

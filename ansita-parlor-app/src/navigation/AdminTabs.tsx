@@ -1,9 +1,11 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { TabBar, tabIcon } from '@/components/navigation/TabBar';
+import { AppointmentsScreen } from '@/screens/admin/AppointmentsScreen';
+import { CustomersScreen } from '@/screens/admin/CustomersScreen';
 import { DashboardScreen } from '@/screens/admin/DashboardScreen';
 import { MoreScreen } from '@/screens/admin/MoreScreen';
-import { AppointmentsScreen, CustomersScreen, TrainingScreen } from '@/screens/admin/PlaceholderTabs';
+import { TrainingScreen } from '@/screens/admin/TrainingScreen';
 import { useAppointmentStore } from '@/store';
 import { useTheme } from '@/theme';
 import { todayISO } from '@/utils/date';

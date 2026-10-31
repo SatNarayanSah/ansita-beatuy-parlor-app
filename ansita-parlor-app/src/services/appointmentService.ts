@@ -4,6 +4,7 @@ import {
   useAppointmentStore,
   type AppointmentFilter,
 } from '@/store/appointmentStore';
+import { selectHolidayOn, selectPointsFor, useBusinessStore } from '@/store/businessStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { newEntityMeta } from '@/store/entityHelpers';
 import { selectServicesByIds, selectServicesTotals, useServiceStore } from '@/store/serviceStore';
@@ -41,8 +42,6 @@ import { requireAdmin, requireCustomerAccess, requireUser } from './session';
 /** Booking slots are offered every 30 minutes. */
 export const SLOT_INTERVAL_MINUTES = 30;
 
-/** Customers earn 1 loyalty point per Rs. 100 spent on completed appointments. */
-const RUPEES_PER_LOYALTY_POINT = 100;
 
 export interface AppointmentInput {
   customerId: ID;
@@ -134,6 +133,8 @@ const validateBooking = (
     throw new ApiError('VALIDATION', 'This time has already passed. Pick a later slot.');
   }
   ensureFound(useCustomerStore.getState().getCustomerById(input.customerId), 'Customer');
+  const holiday = selectHolidayOn(useBusinessStore.getState().holidays, input.date);
+  if (holiday) throw new ApiError('VALIDATION', `The parlour is closed on this day (${holiday.name}).`);
 
   const services = resolveServices(input.serviceIds);
   const { price, duration } = selectServicesTotals(services);
@@ -209,6 +210,7 @@ export const appointmentService = {
   getAvailableStaff: (date: ISODate, serviceIds: ID[]): Promise<Staff[]> =>
     simulateRequest(() => {
       requireUser();
+      if (selectHolidayOn(useBusinessStore.getState().holidays, date)) return [];
       const categoryIds = [...new Set(resolveServices(serviceIds).map((service) => service.categoryId))];
       return selectActiveStaff(useStaffStore.getState().staff).filter((member) => {
         const hours = selectWorkingHoursOn(member, date);
@@ -226,7 +228,7 @@ export const appointmentService = {
       requireUser();
       const member = resolveStaff(staffId);
       const hours = selectWorkingHoursOn(member, date);
-      if (!hours || hours.isOff) return [];
+      if (!hours || hours.isOff || selectHolidayOn(useBusinessStore.getState().holidays, date)) return [];
 
       const duration = totalDurationOf(serviceIds);
       const busy = busyAppointments(date, (a) => a.staffId === staffId, excludeAppointmentId);
@@ -372,12 +374,12 @@ export const appointmentService = {
       const link = { kind: 'appointment', id } as const;
 
       if (status === 'completed') {
-        const points = Math.floor(updated.totalPrice / RUPEES_PER_LOYALTY_POINT);
-        useCustomerStore.getState().adjustLoyaltyPoints(updated.customerId, points);
+        const points = selectPointsFor(useBusinessStore.getState().loyalty, updated.totalPrice);
+        if (points > 0) useCustomerStore.getState().adjustLoyaltyPoints(updated.customerId, points);
         notifyCustomer(updated.customerId, {
           type: 'system',
           title: 'Thanks for visiting!',
-          message: `You earned ${points} loyalty points. We’d love your review.`,
+          message: points > 0 ? `You earned ${points} loyalty points. We’d love your review.` : 'We’d love to hear how your visit went.',
           link,
         });
       } else if (status === 'confirmed') {
