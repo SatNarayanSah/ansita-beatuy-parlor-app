@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { buildAppointments } from '@/data/appointments';
-import { buildServices } from '@/data/services';
 import type { Appointment, AppointmentStatus, ID, ISODate, UpdateInput } from '@/types';
 
 import { findEntity, insertEntity, removeEntity, updateEntity } from './entityHelpers';
@@ -23,7 +22,7 @@ interface AppointmentActions {
 export type AppointmentState = AppointmentData & AppointmentActions;
 
 const createInitialData = (): AppointmentData => ({
-  appointments: buildAppointments(buildServices()),
+  appointments: buildAppointments(),
 });
 
 export const useAppointmentStore = create<AppointmentState>()(

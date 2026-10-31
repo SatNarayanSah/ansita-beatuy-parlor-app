@@ -13,7 +13,8 @@ export type IdPrefix =
   | 'enr'
   | 'pay'
   | 'ntf'
-  | 'rev';
+  | 'rev'
+  | 'ofr';
 
 let counter = 0;
 

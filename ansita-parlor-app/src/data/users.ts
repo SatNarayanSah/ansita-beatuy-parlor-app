@@ -1,63 +1,41 @@
-import type { DemoCredential, User } from '@/types';
+import type { DemoCredential, User, UserRole } from '@/types';
 
 import { CUSTOMER_IDS } from './customers';
 import { seedBase } from './helpers';
-import { STAFF_IDS } from './staff';
+import { STAFF_IDS } from './team';
 
 export const USER_IDS = {
   admin: 'usr_admin',
-  reception: 'usr_reception',
-  priya: 'usr_priya',
-  neha: 'usr_neha',
+  customer: 'usr_customer',
 } as const;
+
+/** The two demo logins, used by the sign-in screen and "Continue as demo …" buttons. */
+export const DEMO_ACCOUNTS: Record<UserRole, { email: string; password: string; userId: string }> = {
+  admin: { email: 'admin@ansita.com', password: 'admin123', userId: USER_IDS.admin },
+  customer: { email: 'customer@ansita.com', password: 'customer123', userId: USER_IDS.customer },
+};
 
 export const buildUsers = (): User[] => [
   {
-    ...seedBase(USER_IDS.admin, 900),
+    ...seedBase(USER_IDS.admin, 1100),
     role: 'admin',
-    name: 'Anita Verma',
-    email: 'admin@ansita.com.np',
-    phone: '+9779841011001',
+    name: 'Ansita Shrestha',
+    email: DEMO_ACCOUNTS.admin.email,
+    phone: '+9779841500100',
     avatar: null,
     customerId: null,
-    staffId: STAFF_IDS.anita,
+    staffId: STAFF_IDS.ansita,
   },
   {
-    ...seedBase(USER_IDS.reception, 300),
-    role: 'admin',
-    name: 'Front Desk',
-    email: 'desk@ansita.com.np',
-    phone: '+9779841011000',
-    avatar: null,
-    customerId: null,
-    staffId: null,
-  },
-  {
-    ...seedBase(USER_IDS.priya, 380),
+    ...seedBase(USER_IDS.customer, 420),
     role: 'customer',
     name: 'Priya Sharma',
-    email: 'priya@example.com',
+    email: DEMO_ACCOUNTS.customer.email,
     phone: '+9779841234567',
     avatar: null,
     customerId: CUSTOMER_IDS.priya,
     staffId: null,
   },
-  {
-    ...seedBase(USER_IDS.neha, 90),
-    role: 'customer',
-    name: 'Neha Gupta',
-    email: 'neha.gupta@example.com',
-    phone: '+9779851000011',
-    avatar: null,
-    customerId: CUSTOMER_IDS.neha,
-    staffId: null,
-  },
 ];
 
-/** Demo logins shown on the sign-in screen. */
-export const buildDemoCredentials = (): DemoCredential[] => [
-  { email: 'admin@ansita.com.np', password: 'admin123', userId: USER_IDS.admin },
-  { email: 'desk@ansita.com.np', password: 'desk123', userId: USER_IDS.reception },
-  { email: 'priya@example.com', password: 'priya123', userId: USER_IDS.priya },
-  { email: 'neha.gupta@example.com', password: 'neha123', userId: USER_IDS.neha },
-];
+export const buildDemoCredentials = (): DemoCredential[] => Object.values(DEMO_ACCOUNTS).map((account) => ({ ...account }));

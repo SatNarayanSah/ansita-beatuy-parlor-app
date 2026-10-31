@@ -3,6 +3,7 @@ import { useAuthStore } from './authStore';
 import { useCourseStore } from './courseStore';
 import { useCustomerStore } from './customerStore';
 import { useNotificationStore } from './notificationStore';
+import { useOfferStore } from './offerStore';
 import { useReviewStore } from './reviewStore';
 import { useServiceStore } from './serviceStore';
 import { useSettingsStore } from './settingsStore';
@@ -13,6 +14,7 @@ export * from './authStore';
 export * from './courseStore';
 export * from './customerStore';
 export * from './notificationStore';
+export * from './offerStore';
 export * from './reviewStore';
 export * from './serviceStore';
 export * from './settingsStore';
@@ -28,6 +30,7 @@ export const persistedStores = [
   useCourseStore,
   useNotificationStore,
   useReviewStore,
+  useOfferStore,
 ] as const;
 
 /**

@@ -11,7 +11,7 @@ export type NotificationType =
   | 'system';
 
 export interface NotificationLink {
-  kind: 'appointment' | 'enrollment' | 'course' | 'customer';
+  kind: 'appointment' | 'enrollment' | 'course' | 'customer' | 'offer';
   id: ID;
 }
 

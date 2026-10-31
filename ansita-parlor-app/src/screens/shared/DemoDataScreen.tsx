@@ -14,7 +14,7 @@ import {
   ThemeModeSelector,
   useToast,
 } from '@/components/ui';
-
+import { DEMO_ACCOUNTS } from '@/data/users';
 import { useApiConfig } from '@/hooks/useApiConfig';
 import {
   appointmentService,
@@ -22,11 +22,12 @@ import {
   catalogService,
   configureApi,
   courseService,
+  demoService,
   getErrorMessage,
   notificationService,
+  offerService,
 } from '@/services';
 import {
-  resetAllStores,
   selectCurrentUser,
   selectStatusCounts,
   useAppointmentStore,
@@ -34,12 +35,14 @@ import {
   useCourseStore,
   useCustomerStore,
   useNotificationStore,
+  useOfferStore,
   useReviewStore,
   useServiceStore,
   useStaffStore,
 } from '@/store';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { useTheme } from '@/theme';
+import type { UserRole } from '@/types';
 import { todayISO } from '@/utils/date';
 import { formatEnumLabel } from '@/utils/format';
 
@@ -50,12 +53,12 @@ interface SmokeStep {
   ms: number;
 }
 
-/**
- * Demo controls: record counts, fake-API settings, a service smoke test and a
- * data reset. Shown at launch in Phase 1; later reachable from admin settings.
- */
 type Props = NativeStackScreenProps<RootStackParamList, 'DemoData'>;
 
+/**
+ * Demo controls: one-tap demo sign-in, record counts, fake-API settings, a
+ * service smoke test and a data reset. Later reachable from admin settings.
+ */
 export const DemoDataScreen = ({ navigation }: Props) => {
   const { colors } = useTheme();
   const toast = useToast();
@@ -71,10 +74,13 @@ export const DemoDataScreen = ({ navigation }: Props) => {
   const enrollmentsCount = useCourseStore((state) => state.enrollments.length);
   const notificationsCount = useNotificationStore((state) => state.notifications.length);
   const reviewsCount = useReviewStore((state) => state.reviews.length);
+  const offersCount = useOfferStore((state) => state.offers.length);
 
   const [running, setRunning] = useState(false);
   const [steps, setSteps] = useState<SmokeStep[]>([]);
   const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [signingIn, setSigningIn] = useState<UserRole | 'out' | null>(null);
 
   const statusCounts = selectStatusCounts(appointments);
   const counts: [string, number][] = [
@@ -88,6 +94,7 @@ export const DemoDataScreen = ({ navigation }: Props) => {
     ['Enrollments', enrollmentsCount],
     ['Notifications', notificationsCount],
     ['Reviews', reviewsCount],
+    ['Offers', offersCount],
   ];
 
   const runSmokeTest = async (): Promise<void> => {
@@ -107,14 +114,14 @@ export const DemoDataScreen = ({ navigation }: Props) => {
 
     await step('Login with wrong password', async () => {
       try {
-        await authService.login({ email: 'admin@ansita.in', password: 'wrong' });
+        await authService.login({ email: DEMO_ACCOUNTS.admin.email, password: 'wrong' });
         throw new Error('Expected an UNAUTHORIZED error');
       } catch (error) {
         return `Rejected as expected: ${getErrorMessage(error)}`;
       }
     });
     await step('Login as admin', async () => {
-      const user = await authService.login({ email: 'admin@ansita.in', password: 'admin123' });
+      const user = await authService.login(DEMO_ACCOUNTS.admin);
       return `${user.name} (${user.role})`;
     });
     await step("Today's appointments", async () => {
@@ -133,6 +140,12 @@ export const DemoDataScreen = ({ navigation }: Props) => {
       return `${first.title}: ${batches.map((b) => `${b.batch.name} ${b.seatsLeft} left`).join(', ')}`;
     });
     await step('Unread notifications', async () => `${await notificationService.getUnreadCount()} unread`);
+    await step('All offers (admin)', async () => `${(await offerService.listOffers()).length} offers`);
+    await step('Demo customer login', async () => {
+      const user = await authService.loginAsDemo('customer');
+      return `${user.name} (${user.role})`;
+    });
+    await step('Live offers (customer)', async () => `${(await offerService.listOffers()).length} live`);
     await step('Logout', async () => {
       await authService.logout();
       return 'Session cleared';
@@ -141,19 +154,74 @@ export const DemoDataScreen = ({ navigation }: Props) => {
     setRunning(false);
   };
 
+  const continueAs = async (role: UserRole): Promise<void> => {
+    setSigningIn(role);
+    try {
+      const user = await authService.loginAsDemo(role);
+      toast.success(`Signed in as ${user.name}`);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setSigningIn(null);
+    }
+  };
 
-  const resetData = (): void => {
-    resetAllStores({ keepSession: true });
-    setSteps([]);
+  const signOut = async (): Promise<void> => {
+    setSigningIn('out');
+    await authService.logout();
+    setSigningIn(null);
+  };
+
+  const resetData = async (): Promise<void> => {
+    setResetting(true);
+    await demoService.resetDemoData();
+    setResetting(false);
     setResetOpen(false);
+    setSteps([]);
     toast.success('Demo data restored');
   };
 
   return (
     <Screen>
-      <Text variant="bodySmall" tone="secondary">
-        Signed in as: {currentUser ? `${currentUser.name} (${currentUser.role})` : 'nobody'}
-      </Text>
+      <Card style={styles.cardGap}>
+        <SectionHeader
+          title="Demo sign-in"
+          subtitle={currentUser ? `Signed in as ${currentUser.name} (${currentUser.role})` : 'Not signed in'}
+          compact
+        />
+        <Button
+          title="Continue as demo admin"
+          leftIcon="briefcase-outline"
+          loading={signingIn === 'admin'}
+          disabled={signingIn !== null}
+          onPress={() => void continueAs('admin')}
+          fullWidth
+        />
+        <Button
+          title="Continue as demo customer"
+          leftIcon="person-outline"
+          variant="secondary"
+          loading={signingIn === 'customer'}
+          disabled={signingIn !== null}
+          onPress={() => void continueAs('customer')}
+          fullWidth
+        />
+        {currentUser ? (
+          <Button
+            title="Sign out"
+            variant="ghost"
+            leftIcon="log-out-outline"
+            loading={signingIn === 'out'}
+            onPress={() => void signOut()}
+            fullWidth
+          />
+        ) : null}
+        {Object.values(DEMO_ACCOUNTS).map((account) => (
+          <Text key={account.email} variant="caption" tone="muted">
+            {account.email} / {account.password}
+          </Text>
+        ))}
+      </Card>
 
       <Card>
         <SectionHeader title="Records in local storage" compact />
@@ -249,9 +317,10 @@ export const DemoDataScreen = ({ navigation }: Props) => {
         tone="danger"
         icon="refresh"
         title="Reset demo data?"
-        message="All changes are discarded and the original sample data is restored."
+        message="All changes are discarded and fresh sample data is generated around today's date. Your theme setting is kept."
         confirmLabel="Reset"
-        onConfirm={resetData}
+        loading={resetting}
+        onConfirm={() => void resetData()}
         onCancel={() => setResetOpen(false)}
       />
     </Screen>

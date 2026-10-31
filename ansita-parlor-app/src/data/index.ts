@@ -5,6 +5,7 @@ import type {
   DemoCredential,
   Enrollment,
   Notification,
+  Offer,
   Review,
   Service,
   ServiceCategory,
@@ -18,6 +19,7 @@ import { buildCourses } from './courses';
 import { buildCustomers } from './customers';
 import { buildEnrollments } from './enrollments';
 import { buildNotifications } from './notifications';
+import { buildOffers } from './offers';
 import { buildReviews } from './reviews';
 import { buildServices } from './services';
 import { buildStaff } from './staff';
@@ -35,6 +37,7 @@ export interface SeedData {
   enrollments: Enrollment[];
   notifications: Notification[];
   reviews: Review[];
+  offers: Offer[];
 }
 
 /**
@@ -42,24 +45,26 @@ export interface SeedData {
  * demo always shows bookings for today and the coming days.
  */
 export const createSeedData = (): SeedData => {
-  const services = buildServices();
+  const appointments = buildAppointments();
   return {
     users: buildUsers(),
     credentials: buildDemoCredentials(),
     customers: buildCustomers(),
     categories: buildCategories(),
-    services,
+    services: buildServices(),
     staff: buildStaff(),
-    appointments: buildAppointments(services),
+    appointments,
     courses: buildCourses(),
     enrollments: buildEnrollments(),
     notifications: buildNotifications(),
-    reviews: buildReviews(),
+    reviews: buildReviews(appointments),
+    offers: buildOffers(),
   };
 };
 
 export { CATEGORY_IDS } from './categories';
 export { COURSE_IDS, BATCH_IDS } from './courses';
 export { CUSTOMER_IDS } from './customers';
+export { OFFER_IDS } from './offers';
 export { PARLOR_HOURS, STAFF_IDS } from './staff';
-export { USER_IDS } from './users';
+export { DEMO_ACCOUNTS, USER_IDS } from './users';

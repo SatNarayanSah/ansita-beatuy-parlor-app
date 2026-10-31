@@ -1,3 +1,4 @@
+import { DEMO_ACCOUNTS } from '@/data/users';
 import { selectCurrentUser, useAuthStore } from '@/store/authStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { newEntityMeta } from '@/store/entityHelpers';
@@ -66,6 +67,12 @@ export const authService = {
       startSession(user);
       return user;
     }),
+
+  /** One-tap "Continue as demo admin / customer". */
+  loginAsDemo: (role: UserRole): Promise<User> => {
+    const { email, password } = DEMO_ACCOUNTS[role];
+    return authService.login({ email, password });
+  },
 
   logout: (): Promise<void> =>
     simulateRequest(() => useAuthStore.getState().clearSession(), { neverFail: true }),

@@ -8,3 +8,4 @@ export * from './course';
 export * from './enrollment';
 export * from './notification';
 export * from './review';
+export * from './offer';
