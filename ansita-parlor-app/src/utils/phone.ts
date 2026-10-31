@@ -69,6 +69,19 @@ export const normalizePhone = (input: string, defaultCountry: CountryCode = DEFA
   return `+${getPhoneCountry(defaultCountry).dialCode}${digits.replace(/^0+/, '')}`;
 };
 
+/**
+ * Nepal landline: area code without the leading 0 + subscriber number, 8 digits
+ * in all (Kathmandu 01-4xxxxxx -> 14xxxxxx, Janakpur 041-5xxxxx -> 415xxxxx).
+ */
+const NEPAL_LANDLINE = /^[1-8]\d{7}$/;
+
+/** Mobile number (any supported country) or a Nepal landline. For business contact numbers. */
+export const isValidContactPhone = (input: string): boolean => {
+  const parsed = parsePhone(normalizePhone(input));
+  if (!parsed) return false;
+  return parsed.country.pattern.test(parsed.national) || (parsed.country.code === 'NP' && NEPAL_LANDLINE.test(parsed.national));
+};
+
 export const isValidPhone = (input: string): boolean => {
   const parsed = parsePhone(normalizePhone(input));
   return parsed !== null && parsed.country.pattern.test(parsed.national);

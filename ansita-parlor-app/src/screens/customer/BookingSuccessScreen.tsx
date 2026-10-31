@@ -54,9 +54,9 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
 
   useEffect(() => {
     haptics.success();
-    check.value = withSpring(1, { damping: 9, stiffness: 140 });
-    ring.value = withDelay(120, withTiming(1, { duration: 700 }));
-    burst.value = withDelay(200, withTiming(1, { duration: 900 }));
+    check.set(withSpring(1, { damping: 9, stiffness: 140 }));
+    ring.set(withDelay(120, withTiming(1, { duration: 700 })));
+    burst.set(withDelay(200, withTiming(1, { duration: 900 })));
   }, [check, ring, burst]);
 
   const checkStyle = useAnimatedStyle(() => ({ transform: [{ scale: check.value }] }));
@@ -85,7 +85,7 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
             Booking requested!
           </Text>
           <Text variant="body" tone="secondary" align="center">
-            We'll confirm your appointment shortly. You'll get a notification once it's confirmed.
+            We’ll confirm your appointment shortly. You’ll get a notification once it’s confirmed.
           </Text>
         </Animated.View>
 

@@ -56,12 +56,6 @@ export const selectFilteredStaff = (staff: readonly Staff[], query: string): Sta
     .filter((member) => matchesQuery(query, member.name, member.phone, member.email))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-/** Active staff qualified for every given category. */
-export const selectStaffForCategories = (staff: readonly Staff[], categoryIds: readonly ID[]): Staff[] =>
-  selectActiveStaff(staff).filter((member) =>
-    categoryIds.every((categoryId) => member.specialties.includes(categoryId)),
-  );
-
 export const selectWorkingHoursOn = (member: Staff, date: ISODate): WorkingHours | undefined => {
   const day = weekdayOf(date);
   return member.workingHours.find((hours) => hours.day === day);

@@ -6,7 +6,7 @@ export interface Address {
   line1: string;
   line2: string;
   city: string;
-  /** Nepal province, e.g. "Bagmati". */
+  /** Nepal province, e.g. "Madhesh". */
   province: string;
   postalCode: string;
 }

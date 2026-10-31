@@ -33,7 +33,7 @@ export const QuickCustomerForm = ({ onCreated, onCancel }: QuickCustomerFormProp
         email: '',
         gender: 'female',
         dob: null,
-        address: { line1: '', line2: '', city: 'Kathmandu', province: 'Bagmati', postalCode: '' },
+        address: { line1: '', line2: '', city: 'Janakpur', province: 'Madhesh', postalCode: '' },
         notes: '',
         avatar: null,
         tags: ['new'],

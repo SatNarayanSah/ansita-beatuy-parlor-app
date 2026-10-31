@@ -114,12 +114,15 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const qualified = useQualifiedStaff(serviceIds);
 
   const presetStaff = route.params?.staffId ?? preferences.favoriteStaffId;
-  const [staffChoice, setStaffChoice] = useState<StaffChoice | null>(() =>
+  const [staffChoiceRaw, setStaffChoice] = useState<StaffChoice | null>(() =>
     presetStaff && qualified.some((member) => member.id === presetStaff) ? presetStaff : null,
   );
+  // Later choices are stored raw and validated here, so changing an earlier
+  // step silently drops whatever no longer fits (no syncing effects).
+  const staffChoice = staffChoiceRaw === ANY_STAFF || qualified.some((member) => member.id === staffChoiceRaw) ? staffChoiceRaw : null;
   const [step, setStep] = useState(() => (presetServices.length === 0 ? 0 : route.params?.staffId && staffChoice ? 2 : 1));
-  const [date, setDate] = useState<ISODate | null>(null);
-  const [slot, setSlot] = useState<FreeSlot | null>(null);
+  const [dateRaw, setDate] = useState<ISODate | null>(null);
+  const [slotPick, setSlotPick] = useState<{ context: string; slot: FreeSlot } | null>(null);
   const [notes, setNotes] = useState('');
   const [payment, setPayment] = useState<PaymentMethod>(
     CUSTOMER_PAYMENT_METHODS.includes(preferences.paymentMethod) ? preferences.paymentMethod : 'cash',
@@ -129,17 +132,13 @@ export const BookingScreen = ({ navigation, route }: Props) => {
 
   const catalog = useServiceQuery(() => catalogService.listServices({ activeOnly: true }), [], { refetchOn: [useServiceStore] });
   const isDayOff = useIsDayOff(staffChoice, qualified);
+  const date = dateRaw && !isDayOff(dateRaw) ? dateRaw : null;
+  // A picked slot only counts for the date, stylist and services it was picked for.
+  const slotContext = `${date}|${staffChoice}|${serviceIds.join(',')}`;
+  const slot = slotPick?.context === slotContext ? slotPick.slot : null;
+  const setSlot = (next: FreeSlot | null): void => setSlotPick(next ? { context: slotContext, slot: next } : null);
   const slots = useFreeSlots({ date, choice: step >= 3 ? staffChoice : null, qualified, serviceIds });
   const [submitting, setSubmitting] = useState(false);
-
-  // Keep later choices valid when an earlier one changes.
-  useEffect(() => {
-    if (staffChoice && staffChoice !== ANY_STAFF && !qualified.some((member) => member.id === staffChoice)) setStaffChoice(null);
-  }, [qualified, staffChoice]);
-  useEffect(() => {
-    if (date && isDayOff(date)) setDate(null);
-  }, [date, isDayOff]);
-  useEffect(() => setSlot(null), [date, staffChoice, serviceIds]);
 
   const selected = useMemo(() => serviceIds.map((id) => serviceMap.get(id)).filter((s) => s !== undefined), [serviceIds, serviceMap]);
   const totals = useMemo(
@@ -310,7 +309,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
         <Animated.View entering={FadeIn} style={styles.inline}>
           <Icon name="person-circle-outline" size={18} color={colors.primary} />
           <Text variant="bodySmall">
-            You'll be with <Text variant="label">{slotStaff.name}</Text>
+            You’ll be with <Text variant="label">{slotStaff.name}</Text>
           </Text>
         </Animated.View>
       ) : null}

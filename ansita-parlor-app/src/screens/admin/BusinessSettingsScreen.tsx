@@ -123,7 +123,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
             </View>
           </View>
           <Text variant="caption" tone="muted">
-            Opening hours are shown to customers and frame the admin calendar. Each stylist's shift is set under Staff.
+            Opening hours are shown to customers and frame the admin calendar. Each stylist’s shift is set under Staff.
           </Text>
           <Button
             title="Save profile"
@@ -180,7 +180,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
           <FormInput control={holidayForm.control} name="name" label="Name" placeholder="e.g. Laxmi Puja" />
           <Button title="Add holiday" variant="secondary" leftIcon="add" loading={holidayForm.formState.isSubmitting} onPress={() => void addHoliday()} fullWidth />
           <Text variant="caption" tone="muted">
-            A day that already has bookings can't be closed until they're moved or cancelled.
+            A day that already has bookings can’t be closed until they’re moved or cancelled.
           </Text>
         </Card>
       </View>

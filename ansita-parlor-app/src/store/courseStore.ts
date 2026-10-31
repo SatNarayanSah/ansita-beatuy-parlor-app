@@ -101,18 +101,6 @@ export const selectFilteredCourses = (courses: readonly Course[], query: string,
 
 export const selectBatch = (course: Course, batchId: ID): Batch | undefined =>
   course.batches.find((batch) => batch.id === batchId);
-
-export const selectEnrollmentsByCourse = (enrollments: readonly Enrollment[], courseId: ID): Enrollment[] =>
-  enrollments.filter((enrollment) => enrollment.courseId === courseId);
-
-export const selectEnrollmentsByBatch = (enrollments: readonly Enrollment[], batchId: ID): Enrollment[] =>
-  enrollments.filter((enrollment) => enrollment.batchId === batchId);
-
-export const selectEnrollmentsByStudent = (enrollments: readonly Enrollment[], studentId: ID): Enrollment[] =>
-  enrollments
-    .filter((enrollment) => enrollment.studentId === studentId)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
 export const selectSeatsTaken = (enrollments: readonly Enrollment[], batchId: ID): number =>
   enrollments.filter(
     (enrollment) => enrollment.batchId === batchId && SEAT_HOLDING_STATUSES.includes(enrollment.status),
@@ -123,12 +111,6 @@ export const selectSeatsLeft = (enrollments: readonly Enrollment[], batch: Batch
 
 export const selectFeeDue = (enrollment: Enrollment): number =>
   Math.max(0, enrollment.feeTotal - enrollment.feePaid);
-
-export const selectTotalFeesDue = (enrollments: readonly Enrollment[]): number =>
-  enrollments
-    .filter((enrollment) => enrollment.status !== 'dropped')
-    .reduce((sum, enrollment) => sum + selectFeeDue(enrollment), 0);
-
 /** Present + late count as attended. Returns 0-100. */
 export const selectAttendancePercent = (enrollment: Enrollment): number => {
   const total = enrollment.attendance.length;

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, View, type ListRenderItem, type ListViewToken } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -128,10 +128,11 @@ export const OnboardingScreen = () => {
     scrollX.value = event.contentOffset.x;
   });
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ListViewToken[] }) => {
+  // FlatList needs a stable callback; it only uses the (stable) state setter.
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ListViewToken[] }) => {
     const first = viewableItems[0];
     if (first?.index !== undefined && first.index !== null) setIndex(first.index);
-  }).current;
+  }, []);
 
   const finish = (): void => setHasSeenOnboarding(true);
   const next = (): void => {

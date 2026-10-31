@@ -88,7 +88,7 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
                   </>
                 ) : (
                   <Text variant="caption" color={colors.onAccent}>
-                    You're at our highest tier. Thank you!
+                    You’re at our highest tier. Thank you!
                   </Text>
                 )}
               </View>

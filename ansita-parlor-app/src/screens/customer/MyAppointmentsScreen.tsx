@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
 import { CancelAppointmentSheet, ReviewSheet } from '@/components/customer/AppointmentSheets';
 import { ListScreen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { serviceNames, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
@@ -32,9 +33,7 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
   const [cancelling, setCancelling] = useState<Appointment | null>(null);
   const [reviewing, setReviewing] = useState<Appointment | null>(null);
 
-  useEffect(() => {
-    if (route.params?.tab) setTab(route.params.tab);
-  }, [route.params?.tab]);
+  useAdoptParam(route.params?.tab, setTab);
 
   const query = useServiceQuery(
     async () => {

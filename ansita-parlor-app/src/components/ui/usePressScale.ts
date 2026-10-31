@@ -7,10 +7,10 @@ export const usePressScale = (pressedScale = 0.97) => {
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   const onPressIn = (): void => {
-    scale.value = withTiming(pressedScale, { duration: 90 });
+    scale.set(withTiming(pressedScale, { duration: 90 }));
   };
   const onPressOut = (): void => {
-    scale.value = withSpring(1, { damping: 14, stiffness: 260 });
+    scale.set(withSpring(1, { damping: 14, stiffness: 260 }));
   };
 
   return { animatedStyle, onPressIn, onPressOut };

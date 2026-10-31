@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { z } from 'zod';
 
@@ -11,7 +11,7 @@ import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { catalogService, getErrorMessage } from '@/services';
-import { useTheme } from '@/theme';
+import { palette, useTheme } from '@/theme';
 import { categorySchema } from '@/utils/formSchemas';
 
 type Props = RootStackScreenProps<'CategoryForm'>;
@@ -42,7 +42,7 @@ export const CategoryFormScreen = ({ navigation, route }: Props) => {
   const [deleting, setDeleting] = useState(false);
   const query = useServiceQuery(async () => (categoryId ? ((await catalogService.listCategories()).find((c) => c.id === categoryId) ?? null) : null), [categoryId]);
 
-  const { control, handleSubmit, reset, watch, formState } = useForm<Values, unknown, z.output<typeof categorySchema>>({
+  const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<typeof categorySchema>>({
     resolver: zodResolver(categorySchema),
     defaultValues: { name: '', icon: ICONS[0] ?? 'sparkles-outline', color: COLORS[0] ?? '#C2577A' },
     mode: 'onTouched',
@@ -82,7 +82,7 @@ export const CategoryFormScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const [name, icon, color] = watch(['name', 'icon', 'color']);
+  const [name, icon, color] = useWatch({ control, name: ['name', 'icon', 'color'] });
   const preview = { id: 'preview', name, icon, color, sortOrder: 0, createdAt: '', updatedAt: '' };
 
   return (
@@ -141,7 +141,7 @@ export const CategoryFormScreen = ({ navigation, route }: Props) => {
                         accessibilityLabel={`Colour ${option}`}
                         style={[styles.swatch, { backgroundColor: option, borderColor: field.value === option ? colors.text : 'transparent' }]}
                       >
-                        {field.value === option ? <Icon name="checkmark" size={18} color="#FFFFFF" /> : null}
+                        {field.value === option ? <Icon name="checkmark" size={18} color={palette.white} /> : null}
                       </Pressable>
                     ))}
                   </View>

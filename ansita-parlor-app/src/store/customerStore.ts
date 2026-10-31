@@ -72,12 +72,3 @@ export const selectFilteredCustomers = (
     .filter((customer) => (tag ? customer.tags.includes(tag) : true))
     .filter((customer) => matchesQuery(query, customer.name, customer.phone, customer.email))
     .sort((a, b) => a.name.localeCompare(b.name));
-
-export const selectCustomersByIds = (customers: readonly Customer[], ids: readonly ID[]): Customer[] =>
-  customers.filter((customer) => ids.includes(customer.id));
-
-export const selectNewCustomersSince = (customers: readonly Customer[], sinceISO: string): Customer[] =>
-  customers.filter((customer) => customer.joinedAt >= sinceISO);
-
-export const selectTopLoyaltyCustomers = (customers: readonly Customer[], limit = 5): Customer[] =>
-  [...customers].sort((a, b) => b.loyaltyPoints - a.loyaltyPoints).slice(0, limit);

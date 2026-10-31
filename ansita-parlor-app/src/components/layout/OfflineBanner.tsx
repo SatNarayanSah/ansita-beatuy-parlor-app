@@ -33,7 +33,7 @@ export const OfflineBanner = () => {
       >
         <Icon name="cloud-offline-outline" size={16} color={colors.textInverse} />
         <Text variant="label" color={colors.textInverse} style={styles.flex}>
-          You're offline (demo)
+          You’re offline (demo)
         </Text>
         <Text variant="caption" color={colors.textInverse}>
           Tap to reconnect

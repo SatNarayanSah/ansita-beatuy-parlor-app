@@ -10,9 +10,12 @@ import { useTheme } from '@/theme';
 import { haptics } from '@/utils/haptics';
 
 /** `tabBarIcon` helper: outline glyph when idle, filled when active. */
-export const tabIcon =
-  (outline: IconName, filled: IconName): NonNullable<BottomTabNavigationOptions['tabBarIcon']> =>
-  ({ focused, color, size }) => <Icon name={focused ? filled : outline} size={size} color={color} />;
+export const tabIcon = (outline: IconName, filled: IconName): NonNullable<BottomTabNavigationOptions['tabBarIcon']> => {
+  const TabIcon = ({ focused, color, size }: { focused: boolean; color: string; size: number }) => (
+    <Icon name={focused ? filled : outline} size={size} color={color} />
+  );
+  return TabIcon;
+};
 
 const ICON_SIZE = 22;
 const SPRING = { damping: 16, stiffness: 220 };
@@ -30,7 +33,7 @@ const TabItem = ({ label, focused, options, onPress, onLongPress }: TabItemProps
   const progress = useSharedValue(focused ? 1 : 0);
 
   useEffect(() => {
-    progress.value = withSpring(focused ? 1 : 0, SPRING);
+    progress.set(withSpring(focused ? 1 : 0, SPRING));
   }, [focused, progress]);
 
   // Soft pill grows in behind the active icon, which lifts slightly.

@@ -39,10 +39,6 @@ export const formatEnumLabel = (value: string): string =>
 /** pluralize(1, 'visit') -> "1 visit", pluralize(3, 'visit') -> "3 visits" */
 export const pluralize = (count: number, singular: string, plural = `${singular}s`): string =>
   `${count} ${count === 1 ? singular : plural}`;
-
-export const truncate = (value: string, maxLength: number): string =>
-  value.length <= maxLength ? value : `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
-
 /** Rounds to one decimal, e.g. 4.666 -> 4.7 */
 export const roundRating = (value: number): number => Math.round(value * 10) / 10;
 

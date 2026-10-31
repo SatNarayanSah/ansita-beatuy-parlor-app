@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { DateCalendar } from '@/components/customer/DateCalendar';
@@ -27,7 +27,6 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
 
   const [date, setDate] = useState<ISODate | null>(null);
   const [time, setTime] = useState<TimeString | null>(null);
-  useEffect(() => setTime(null), [date]);
 
   const serviceIds = appointment?.serviceIds ?? [];
   const qualified = useQualifiedStaff(serviceIds);
@@ -63,7 +62,15 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
             <View style={{ gap: spacing.md }}>
               <SectionHeader title="New date" compact />
               <Card padding="sm">
-                <DateCalendar value={date} onChange={setDate} isDisabled={isDayOff} />
+                <DateCalendar
+                  value={date}
+                  onChange={(next) => {
+                    // A new day means the old time may not be free.
+                    setDate(next);
+                    setTime(null);
+                  }}
+                  isDisabled={isDayOff}
+                />
               </Card>
             </View>
 
@@ -88,7 +95,7 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
             <View style={styles.note}>
               <Icon name="information-circle-outline" size={16} color={colors.textMuted} />
               <Text variant="caption" tone="muted" style={styles.flex}>
-                Your booking goes back to "pending" until the parlour confirms the new time.
+                Your booking goes back to “pending” until the parlour confirms the new time.
               </Text>
             </View>
             <Button title="Request new time" size="lg" disabled={!date || !time} loading={update.loading} onPress={() => void save()} fullWidth />

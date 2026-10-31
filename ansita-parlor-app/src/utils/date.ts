@@ -123,8 +123,4 @@ export const formatTimeRange = (start: TimeString, end: TimeString): string =>
 export const formatTimeAgo = (value: ISODateTime): string =>
   formatDistanceToNow(parseISO(value), { addSuffix: true });
 
-/** "3 Nov 2026" from a full timestamp. */
-export const formatDateTimeShort = (value: ISODateTime): string =>
-  format(parseISO(value), 'd MMM yyyy, h:mm a');
-
 export const getAge = (dob: ISODate): number => differenceInYears(new Date(), parseISODate(dob));

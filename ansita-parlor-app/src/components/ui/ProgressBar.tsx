@@ -21,7 +21,7 @@ export const ProgressBar = ({ value, tone = 'primary', height = 8, accessibility
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(clamped, { duration: 450 });
+    progress.set(withTiming(clamped, { duration: 450 }));
   }, [clamped, progress]);
 
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

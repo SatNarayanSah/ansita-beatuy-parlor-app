@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
-import { isValidISODate, isValidTime } from './date';
-import { isValidPhone as isValidE164Phone, normalizePhone } from './phone';
+import { isValidContactPhone, isValidPhone as isValidE164Phone, normalizePhone } from './phone';
 
 /** Reusable zod field schemas shared by every form. */
 
@@ -28,6 +27,14 @@ export const phoneSchema = z
   .transform((value) => normalizePhone(value))
   .refine(isValidE164Phone, { error: 'Enter a valid mobile number' });
 
+/** Business contact number: a mobile or a Nepal landline (e.g. 041-520123). Output is E.164. */
+export const contactPhoneSchema = z
+  .string()
+  .trim()
+  .min(1, { error: 'Enter a phone number' })
+  .transform((value) => normalizePhone(value))
+  .refine(isValidContactPhone, { error: 'Enter a valid mobile or landline number' });
+
 export const passwordSchema = z
   .string()
   .min(6, { error: 'Password must be at least 6 characters' })
@@ -40,13 +47,6 @@ export const postalCodeSchema = z
   .refine((value) => value === '' || /^\d{5}$/.test(value), {
     error: 'Postal code must be 5 digits',
   });
-
-export const isoDateSchema = z
-  .string()
-  .refine(isValidISODate, { error: 'Enter a valid date (YYYY-MM-DD)' });
-
-export const timeSchema = z.string().refine(isValidTime, { error: 'Enter a valid time (HH:mm)' });
-
 export const priceSchema = z
   .number({ error: 'Enter an amount' })
   .int({ error: 'Amount must be a whole number' })
@@ -58,7 +58,3 @@ export const durationSchema = z
   .int({ error: 'Duration must be whole minutes' })
   .min(5, { error: 'Duration must be at least 5 minutes' })
   .max(600, { error: 'Duration must be at most 10 hours' });
-
-// Plain predicates for non-form checks.
-export const isValidEmail = (value: string): boolean => emailSchema.safeParse(value).success;
-export const isValidPhoneInput = (value: string): boolean => phoneSchema.safeParse(value).success;

@@ -21,7 +21,7 @@ export const Stepper = ({ steps, current, style }: StepperProps) => {
   const fraction = steps.length > 1 ? current / (steps.length - 1) : 0;
 
   useEffect(() => {
-    progress.value = withTiming(fraction, { duration: 350 });
+    progress.set(withTiming(fraction, { duration: 350 }));
   }, [fraction, progress]);
 
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));

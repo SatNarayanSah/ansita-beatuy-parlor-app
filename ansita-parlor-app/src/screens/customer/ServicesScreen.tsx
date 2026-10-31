@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { ratingsByService, ServiceRow } from '@/components/customer/ServiceCards';
 import { FAB, FilterChips, ListScreen, SearchBar, SkeletonListItem, Text, type FilterOption } from '@/components/ui';
 import { isIconName } from '@/components/ui/Icon';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
 import type { CustomerTabScreenProps } from '@/navigation/types';
@@ -21,9 +22,7 @@ export const ServicesScreen = ({ navigation, route }: Props) => {
   const [query, setQuery] = useState('');
   const [categoryId, setCategoryId] = useState<ID | null>(route.params?.categoryId ?? null);
 
-  useEffect(() => {
-    if (route.params?.categoryId) setCategoryId(route.params.categoryId);
-  }, [route.params?.categoryId]);
+  useAdoptParam(route.params?.categoryId, setCategoryId);
 
   const data = useServiceQuery(
     async () => {

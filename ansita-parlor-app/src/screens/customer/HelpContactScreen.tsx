@@ -12,7 +12,7 @@ import { formatPhone } from '@/utils/phone';
 type Props = RootStackScreenProps<'HelpContact'>;
 
 /** Map pin for the demo address. Contact details come from the business profile in admin Settings. */
-const MAP_PIN = { latitude: 27.6915, longitude: 85.342 };
+const MAP_PIN = { latitude: 26.7288, longitude: 85.9263 };
 
 const FAQS = [
   { q: 'How do I cancel or reschedule?', a: 'Open Bookings, choose the appointment and tap Reschedule or Cancel. There is no fee for changes made before your visit.' },
@@ -71,7 +71,7 @@ export const HelpContactScreen = (_props: Props) => {
   return (
     <Screen gap="xl">
       <Card style={{ gap: spacing.md }}>
-        <Text variant="h3">We're here to help</Text>
+        <Text variant="h3">We’re here to help</Text>
         <Text variant="bodySmall" tone="secondary">
           Call us, message on WhatsApp or drop by the parlour.
         </Text>

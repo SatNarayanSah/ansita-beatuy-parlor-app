@@ -23,7 +23,11 @@ export const useAsyncAction = <TArgs extends unknown[], TResult>(
   const [data, setData] = useState<TResult | undefined>(undefined);
   const mounted = useRef(true);
   const actionRef = useRef(action);
-  actionRef.current = action;
+
+  // Refs are updated after render, never during it.
+  useEffect(() => {
+    actionRef.current = action;
+  });
 
   useEffect(() => {
     mounted.current = true;

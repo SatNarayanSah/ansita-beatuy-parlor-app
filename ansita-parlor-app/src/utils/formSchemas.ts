@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { isValidTime, timeToMinutes } from './date';
-import { emailSchema, nameSchema, optionalEmailSchema, phoneSchema, priceSchema } from './validators';
+import { contactPhoneSchema, emailSchema, nameSchema, optionalEmailSchema, phoneSchema, priceSchema } from './validators';
 
 /**
  * Zod schemas for the admin and payment forms. Text inputs hold strings, so
@@ -97,7 +97,7 @@ export const businessProfileSchema = z
   .object({
     name: z.string().trim().min(2, { error: 'Enter the business name' }).max(60),
     tagline: z.string().trim().max(60, { error: 'Keep it under 60 characters' }),
-    phone: phoneSchema,
+    phone: contactPhoneSchema,
     whatsapp: phoneSchema,
     email: emailSchema,
     address: z.string().trim().min(5, { error: 'Enter the full address' }).max(120),

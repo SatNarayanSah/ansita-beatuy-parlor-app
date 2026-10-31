@@ -70,7 +70,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
         <SectionHeader title="Appearance" compact />
         <Card style={{ gap: spacing.md }}>
           <Text variant="bodySmall" tone="secondary">
-            Choose a theme, or follow your phone's setting.
+            Choose a theme, or follow your phone’s setting.
           </Text>
           <ThemeModeSelector />
           <ListItem

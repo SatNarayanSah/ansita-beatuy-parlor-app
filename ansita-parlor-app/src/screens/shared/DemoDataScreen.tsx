@@ -26,7 +26,6 @@ import {
   offerService,
 } from '@/services';
 import {
-  selectCurrentUser,
   selectStatusCounts,
   useAppointmentStore,
   useAuthStore,
@@ -60,7 +59,6 @@ export const DemoDataScreen = (_props: Props) => {
   const { colors } = useTheme();
   const toast = useToast();
   const apiConfig = useApiConfig();
-  const currentUser = useAuthStore(selectCurrentUser);
   const usersCount = useAuthStore((state) => state.users.length);
   const customersCount = useCustomerStore((state) => state.customers.length);
   const servicesCount = useServiceStore((state) => state.services.length);

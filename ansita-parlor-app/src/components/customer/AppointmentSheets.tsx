@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import { BottomSheet, Button, Chip, Input, RatingStars, Text, useToast } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { appointmentService, reviewService } from '@/services';
 import { useTheme } from '@/theme';
@@ -29,14 +30,12 @@ export const CancelAppointmentSheet = ({ appointment, summary, onClose, reasons 
   const [details, setDetails] = useState('');
   const cancel = useAsyncAction(appointmentService.updateStatus);
 
-  useEffect(() => {
-    if (appointment) {
-      setReason(reasons[0] ?? 'Other');
-      setDetails('');
-      cancel.reset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointment?.id]);
+  // Fresh form each time the sheet opens for an appointment.
+  useAdoptParam(appointment?.id, () => {
+    setReason(reasons[0] ?? 'Other');
+    setDetails('');
+    cancel.reset();
+  });
 
   const confirm = async (): Promise<void> => {
     if (!appointment) return;
@@ -104,14 +103,11 @@ export const ReviewSheet = ({ appointment, summary, onClose }: ReviewSheetProps)
   const [comment, setComment] = useState('');
   const submit = useAsyncAction(reviewService.createReview);
 
-  useEffect(() => {
-    if (appointment) {
-      setRating(5);
-      setComment('');
-      submit.reset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointment?.id]);
+  useAdoptParam(appointment?.id, () => {
+    setRating(5);
+    setComment('');
+    submit.reset();
+  });
 
   const send = async (): Promise<void> => {
     if (!appointment) return;

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import type { z } from 'zod';
 
@@ -49,7 +49,7 @@ export const BatchFormScreen = ({ navigation, route }: Props) => {
   const [deleting, setDeleting] = useState(false);
   const query = useServiceQuery(() => courseService.getCourse(courseId), [courseId]);
 
-  const { control, handleSubmit, reset, watch, setValue, formState } = useForm<Values, unknown, z.output<typeof batchSchema>>({
+  const { control, handleSubmit, reset, getValues, setValue, formState } = useForm<Values, unknown, z.output<typeof batchSchema>>({
     resolver: zodResolver(batchSchema),
     defaultValues: {
       name: '',
@@ -70,11 +70,11 @@ export const BatchFormScreen = ({ navigation, route }: Props) => {
     if (!course) return;
     const batch = batchId ? course.batches.find((b) => b.id === batchId) : undefined;
     if (batch) reset({ ...batch, seats: String(batch.seats) });
-    else reset({ ...watch(), seats: String(course.seats) });
+    else reset({ ...getValues(), seats: String(course.seats) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data, batchId, reset]);
 
-  const [startDate, endDate, startTime, endTime] = watch(['startDate', 'endDate', 'startTime', 'endTime']);
+  const [startDate, endDate, startTime, endTime] = useWatch({ control, name: ['startDate', 'endDate', 'startTime', 'endTime'] });
   useEffect(() => {
     if (!statusTouched && startDate && endDate) setValue('status', statusFor(startDate, endDate));
   }, [startDate, endDate, statusTouched, setValue]);

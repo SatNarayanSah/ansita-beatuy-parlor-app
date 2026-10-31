@@ -19,10 +19,10 @@ export const buildBusinessSettings = (): BusinessSettings => ({
   profile: {
     name: 'Ansita Beauty Parlour',
     tagline: 'Beauty Parlour & Training Centre',
-    phone: '+97714781234',
+    phone: '+97741520123',
     whatsapp: '+9779841500100',
     email: 'hello@ansita.com',
-    address: 'Baneshwor Chowk, Kathmandu 44600',
+    address: 'Bhanu Chowk, Janakpur-8, Dhanusha 45600',
     openTime: PARLOR_HOURS.open,
     closeTime: PARLOR_HOURS.close,
   },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
@@ -24,6 +24,7 @@ import {
   type FilterOption,
   type SegmentOption,
 } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useCourseMap, useCustomerMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { AdminTabScreenProps, TrainingView } from '@/navigation/types';
@@ -61,9 +62,7 @@ export const TrainingScreen = ({ navigation, route }: Props) => {
   const [payBusy, setPayBusy] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (route.params?.view) setView(route.params.view);
-  }, [route.params?.view]);
+  useAdoptParam(route.params?.view, setView);
 
   const query = useServiceQuery(
     async () => {

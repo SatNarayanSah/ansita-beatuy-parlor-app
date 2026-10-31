@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { ChipSelect, SelectSheet } from '@/components/admin/Pickers';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import { FormInput } from '@/components/form/FormFields';
 import { Avatar, Button, Card, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useCustomerMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
@@ -32,7 +33,7 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
   const customerList = useCustomerStore((state) => state.customers);
   const [studentId, setStudentId] = useState<ID | null>(route.params?.customerId ?? null);
   const [courseId, setCourseId] = useState<ID | null>(route.params?.courseId ?? null);
-  const [batchId, setBatchId] = useState<ID | null>(null);
+  const [chosenBatchId, setBatchId] = useState<ID | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('cash');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -44,9 +45,8 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
   const open = useMemo(() => (availability.data ?? []).filter((item) => item.isOpen), [availability.data]);
   const course = courses.data?.find((c) => c.id === courseId);
 
-  useEffect(() => {
-    setBatchId(open[0]?.batch.id ?? null);
-  }, [open]);
+  // Soonest open batch of the chosen course, until another is picked.
+  const batchId = open.some((item) => item.batch.id === chosenBatchId) ? chosenBatchId : (open[0]?.batch.id ?? null);
 
   // Optional first instalment, capped at the selected course's fee.
   const schema = useMemo(() => z.object({ amount: optionalWholeNumberText('the amount', course?.fee ?? 0) }), [course?.fee]);
@@ -55,7 +55,8 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
     defaultValues: { amount: '' },
     mode: 'onChange',
   });
-  useEffect(() => reset({ amount: '' }), [courseId, reset]);
+  // Clear the amount when the course (and so the fee) changes.
+  useAdoptParam(courseId ?? undefined, () => reset({ amount: '' }));
   const amountText = useWatch({ control, name: 'amount' });
   const paid = /^\d+$/.test(amountText) ? Number(amountText) : 0;
   const student = studentId ? customers.get(studentId) : undefined;

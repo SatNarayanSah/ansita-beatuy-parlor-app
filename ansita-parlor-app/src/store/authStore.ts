@@ -87,11 +87,6 @@ export const selectCurrentUser = (state: AuthData): User | null => {
   if (!session) return null;
   return findEntity(state.users, session.userId) ?? null;
 };
-
-export const selectIsAuthenticated = (state: AuthData): boolean => selectCurrentUser(state) !== null;
-
-export const selectCurrentRole = (state: AuthData): UserRole | null => selectCurrentUser(state)?.role ?? null;
-
 export const selectUsersByRole = (users: readonly User[], role: UserRole): User[] =>
   users.filter((user) => user.role === role);
 

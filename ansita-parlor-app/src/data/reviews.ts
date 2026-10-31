@@ -9,7 +9,7 @@ import { buildServices } from './services';
 
 const COMMENTS: Record<ID, Partial<Record<ReviewRating, readonly string[]>>> = {
   [CATEGORY_IDS.hair]: {
-    5: ['Sarita didi understood exactly what I wanted. My hair has never looked this good!', 'Colour came out perfect and my scalp did not itch at all.', 'Best hair spa in Kathmandu. Hair feels so soft.'],
+    5: ['Sarita didi understood exactly what I wanted. My hair has never looked this good!', 'Colour came out perfect and my scalp did not itch at all.', 'Best hair spa in Janakpur. Hair feels so soft.'],
     4: ['Good cut and friendly staff. Had to wait about 15 minutes.', 'Nice result, slightly pricier than nearby parlours but worth it.'],
     3: ['Haircut was okay, a bit shorter than I asked for.'],
     2: ['Colour faded faster than I expected.'],
@@ -33,7 +33,7 @@ const COMMENTS: Record<ID, Partial<Record<ReviewRating, readonly string[]>>> = {
     4: ['Good waxing, slightly crowded on Saturday.'],
   },
   [CATEGORY_IDS.spa]: {
-    5: ['Best massage I have had in the valley. All my back pain was gone.', 'Head massage after a long office week was heaven.'],
+    5: ['Best massage I have had in town. All my back pain was gone.', 'Head massage after a long office week was heaven.'],
     4: ['Very relaxing, the room could have been a little warmer.'],
     2: ['Pressure was too hard for me even after I asked to reduce it.'],
   },

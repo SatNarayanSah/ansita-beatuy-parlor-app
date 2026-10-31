@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Badge, Button, Card, Divider, Icon, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
@@ -20,7 +20,7 @@ export const EnrollScreen = ({ navigation, route }: Props) => {
   const toast = useToast();
   const user = useAuthStore(selectCurrentUser);
   const { courseId } = route.params;
-  const [batchId, setBatchId] = useState<ID | null>(route.params.batchId ?? null);
+  const [chosenBatchId, setBatchId] = useState<ID | null>(route.params.batchId ?? null);
   const enroll = useAsyncAction(enrollmentService.enroll);
 
   const query = useServiceQuery(
@@ -33,9 +33,8 @@ export const EnrollScreen = ({ navigation, route }: Props) => {
   );
 
   // Preselect the soonest open batch.
-  useEffect(() => {
-    if (!batchId && query.data?.open[0]) setBatchId(query.data.open[0].batch.id);
-  }, [batchId, query.data]);
+  // The soonest open batch is preselected until the customer picks one.
+  const batchId = query.data?.open.some((item) => item.batch.id === chosenBatchId) ? chosenBatchId : (query.data?.open[0]?.batch.id ?? null);
 
   const confirm = async (): Promise<void> => {
     if (!user?.customerId || !batchId) return;

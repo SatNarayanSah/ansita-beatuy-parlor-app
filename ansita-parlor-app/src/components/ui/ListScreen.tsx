@@ -7,6 +7,7 @@ import { useTheme } from '@/theme';
 
 import { Appear } from './Appear';
 import { EmptyState, type EmptyStateProps } from './EmptyState';
+import { StaleDataBanner } from './QueryState';
 import { MAX_CONTENT_WIDTH } from './Screen';
 
 export interface ListScreenProps<T> {
@@ -42,12 +43,13 @@ export const ListScreen = <T,>({ query, items, keyExtractor, renderItem, header,
   const listHeader = (
     <View style={{ gap: spacing.lg, paddingBottom: spacing.md }}>
       {header}
+      {loaded && query.error ? <StaleDataBanner message={query.error} onRetry={() => void query.refetch()} /> : null}
       {!loaded && !failed ? skeleton : null}
       {failed ? (
         <EmptyState
           icon="cloud-offline-outline"
           tone="danger"
-          title="Couldn't load this"
+          title="Couldn’t load this"
           message={query.error ?? undefined}
           actionLabel="Try again"
           onAction={() => void query.refetch()}

@@ -60,18 +60,20 @@ export const BottomSheet = ({
   const translateY = useSharedValue(screenHeight);
   const backdrop = useSharedValue(0);
 
-  // Mount immediately on open; unmount only after the exit animation finishes.
+  // Mount as soon as it opens (during render, so the first frame already has it);
+  // unmount only after the exit animation finishes.
+  if (visible && !mounted) setMounted(true);
+
   useEffect(() => {
     if (visible) {
-      setMounted(true);
-      translateY.value = screenHeight;
-      translateY.value = withSpring(0, { damping: 22, stiffness: 220, overshootClamping: true });
-      backdrop.value = withTiming(1, { duration: 220 });
+      translateY.set(screenHeight);
+      translateY.set(withSpring(0, { damping: 22, stiffness: 220, overshootClamping: true }));
+      backdrop.set(withTiming(1, { duration: 220 }));
     } else if (mounted) {
-      backdrop.value = withTiming(0, { duration: 180 });
-      translateY.value = withTiming(screenHeight, { duration: 220, easing: Easing.in(Easing.cubic) }, (finished) => {
+      backdrop.set(withTiming(0, { duration: 180 }));
+      translateY.set(withTiming(screenHeight, { duration: 220, easing: Easing.in(Easing.cubic) }, (finished) => {
         if (finished) scheduleOnRN(setMounted, false);
-      });
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
@@ -81,17 +83,17 @@ export const BottomSheet = ({
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gesture) => dismissible && gesture.dy > 4 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
         onPanResponderMove: (_, gesture) => {
-          translateY.value = Math.max(0, gesture.dy);
+          translateY.set(Math.max(0, gesture.dy));
         },
         onPanResponderRelease: (_, gesture) => {
           if (gesture.dy > DISMISS_DISTANCE || gesture.vy > DISMISS_VELOCITY) {
             onClose();
           } else {
-            translateY.value = withSpring(0, { damping: 20, stiffness: 240 });
+            translateY.set(withSpring(0, { damping: 20, stiffness: 240 }));
           }
         },
         onPanResponderTerminate: () => {
-          translateY.value = withSpring(0, { damping: 20, stiffness: 240 });
+          translateY.set(withSpring(0, { damping: 20, stiffness: 240 }));
         },
       }),
     [dismissible, onClose, translateY],

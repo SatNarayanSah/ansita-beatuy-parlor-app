@@ -7,7 +7,7 @@ type ServiceSeed = Pick<Service, 'id' | 'name' | 'categoryId' | 'duration' | 'pr
   isActive?: boolean;
 };
 
-/** Prices in NPR, typical of a mid-range Kathmandu parlour. Durations in minutes. */
+/** Prices in NPR for a well-established Janakpur parlour. Durations in minutes. */
 const SERVICE_SEEDS: ServiceSeed[] = [
   // Hair
   { id: 'svc_haircut', name: 'Haircut & Blow-dry', categoryId: C.hair, duration: 45, price: 600, description: 'Consultation, wash, precision cut and blow-dry finish.' },

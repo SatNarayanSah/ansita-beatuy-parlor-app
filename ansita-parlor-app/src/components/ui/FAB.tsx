@@ -40,7 +40,7 @@ export const FAB = ({
   const pressed = useSharedValue(1);
 
   useEffect(() => {
-    shown.value = withTiming(visible ? 1 : 0, { duration: 200 });
+    shown.set(withTiming(visible ? 1 : 0, { duration: 200 }));
   }, [visible, shown]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -64,10 +64,10 @@ export const FAB = ({
           onPress();
         }}
         onPressIn={() => {
-          pressed.value = withTiming(0.94, { duration: 90 });
+          pressed.set(withTiming(0.94, { duration: 90 }));
         }}
         onPressOut={() => {
-          pressed.value = withSpring(1);
+          pressed.set(withSpring(1));
         }}
         style={[
           styles.button,

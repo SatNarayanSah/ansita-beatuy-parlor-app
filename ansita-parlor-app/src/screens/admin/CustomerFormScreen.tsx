@@ -47,7 +47,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
 
   const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', phone: '', email: '', gender: 'female', dob: null, line1: '', city: 'Kathmandu', postalCode: '', notes: '', tags: ['new'] },
+    defaultValues: { name: '', phone: '', email: '', gender: 'female', dob: null, line1: '', city: 'Janakpur', postalCode: '', notes: '', tags: ['new'] },
     mode: 'onTouched',
   });
   const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
@@ -81,7 +81,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
       notes: values.notes,
       tags: values.tags,
       avatar: existing?.avatar ?? null,
-      address: { line1: values.line1, line2: existing?.address.line2 ?? '', city: values.city, province: 'Bagmati', postalCode: values.postalCode },
+      address: { line1: values.line1, line2: existing?.address.line2 ?? '', city: values.city, province: existing?.address.province || 'Madhesh', postalCode: values.postalCode },
     };
     try {
       if (customerId) {
@@ -135,7 +135,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
                 <DatePickerField label="Date of birth" value={field.value} onChange={field.onChange} maxDate={daysFromToday(-365 * 5)} showYearControls clearable />
               )}
             />
-            <FormInput control={control} name="line1" label="Address" leftIcon="home-outline" placeholder="e.g. Baneshwor-10" />
+            <FormInput control={control} name="line1" label="Address" leftIcon="home-outline" placeholder="e.g. Bhanu Chowk, Janakpur-8" />
             <FormInput control={control} name="city" label="City" leftIcon="business-outline" />
             <FormInput control={control} name="postalCode" label="Postal code" keyboardType="number-pad" maxLength={5} />
             <FormInput control={control} name="notes" label="Notes & preferences" placeholder="Allergies, favourite shades, preferred stylist…" multiline maxLength={300} showCount />

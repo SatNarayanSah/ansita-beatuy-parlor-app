@@ -1,5 +1,5 @@
 import { addDays, format, startOfWeek } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AdminAppointmentRow } from '@/components/admin/AdminAppointmentRow';
@@ -21,6 +21,7 @@ import {
   type FilterOption,
   type SegmentOption,
 } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useCustomerMap, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { AdminTabScreenProps, AppointmentsView } from '@/navigation/types';
@@ -88,11 +89,12 @@ export const AppointmentsScreen = ({ navigation, route }: Props) => {
   const [range, setRange] = useState<ListRange | null>('upcoming');
 
   // Deep links from the Dashboard (e.g. "Pending approval") update the filters.
-  useEffect(() => {
-    if (route.params?.view) setView(route.params.view);
-    if (route.params?.date) setDate(route.params.date);
-    if (route.params?.status !== undefined) setStatus(route.params.status);
-  }, [route.params]);
+  // Keyed on the params object, so repeating the same link re-applies it.
+  useAdoptParam(route.params, (params) => {
+    if (params.view) setView(params.view);
+    if (params.date) setDate(params.date);
+    if (params.status !== undefined) setStatus(params.status);
+  });
 
   const query = useServiceQuery(() => appointmentService.listAppointments(), [], { refetchOn: [useAppointmentStore] });
 

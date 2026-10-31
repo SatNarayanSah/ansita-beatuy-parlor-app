@@ -32,8 +32,8 @@ export const Skeleton = ({ width = '100%', height = 14, radius, circle = false, 
 
   useEffect(() => {
     if (reduceMotion || blockWidth === 0) return undefined;
-    progress.value = 0;
-    progress.value = withRepeat(withTiming(1, { duration: SHIMMER_MS, easing: Easing.inOut(Easing.ease) }), -1, false);
+    progress.set(0);
+    progress.set(withRepeat(withTiming(1, { duration: SHIMMER_MS, easing: Easing.inOut(Easing.ease) }), -1, false));
     return () => cancelAnimation(progress);
   }, [progress, reduceMotion, blockWidth]);
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ChipSelect, MultiChipSelect, SelectSheet } from '@/components/admin/Pickers';
@@ -22,6 +22,7 @@ import {
   type FilterOption,
 } from '@/components/ui';
 import { isIconName } from '@/components/ui/Icon';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useQualifiedStaff } from '@/hooks/useBookingAvailability';
 import { useCategoryMap, useCustomerMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
@@ -76,17 +77,15 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Prefill once when editing.
-  useEffect(() => {
-    const a = existing.data;
-    if (!a) return;
+  // Prefill once the booking being edited has loaded.
+  useAdoptParam(existing.data ?? undefined, (a) => {
     setCustomerId(a.customerId);
     setServiceIds(a.serviceIds);
     setStaffId(a.staffId);
     setDate(a.date);
     setTime(a.startTime);
     setNotes(a.notes);
-  }, [existing.data]);
+  });
 
   // Dirty when anything differs from how the form started (prefill or the booking being edited).
   const original = existing.data;

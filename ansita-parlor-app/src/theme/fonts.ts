@@ -26,5 +26,3 @@ export const fontAssets = {
   [fontFamily.semibold]: Inter_600SemiBold,
   [fontFamily.bold]: Inter_700Bold,
 };
-
-export type FontFamily = (typeof fontFamily)[keyof typeof fontFamily];

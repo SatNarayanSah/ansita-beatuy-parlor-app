@@ -29,4 +29,3 @@ export const screenPadding = spacing.lg;
 export const minTouchSize = 44;
 
 export type SpacingKey = keyof typeof spacing;
-export type RadiusKey = keyof typeof radius;

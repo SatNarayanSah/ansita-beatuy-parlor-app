@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Button, Card, DatePickerField, EmptyState, QueryState, Screen, SegmentedControl, SkeletonListItem, Text, useToast, type SegmentOption } from '@/components/ui';
@@ -36,8 +36,9 @@ export const BatchAttendanceScreen = ({ navigation, route }: Props) => {
   const toast = useToast();
   const customers = useCustomerMap();
   const { courseId, batchId } = route.params;
-  const [date, setDate] = useState<ISODate | null>(null);
-  const [marks, setMarks] = useState<Record<ID, AttendanceStatus>>({});
+  const [pickedDate, setDate] = useState<ISODate | null>(null);
+  // Edits for the chosen day only; everything else falls back to what is recorded.
+  const [edits, setEdits] = useState<{ date: ISODate | null; marks: Record<ID, AttendanceStatus> }>({ date: null, marks: {} });
   const [saving, setSaving] = useState(false);
 
   const query = useServiceQuery(async () => {
@@ -46,15 +47,17 @@ export const BatchAttendanceScreen = ({ navigation, route }: Props) => {
   }, [courseId, batchId]);
 
   const batch = query.data?.batch;
-  useEffect(() => {
-    if (batch && date === null) setDate(latestClassDay(batch));
-  }, [batch, date]);
+  // Defaults to the most recent class day until another is picked.
+  const date = pickedDate ?? (batch ? latestClassDay(batch) : null);
 
-  // Prefill from anything already recorded for the chosen day; default present.
-  useEffect(() => {
-    if (!date || !query.data) return;
-    setMarks(Object.fromEntries(query.data.enrollments.map((e) => [e.id, e.attendance.find((r) => r.date === date)?.status ?? 'present'])));
-  }, [date, query.data]);
+  // What is already recorded for the day (default present), overlaid with this session's edits.
+  const marks = useMemo<Record<ID, AttendanceStatus>>(() => {
+    const recorded = Object.fromEntries(
+      (query.data?.enrollments ?? []).map((e) => [e.id, e.attendance.find((r) => r.date === date)?.status ?? ('present' as const)]),
+    );
+    return edits.date === date ? { ...recorded, ...edits.marks } : recorded;
+  }, [query.data, date, edits]);
+  const setMarks = (next: Record<ID, AttendanceStatus>): void => setEdits({ date, marks: next });
 
   const counts = useMemo(
     () => Object.values(marks).reduce((totals, status) => ({ ...totals, [status]: totals[status] + 1 }), { present: 0, late: 0, absent: 0 }),
@@ -148,7 +151,7 @@ export const BatchAttendanceScreen = ({ navigation, route }: Props) => {
                         <SegmentedControl
                           options={OPTIONS}
                           value={marks[enrollment.id] ?? 'present'}
-                          onChange={(status) => setMarks((current) => ({ ...current, [enrollment.id]: status }))}
+                          onChange={(status) => setMarks({ ...marks, [enrollment.id]: status })}
                         />
                       </Card>
                     );

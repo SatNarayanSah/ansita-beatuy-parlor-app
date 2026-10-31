@@ -1,39 +1,22 @@
+import { Image } from 'expo-image';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { Icon } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
-import { palette, useTheme } from '@/theme';
+
+// Light, squared copy of the client's assets/logo.png (the original is ~1.4 MB).
+const LOGO = require('../../../assets/logo-app.png');
 
 interface BrandLogoProps {
   size?: number;
   style?: StyleProp<ViewStyle>;
 }
 
-/** "A" monogram in a rose disc with a gold ring and sparkle. Drawn in code until a final logo asset exists. */
-export const BrandLogo = ({ size = 88, style }: BrandLogoProps) => {
-  const { fontFamily, shadows } = useTheme();
-  const ring = Math.max(2, Math.round(size * 0.04));
-  const sparkle = Math.round(size * 0.26);
-
-  return (
-    <View style={[{ width: size, height: size }, style]} accessibilityRole="image" accessibilityLabel="Ansita logo">
-      <View
-        style={[
-          styles.disc,
-          shadows.md,
-          { borderRadius: size / 2, backgroundColor: palette.rose500, borderColor: palette.gold300, borderWidth: ring },
-        ]}
-      >
-        <Text style={{ fontFamily: fontFamily.headingBold, fontSize: size * 0.5, lineHeight: size * 0.62, color: palette.white }}>
-          A
-        </Text>
-      </View>
-      <View style={[styles.sparkle, { top: -sparkle * 0.15, right: -sparkle * 0.15 }]}>
-        <Icon name="sparkles" size={sparkle} color={palette.gold300} />
-      </View>
-    </View>
-  );
-};
+/** The parlour's badge logo (अंशिता ब्युटी पार्लर तथा प्रशिक्षण केन्द्र, जनकपुर-८). */
+export const BrandLogo = ({ size = 88, style }: BrandLogoProps) => (
+  <View style={[{ width: size, height: size }, style]} accessibilityRole="image" accessibilityLabel="Ansita Beauty Parlour logo">
+    <Image source={LOGO} style={{ width: size, height: size }} contentFit="contain" cachePolicy="memory" />
+  </View>
+);
 
 interface BrandWordmarkProps {
   align?: 'center' | 'left';
@@ -47,14 +30,12 @@ export const BrandWordmark = ({ align = 'center', tagline = true }: BrandWordmar
     </Text>
     {tagline ? (
       <Text variant="overline" tone="secondary">
-        Beauty Parlour & Training Centre
+        Beauty Parlour & Training Centre · Janakpur
       </Text>
     ) : null}
   </View>
 );
 
 const styles = StyleSheet.create({
-  disc: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  sparkle: { position: 'absolute' },
   wordmark: { letterSpacing: 1 },
 });

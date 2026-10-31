@@ -97,7 +97,7 @@ const CANCELLATION_REASONS = [
   'Customer was unwell.',
   'Clashed with a family puja.',
   'Rescheduled due to load-shedding at home.',
-  'Customer travelling outside the valley.',
+  'Customer travelling outside Janakpur.',
   'Booked by mistake.',
   'Office meeting came up.',
 ] as const;

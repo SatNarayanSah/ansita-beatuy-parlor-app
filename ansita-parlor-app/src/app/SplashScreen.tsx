@@ -43,18 +43,18 @@ export const SplashScreen = ({ fontsReady, appReady, onFinish, onFirstFrame }: S
 
   useEffect(() => {
     if (!fontsReady) return undefined;
-    logo.value = withSpring(1, { damping: 11, stiffness: 120 });
-    halo.value = withDelay(250, withRepeat(withSequence(withTiming(1, { duration: 1100 }), withTiming(0.6, { duration: 900 })), -1, true));
-    words.value = withDelay(450, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }));
+    logo.set(withSpring(1, { damping: 11, stiffness: 120 }));
+    halo.set(withDelay(250, withRepeat(withSequence(withTiming(1, { duration: 1100 }), withTiming(0.6, { duration: 900 })), -1, true)));
+    words.set(withDelay(450, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) })));
     const timer = setTimeout(() => setMinTimeElapsed(true), MIN_DURATION_MS);
     return () => clearTimeout(timer);
   }, [fontsReady, logo, halo, words]);
 
   useEffect(() => {
     if (!appReady || !minTimeElapsed) return;
-    exit.value = withTiming(0, { duration: 380, easing: Easing.in(Easing.quad) }, (finished) => {
+    exit.set(withTiming(0, { duration: 380, easing: Easing.in(Easing.quad) }, (finished) => {
       if (finished) scheduleOnRN(onFinish);
-    });
+    }));
   }, [appReady, minTimeElapsed, exit, onFinish]);
 
   const rootStyle = useAnimatedStyle(() => ({ opacity: exit.value }));

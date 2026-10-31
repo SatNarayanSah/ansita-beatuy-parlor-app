@@ -3,9 +3,23 @@ import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { BrandLogo } from '@/components/brand/BrandLogo';
 import { Button, Icon, Text, useToast } from '@/components/ui';
-import { useTheme } from '@/theme';
+import { palette, useTheme } from '@/theme';
 import type { Batch, Course, Enrollment } from '@/types';
 import { formatDisplayDate, formatShortDate, todayISO } from '@/utils/date';
+
+/**
+ * Fixed "parchment" colours from the brand palette: a certificate should look
+ * the same printed or on screen, in light or dark mode.
+ */
+const INK = {
+  paper: '#FFFDF8',
+  gold: palette.gold500,
+  goldLight: palette.gold300,
+  rose: palette.rose700,
+  heading: palette.rose900,
+  body: palette.charcoal,
+  muted: '#5C5357',
+} as const;
 
 interface CertificatePreviewProps {
   visible: boolean;
@@ -28,45 +42,44 @@ export const CertificatePreview = ({ visible, onClose, studentName, course, batc
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View entering={FadeIn.duration(160)} style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
         <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.lg }]}>
-          <Animated.View entering={ZoomIn.duration(220)} style={[shadows.lg, { backgroundColor: '#FFFDF8', borderRadius: radius.lg, padding: 10 }]}>
-            {/* Fixed parchment colours: a certificate looks the same in dark mode. */}
-            <View style={[styles.outer, { borderColor: '#C49A45' }]}>
-              <View style={[styles.inner, { borderColor: '#E0BC6E', padding: spacing.xl, gap: spacing.md }]}>
+          <Animated.View entering={ZoomIn.duration(220)} style={[shadows.lg, { backgroundColor: INK.paper, borderRadius: radius.lg, padding: 10 }]}>
+            <View style={[styles.outer, { borderColor: INK.gold }]}>
+              <View style={[styles.inner, { borderColor: INK.goldLight, padding: spacing.xl, gap: spacing.md }]}>
                 <BrandLogo size={56} />
-                <Text variant="overline" color="#9C3D5E">
+                <Text variant="overline" color={INK.rose}>
                   {businessName}
                 </Text>
-                <Text style={{ fontFamily: fontFamily.headingBold, fontSize: 24, color: '#3F2430', textAlign: 'center' }}>
+                <Text style={{ fontFamily: fontFamily.headingBold, fontSize: 24, color: INK.heading, textAlign: 'center' }}>
                   Certificate of Completion
                 </Text>
-                <Text variant="caption" color="#6B6166">
+                <Text variant="caption" color={INK.muted}>
                   This is proudly presented to
                 </Text>
-                <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 26, color: '#9C3D5E', textAlign: 'center' }}>{studentName}</Text>
-                <View style={[styles.rule, { backgroundColor: '#E0BC6E' }]} />
-                <Text variant="bodySmall" color="#2B2528" align="center">
-                  for successfully completing the <Text variant="label" color="#2B2528">{course.title}</Text>
+                <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 26, color: INK.rose, textAlign: 'center' }}>{studentName}</Text>
+                <View style={[styles.rule, { backgroundColor: INK.goldLight }]} />
+                <Text variant="bodySmall" color={INK.body} align="center">
+                  for successfully completing the <Text variant="label" color={INK.body}>{course.title}</Text>
                   {batch ? ` (${batch.name}, ${formatShortDate(batch.startDate)} - ${formatShortDate(batch.endDate)})` : ''}
                   {` with ${course.syllabus.reduce((sum, m) => sum + m.hours, 0)} hours of training.`}
                 </Text>
                 <View style={styles.signatures}>
                   <View style={styles.signature}>
-                    <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 16, color: '#3F2430' }}>{instructorName ?? 'Instructor'}</Text>
-                    <View style={[styles.signLine, { backgroundColor: '#6B6166' }]} />
-                    <Text variant="caption" color="#6B6166">
+                    <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 16, color: INK.heading }}>{instructorName ?? 'Instructor'}</Text>
+                    <View style={[styles.signLine, { backgroundColor: INK.muted }]} />
+                    <Text variant="caption" color={INK.muted}>
                       Instructor
                     </Text>
                   </View>
-                  <Icon name="ribbon" size={40} color="#C49A45" />
+                  <Icon name="ribbon" size={40} color={INK.gold} />
                   <View style={styles.signature}>
-                    <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 16, color: '#3F2430' }}>Ansita Shrestha</Text>
-                    <View style={[styles.signLine, { backgroundColor: '#6B6166' }]} />
-                    <Text variant="caption" color="#6B6166">
+                    <Text style={{ fontFamily: fontFamily.headingSemibold, fontSize: 16, color: INK.heading }}>Ansita Shrestha</Text>
+                    <View style={[styles.signLine, { backgroundColor: INK.muted }]} />
+                    <Text variant="caption" color={INK.muted}>
                       Director
                     </Text>
                   </View>
                 </View>
-                <Text variant="caption" color="#9A8F94">
+                <Text variant="caption" color={INK.muted}>
                   No. {number} · Issued {formatDisplayDate(todayISO())}
                 </Text>
               </View>

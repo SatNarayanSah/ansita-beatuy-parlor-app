@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import { CourseCard } from '@/components/customer/CourseCards';
 import { EnrollmentCard } from '@/components/customer/EnrollmentCard';
 import { Appear, QueryState, Screen, SegmentedControl, SkeletonCard, type SegmentOption } from '@/components/ui';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useCourseMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
@@ -33,9 +34,7 @@ export const CoursesScreen = ({ navigation, route }: Props) => {
   const courseMap = useCourseMap();
   const [view, setView] = useState<CoursesView>(route.params?.view ?? 'all');
 
-  useEffect(() => {
-    if (route.params?.view) setView(route.params.view);
-  }, [route.params?.view]);
+  useAdoptParam(route.params?.view, setView);
 
   const courses = useServiceQuery(
     async () => {
