@@ -1,0 +1,32 @@
+/** 4-point spacing scale. */
+export const spacing = {
+  none: 0,
+  xxs: 2,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 48,
+} as const;
+
+/** Rounded, soft corners (12-20 for surfaces). */
+export const radius = {
+  xs: 6,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  pill: 999,
+} as const;
+
+/** Standard horizontal padding for screen content. */
+export const screenPadding = spacing.lg;
+
+/** Minimum touch target (Android/iOS accessibility guidelines). */
+export const minTouchSize = 44;
+
+export type SpacingKey = keyof typeof spacing;
+export type RadiusKey = keyof typeof radius;

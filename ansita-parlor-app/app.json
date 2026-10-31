@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Ansita Beauty Parlor",
+    "slug": "ansita-parlor-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FCE8EF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "ansita",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Ansita to access your photos to set a profile picture.",
+          "cameraPermission": "Allow Ansita to use your camera to take a profile picture."
+        }
+      ],
+      "expo-font"
+    ]
+  }
+}
