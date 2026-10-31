@@ -1,32 +1,67 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PhotoSheet } from '@/components/customer/PhotoSheet';
 import { SignOutItem } from '@/components/layout/SignOutItem';
-import { Avatar, Badge, Card, Divider, ListItem, Screen, Text, useToast } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  Card,
+  CountBadge,
+  Divider,
+  ListItem,
+  Screen,
+  SectionHeader,
+  SegmentedControl,
+  Text,
+  ThemeModeSelector,
+  type SegmentOption,
+} from '@/components/ui';
+import { useT } from '@/i18n';
 import type { CustomerTabScreenProps } from '@/navigation/types';
-import { selectCurrentUser, useAuthStore, useCustomerStore } from '@/store';
+import {
+  selectCurrentUser,
+  selectUnreadCount,
+  useAuthStore,
+  useCustomerStore,
+  useNotificationStore,
+  useSettingsStore,
+  type Language,
+} from '@/store';
 import { useTheme } from '@/theme';
 import { formatNumber } from '@/utils/format';
 import { formatPhone } from '@/utils/phone';
 
 type Props = CustomerTabScreenProps<'Profile'>;
 
+const LANGUAGE_OPTIONS: readonly SegmentOption<Language>[] = [
+  { value: 'en', label: 'English' },
+  { value: 'ne', label: 'नेपाली' },
+];
+
 export const ProfileScreen = ({ navigation }: Props) => {
   const { spacing } = useTheme();
-  const toast = useToast();
+  const t = useT();
   const user = useAuthStore(selectCurrentUser);
   const customer = useCustomerStore((state) => state.customers.find((item) => item.id === user?.customerId));
+  const unread = useNotificationStore((state) => (user ? selectUnreadCount(state.notifications, user.id) : 0));
+  const language = useSettingsStore((state) => state.language);
+  const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   if (!user) return null;
-  const later = (feature: string) => () => toast.info(`${feature} arrives in a later phase`);
 
   return (
     <Screen gap="xl">
       <Card style={[styles.profile, { gap: spacing.md }]}>
-        <Avatar name={user.name} uri={user.avatar} size="xl" ring />
+        <Avatar name={user.name} uri={user.avatar} size="xl" ring editable onPress={() => setPhotoOpen(true)} />
         <View style={styles.center}>
           <Text variant="h2">{user.name}</Text>
           <Text variant="bodySmall" tone="secondary">
-            {formatPhone(user.phone)} · {user.email}
+            {formatPhone(user.phone)}
+          </Text>
+          <Text variant="caption" tone="muted">
+            {user.email}
           </Text>
         </View>
         <View style={styles.badges}>
@@ -36,19 +71,42 @@ export const ProfileScreen = ({ navigation }: Props) => {
       </Card>
 
       <Card padding="sm">
-        <ListItem title="Edit profile" leftIcon="create-outline" showChevron onPress={later('Edit profile')} />
+        <ListItem title={t('profile.edit')} leftIcon="create-outline" showChevron onPress={() => navigation.navigate('EditProfile')} />
         <Divider inset={56} />
-        <ListItem title="My reviews" leftIcon="star-outline" leftIconTone="warning" showChevron onPress={later('My reviews')} />
+        <ListItem title={t('profile.loyalty')} leftIcon="diamond-outline" leftIconTone="accent" showChevron onPress={() => navigation.navigate('LoyaltyHistory')} />
         <Divider inset={56} />
-        <ListItem title="Notifications" leftIcon="notifications-outline" leftIconTone="info" showChevron onPress={later('Notifications')} />
+        <ListItem
+          title={t('profile.preferences')}
+          subtitle="Favourite stylist, reminders, payment"
+          leftIcon="heart-outline"
+          leftIconTone="primary"
+          showChevron
+          onPress={() => navigation.navigate('Preferences')}
+        />
         <Divider inset={56} />
-        <ListItem title="Change password" leftIcon="key-outline" leftIconTone="neutral" showChevron onPress={later('Change password')} />
+        <ListItem
+          title={t('profile.notifications')}
+          leftIcon="notifications-outline"
+          leftIconTone="info"
+          right={unread > 0 ? <CountBadge count={unread} /> : undefined}
+          showChevron
+          onPress={() => navigation.navigate('Notifications')}
+        />
       </Card>
 
+      <View style={{ gap: spacing.md }}>
+        <SectionHeader title={t('profile.language')} compact />
+        <SegmentedControl options={LANGUAGE_OPTIONS} value={language} onChange={setLanguage} />
+        <SectionHeader title={t('profile.appearance')} compact />
+        <ThemeModeSelector />
+      </View>
+
       <Card padding="sm">
+        <ListItem title={t('profile.help')} leftIcon="help-buoy-outline" leftIconTone="success" showChevron onPress={() => navigation.navigate('HelpContact')} />
+        <Divider inset={56} />
         <ListItem
           title="Settings"
-          subtitle="Theme, demo role switcher, reset data"
+          subtitle="Demo role switcher, reset data"
           leftIcon="settings-outline"
           leftIconTone="neutral"
           showChevron
@@ -57,6 +115,8 @@ export const ProfileScreen = ({ navigation }: Props) => {
         <Divider inset={56} />
         <SignOutItem />
       </Card>
+
+      <PhotoSheet visible={photoOpen} hasPhoto={Boolean(user.avatar)} onClose={() => setPhotoOpen(false)} />
     </Screen>
   );
 };

@@ -9,7 +9,7 @@ interface ComingSoonProps {
   description: string;
   /** What the finished screen will offer. */
   features: readonly string[];
-  /** e.g. "Phase 5". */
+  /** e.g. "Phase 6" or "a later phase". */
   phase: string;
 }
 

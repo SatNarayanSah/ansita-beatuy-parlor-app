@@ -3,16 +3,18 @@ import { StyleSheet, View } from 'react-native';
 
 import { ComingSoon } from '@/components/layout/ComingSoon';
 import { GreetingHeader } from '@/components/layout/GreetingHeader';
-import { Screen, StatCard } from '@/components/ui';
+import { IconButton, Screen, StatCard } from '@/components/ui';
 import type { AdminTabScreenProps } from '@/navigation/types';
 import {
   selectAppointmentsOnDate,
   selectCurrentUser,
   selectLiveOffers,
   selectRevenue,
+  selectUnreadCount,
   useAppointmentStore,
   useAuthStore,
   useCourseStore,
+  useNotificationStore,
   useOfferStore,
 } from '@/store';
 import { useTheme } from '@/theme';
@@ -21,13 +23,14 @@ import { formatCurrency } from '@/utils/format';
 
 type Props = AdminTabScreenProps<'Dashboard'>;
 
-/** Admin home. Headline numbers are live from the stores; charts and lists arrive in Phase 5. */
+/** Admin home. Headline numbers are live from the stores; charts and lists arrive in a later phase. */
 export const DashboardScreen = ({ navigation }: Props) => {
   const { spacing } = useTheme();
   const user = useAuthStore(selectCurrentUser);
   const appointments = useAppointmentStore((state) => state.appointments);
   const enrollments = useCourseStore((state) => state.enrollments);
   const offers = useOfferStore((state) => state.offers);
+  const unread = useNotificationStore((state) => (user ? selectUnreadCount(state.notifications, user.id) : 0));
   const today = todayISO();
 
   const stats = useMemo(() => {
@@ -45,7 +48,19 @@ export const DashboardScreen = ({ navigation }: Props) => {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <GreetingHeader user={user} subtitle={formatDisplayDate(today)} />
+      <GreetingHeader
+        user={user}
+        subtitle={formatDisplayDate(today)}
+        action={
+          <IconButton
+            icon="notifications-outline"
+            accessibilityLabel="Notifications"
+            variant="soft"
+            badgeCount={unread}
+            onPress={() => navigation.navigate('Notifications')}
+          />
+        }
+      />
       <View style={[styles.grid, { gap: spacing.md }]}>
         <StatCard
           label="Today's bookings"
@@ -78,7 +93,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
       <ComingSoon
         icon="stats-chart-outline"
         title="Business dashboard"
-        phase="Phase 5"
+        phase="a later phase"
         description="A full overview of the parlour at a glance."
         features={['Today’s timeline by staff member', 'Weekly revenue chart', 'Top services and customers', 'Fee dues and certificate reminders']}
       />

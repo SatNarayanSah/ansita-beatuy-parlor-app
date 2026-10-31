@@ -9,7 +9,7 @@ export const AppointmentsScreen = (_props: AdminTabScreenProps<'Appointments'>) 
     <ComingSoon
       icon="calendar-outline"
       title="Appointments"
-      phase="Phase 5"
+      phase="a later phase"
       description="Run the day's bookings from one screen."
       features={['Day and week calendar by staff member', 'Confirm, complete, cancel or mark no-show', 'Walk-in booking with conflict checks', 'Take full or partial payments']}
     />
@@ -21,7 +21,7 @@ export const CustomersScreen = (_props: AdminTabScreenProps<'Customers'>) => (
     <ComingSoon
       icon="people-outline"
       title="Customers"
-      phase="Phase 6"
+      phase="a later phase"
       description="Everything about your clients in one place."
       features={['Search and filter by VIP, Bridal, Regular, New', 'Visit history, spend and loyalty points', 'Notes, allergies and preferences', 'Call or message in one tap']}
     />
@@ -33,7 +33,7 @@ export const TrainingScreen = (_props: AdminTabScreenProps<'Training'>) => (
     <ComingSoon
       icon="school-outline"
       title="Training centre"
-      phase="Phase 7"
+      phase="a later phase"
       description="Manage courses, batches and students."
       features={['Courses, syllabus and batch schedules', 'Seat availability per batch', 'Attendance and fee tracking', 'Issue completion certificates']}
     />

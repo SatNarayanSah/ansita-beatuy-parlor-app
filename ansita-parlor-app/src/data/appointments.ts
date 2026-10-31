@@ -348,6 +348,8 @@ export const buildAppointments = (): Appointment[] => {
   return sorted.map((booking, index) => {
     const totalPrice = booking.serviceIds.reduce((sum, id) => sum + (byId.get(id)?.price ?? 0), 0);
     const outcome = decideOutcome(random, booking, totalPrice, nowTime);
+    // Drawn unconditionally: today's statuses depend on the clock and must not shift the sequence.
+    const preferred = random.weighted(PAYMENT_WEIGHTS);
     const date = daysFromToday(booking.dayOffset);
     // Booked 1-10 days ahead; future bookings were made within the last two weeks.
     const lead = random.int(1, 10);
@@ -367,6 +369,7 @@ export const buildAppointments = (): Appointment[] => {
       startTime: booking.startTime,
       endTime: booking.endTime,
       totalPrice,
+      preferredPaymentMethod: outcome.status === 'pending' || outcome.status === 'confirmed' ? preferred : null,
       ...outcome,
     };
   });

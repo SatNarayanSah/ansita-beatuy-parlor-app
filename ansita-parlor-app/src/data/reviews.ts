@@ -62,7 +62,7 @@ const commentFor = (categoryId: ID, rating: ReviewRating, pick: (items: readonly
  * recent completed visit is left unreviewed so "Write a review" can be tried.
  */
 export const buildReviews = (appointments: readonly Appointment[] = buildAppointments()): Review[] => {
-  const random = createRandom(89);
+  const random = createRandom(53);
   const services = new Map(buildServices().map((service) => [service.id, service]));
   // Past days only: today's statuses depend on the clock, which would make review ids unstable.
   const today = todayISO();

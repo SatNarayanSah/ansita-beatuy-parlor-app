@@ -2,6 +2,8 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import type { ID } from '@/types';
+
 /** Root stack. Guest and signed-in screens are mutually exclusive groups. */
 export type RootStackParamList = {
   // Guest
@@ -14,10 +16,26 @@ export type RootStackParamList = {
   AdminTabs: NavigatorScreenParams<AdminTabParamList> | undefined;
   CustomerTabs: NavigatorScreenParams<CustomerTabParamList> | undefined;
   Settings: undefined;
+  Notifications: undefined;
   DemoData: undefined;
   /** Dev-only; not registered in production builds. */
   UIKitShowcase: undefined;
+  // Customer
+  ServiceDetail: { serviceId: ID };
+  /** Prefills for "Book this", "Rebook" and favourites. */
+  Booking: { serviceIds?: ID[]; staffId?: ID } | undefined;
+  BookingSuccess: { appointmentId: ID };
+  Reschedule: { appointmentId: ID };
+  CourseDetail: { courseId: ID };
+  Enroll: { courseId: ID; batchId?: ID };
+  EditProfile: undefined;
+  Preferences: undefined;
+  LoyaltyHistory: undefined;
+  HelpContact: undefined;
 };
+
+export type AppointmentsTab = 'upcoming' | 'past' | 'cancelled';
+export type CoursesView = 'all' | 'mine';
 
 export type AdminTabParamList = {
   Dashboard: undefined;
@@ -29,9 +47,10 @@ export type AdminTabParamList = {
 
 export type CustomerTabParamList = {
   Home: undefined;
-  Book: undefined;
-  MyAppointments: undefined;
-  Courses: undefined;
+  /** Service catalogue; `categoryId` preselects a category chip. */
+  Book: { categoryId?: ID } | undefined;
+  MyAppointments: { tab?: AppointmentsTab } | undefined;
+  Courses: { view?: CoursesView } | undefined;
   Profile: undefined;
 };
 

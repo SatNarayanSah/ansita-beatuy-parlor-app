@@ -23,6 +23,9 @@ export interface Appointment extends BaseEntity {
   totalPrice: number;
   amountPaid: number;
   paymentStatus: PaymentStatus;
+  /** How the last payment was made; null while unpaid. */
   paymentMethod: PaymentMethod | null;
+  /** How the customer plans to pay, chosen when booking (informational). */
+  preferredPaymentMethod: PaymentMethod | null;
   cancellationReason: string | null;
 }

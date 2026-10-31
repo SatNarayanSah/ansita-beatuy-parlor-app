@@ -8,7 +8,7 @@ export const persistStorage = createJSONStorage(() => AsyncStorage);
  * Bump when a persisted shape changes incompatibly. Older persisted data is
  * then discarded and the store falls back to fresh seed data.
  */
-export const STORE_VERSION = 3;
+export const STORE_VERSION = 4;
 
 export const STORAGE_KEYS = {
   auth: 'ansita/auth',

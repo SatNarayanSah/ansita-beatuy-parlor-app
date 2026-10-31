@@ -45,7 +45,7 @@ interface MarkingProps {
   dotColor?: string;
 }
 
-const calendarTheme = ({ colors, fontFamily }: Theme) => ({
+export const calendarTheme = ({ colors, fontFamily }: Theme) => ({
   calendarBackground: colors.surface,
   backgroundColor: colors.surface,
   textSectionTitleColor: colors.textMuted,

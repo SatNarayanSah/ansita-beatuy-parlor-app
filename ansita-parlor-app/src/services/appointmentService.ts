@@ -51,6 +51,7 @@ export interface AppointmentInput {
   date: ISODate;
   startTime: TimeString;
   notes: string;
+  preferredPaymentMethod?: PaymentMethod | null;
 }
 
 export interface SlotQuery {
@@ -256,6 +257,7 @@ export const appointmentService = {
         amountPaid: 0,
         paymentStatus: 'unpaid',
         paymentMethod: null,
+        preferredPaymentMethod: input.preferredPaymentMethod ?? null,
         cancellationReason: null,
       };
       useAppointmentStore.getState().addAppointment(appointment);
