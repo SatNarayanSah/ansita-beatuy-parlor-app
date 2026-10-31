@@ -32,7 +32,6 @@ import {
   StatCard,
   StatusPill,
   Text,
-  ThemeModeSelector,
   TimeSlotGrid,
   useToast,
   type ButtonVariant,
@@ -154,11 +153,6 @@ const FoundationsSection = () => {
 
   return (
     <Section title="Foundations" subtitle={`Active scheme: ${theme.scheme}`}>
-      <Card style={{ gap: spacing.md }}>
-        <Caption>Appearance</Caption>
-        <ThemeModeSelector />
-      </Card>
-
       <Caption>Colour tokens</Caption>
       <View style={styles.swatchGrid}>
         {core.map(([name, color, textColor]) => (

@@ -9,33 +9,23 @@ import { buildServices } from './services';
 
 const COMMENTS: Record<ID, Partial<Record<ReviewRating, readonly string[]>>> = {
   [CATEGORY_IDS.hair]: {
-    5: ['Sarita didi understood exactly what I wanted. My hair has never looked this good!', 'Colour came out perfect and my scalp did not itch at all.', 'Best hair spa in Janakpur. Hair feels so soft.'],
-    4: ['Good cut and friendly staff. Had to wait about 15 minutes.', 'Nice result, slightly pricier than nearby parlours but worth it.'],
-    3: ['Haircut was okay, a bit shorter than I asked for.'],
+    5: ['Sarita didi understood exactly what I wanted. My hair has never looked this smooth!', 'Colour came out perfect and my scalp did not itch at all.', 'Protein treatment made my hair so soft and shiny.'],
+    4: ['Nanoplastia result is lovely. Had to wait about 15 minutes.', 'Nice result, slightly pricier than nearby parlours but worth it.'],
+    3: ['Straightening was okay, a little frizz came back after a month.'],
     2: ['Colour faded faster than I expected.'],
   },
   [CATEGORY_IDS.skin]: {
-    5: ['My skin is glowing after the facial. Didi was so gentle.', 'Hydra facial was so relaxing, I almost fell asleep!', 'Very hygienic setup and they used fresh products in front of me.'],
-    4: ['Lovely facial, waiting time was a bit long.', 'Skin felt fresh. Would like a longer massage next time.'],
-    3: ['Clean-up was fine but slightly rushed.'],
-  },
-  [CATEGORY_IDS.makeup]: {
-    5: ['Flawless job. Makeup lasted the whole night of dancing!', 'Everyone at the function asked who did my makeup.', 'Sari draping was so neat, it did not move all day.'],
-    4: ['Beautiful makeup, foundation was a shade light in photos.'],
-  },
-  [CATEGORY_IDS.nails]: {
-    5: ['Rojina is so creative with nail art. Gel polish still perfect after 2 weeks.', 'Super relaxing pedicure and very clean tools.'],
-    4: ['Neat work. Would love more colour options.'],
-    3: ['Manicure was fine but one nail chipped in 3 days.'],
+    5: ['My skin is glowing after the facial. Didi was so gentle.', 'Ani facial was so relaxing, I almost fell asleep!', 'Very hygienic setup and they used fresh products in front of me.'],
+    4: ['Lovely facial, waiting time was a bit long.', 'Bleach was even and did not sting much.'],
+    3: ['Facial was fine but slightly rushed.'],
   },
   [CATEGORY_IDS.waxing]: {
-    5: ['Quick and almost painless threading. Perfect brow shape.', 'Rica wax was gentle on my sensitive skin.'],
+    5: ['Quick and almost painless waxing.', 'Wax was gentle on my sensitive skin.'],
     4: ['Good waxing, slightly crowded on Saturday.'],
   },
-  [CATEGORY_IDS.spa]: {
-    5: ['Best massage I have had in town. All my back pain was gone.', 'Head massage after a long office week was heaven.'],
-    4: ['Very relaxing, the room could have been a little warmer.'],
-    2: ['Pressure was too hard for me even after I asked to reduce it.'],
+  [CATEGORY_IDS.nails]: {
+    5: ['Super relaxing pedicure and very clean tools.', 'My feet feel brand new. Rojina is so careful.'],
+    4: ['Neat work. Would love more polish colour options.'],
   },
 };
 

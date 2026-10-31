@@ -55,25 +55,25 @@ interface StoryBooking {
 
 const STORY_BOOKINGS: StoryBooking[] = [
   // Demo customer (Priya): a regular with a full history.
-  { customerId: C.priya, serviceIds: ['svc_haircut', 'svc_hair_spa'], staffId: S.sarita, dayOffset: -52, startTime: '11:00', status: 'completed', paymentMethod: 'esewa' },
-  { customerId: C.priya, serviceIds: ['svc_hydra_facial'], staffId: S.puja, dayOffset: -38, startTime: '14:00', status: 'completed', paymentMethod: 'khalti' },
-  { customerId: C.priya, serviceIds: ['svc_cleanup'], staffId: S.puja, dayOffset: -27, startTime: '12:00', status: 'cancelled', cancellationReason: 'Travelling to Pokhara that week.' },
-  { customerId: C.priya, serviceIds: ['svc_root_touchup'], staffId: S.sarita, dayOffset: -18, startTime: '15:00', status: 'completed', paymentMethod: 'cash', notes: 'Ammonia-free, shade 5.0.' },
-  { customerId: C.priya, serviceIds: ['svc_gel_polish', 'svc_pedicure'], staffId: S.rojina, dayOffset: -6, startTime: '13:00', status: 'completed', paymentMethod: 'fonepay' },
-  { customerId: C.priya, serviceIds: ['svc_global_color'], staffId: S.sarita, dayOffset: 2, startTime: '11:00', status: 'confirmed', notes: 'Wants a soft chocolate brown for Tihar.' },
-  { customerId: C.priya, serviceIds: ['svc_eyebrow', 'svc_fruit_facial'], staffId: S.puja, dayOffset: 9, startTime: '15:00', status: 'pending' },
-  // Brides and engagements: big-ticket bookings with advances.
-  { customerId: C.sabina, serviceIds: ['svc_gold_facial'], staffId: S.puja, dayOffset: -21, startTime: '12:00', status: 'completed', paymentMethod: 'esewa', notes: 'Pre-bridal facial 1 of 3.' },
-  { customerId: C.sabina, serviceIds: ['svc_hydra_facial', 'svc_detan'], staffId: S.puja, dayOffset: -7, startTime: '12:00', status: 'completed', paymentMethod: 'esewa', notes: 'Pre-bridal facial 2 of 3.' },
-  { customerId: C.sabina, serviceIds: ['svc_bridal'], staffId: S.ansita, dayOffset: -4, startTime: '11:00', status: 'completed', amountPaid: 10000, paymentMethod: 'fonepay', notes: 'Bridal trial. Balance due on the wedding day.' },
-  { customerId: C.sabina, serviceIds: ['svc_gold_facial'], staffId: S.puja, dayOffset: 3, startTime: '12:00', status: 'confirmed', notes: 'Pre-bridal facial 3 of 3.' },
-  { customerId: C.sabina, serviceIds: ['svc_bridal'], staffId: S.ansita, dayOffset: 11, startTime: '11:00', status: 'confirmed', amountPaid: 10000, paymentMethod: 'fonepay', notes: 'Wedding day. Red Banarasi sari, traditional gold jewellery.' },
-  { customerId: C.anjali, serviceIds: ['svc_engagement'], staffId: S.ansita, dayOffset: 13, startTime: '13:00', status: 'confirmed', amountPaid: 3000, paymentMethod: 'khalti', notes: 'Soft pastel look, pink lehenga.' },
-  { customerId: C.kritika, serviceIds: ['svc_bridal'], staffId: S.ansita, dayOffset: 24, startTime: '11:00', status: 'pending', amountPaid: 5000, paymentMethod: 'esewa', notes: 'Newari bridal look with haku patasi option for the reception.' },
-  { customerId: C.kritika, serviceIds: ['svc_bridal'], staffId: S.ansita, dayOffset: 6, startTime: '11:00', status: 'confirmed', notes: 'Bridal trial.' },
-  { customerId: C.alisha, serviceIds: ['svc_engagement'], staffId: S.ansita, dayOffset: 15, startTime: '11:00', status: 'pending', amountPaid: 2000, paymentMethod: 'khalti' },
-  { customerId: C.shreya, serviceIds: ['svc_party_makeup', 'svc_draping'], staffId: S.ansita, dayOffset: -30, startTime: '13:00', status: 'completed', paymentMethod: 'cash', notes: 'Teej celebration.' },
-  { customerId: C.manisha, serviceIds: ['svc_body_massage'], staffId: S.rojina, dayOffset: -12, startTime: '15:00', status: 'no_show' },
+  { customerId: C.priya, serviceIds: ['svc_hair_protein'], staffId: S.sarita, dayOffset: -52, startTime: '11:00', status: 'completed', paymentMethod: 'esewa' },
+  { customerId: C.priya, serviceIds: ['svc_ani_facial', 'svc_face_bleach'], staffId: S.puja, dayOffset: -38, startTime: '14:00', status: 'completed', paymentMethod: 'khalti' },
+  { customerId: C.priya, serviceIds: ['svc_hand_leg_wax'], staffId: S.puja, dayOffset: -27, startTime: '12:00', status: 'cancelled', cancellationReason: 'Travelling to Pokhara that week.' },
+  { customerId: C.priya, serviceIds: ['svc_cap_highlights'], staffId: S.sarita, dayOffset: -18, startTime: '15:00', status: 'completed', paymentMethod: 'cash', notes: 'Soft caramel streaks.' },
+  { customerId: C.priya, serviceIds: ['svc_pedicure'], staffId: S.rojina, dayOffset: -6, startTime: '13:00', status: 'completed', paymentMethod: 'fonepay' },
+  { customerId: C.priya, serviceIds: ['svc_hair_color'], staffId: S.sarita, dayOffset: 2, startTime: '11:00', status: 'confirmed', notes: 'Wants a soft chocolate brown for Tihar.' },
+  { customerId: C.priya, serviceIds: ['svc_ani_facial'], staffId: S.puja, dayOffset: 9, startTime: '15:00', status: 'pending' },
+  // Brides: pre-wedding hair and skin, some with advances.
+  { customerId: C.sabina, serviceIds: ['svc_ani_facial'], staffId: S.puja, dayOffset: -21, startTime: '12:00', status: 'completed', paymentMethod: 'esewa', notes: 'Pre-bridal facial 1 of 3.' },
+  { customerId: C.sabina, serviceIds: ['svc_ani_facial', 'svc_deep_bleach'], staffId: S.puja, dayOffset: -7, startTime: '12:00', status: 'completed', paymentMethod: 'esewa', notes: 'Pre-bridal facial 2 of 3.' },
+  { customerId: C.sabina, serviceIds: ['svc_nanoplastia'], staffId: S.ansita, dayOffset: -4, startTime: '11:00', status: 'completed', amountPaid: 2000, paymentMethod: 'fonepay', notes: 'Before the wedding. Balance due next visit.' },
+  { customerId: C.sabina, serviceIds: ['svc_ani_facial'], staffId: S.puja, dayOffset: 3, startTime: '12:00', status: 'confirmed', notes: 'Pre-bridal facial 3 of 3.' },
+  { customerId: C.sabina, serviceIds: ['svc_body_wax'], staffId: S.puja, dayOffset: 8, startTime: '11:00', status: 'confirmed', amountPaid: 1000, paymentMethod: 'fonepay', notes: 'Two days before the wedding.' },
+  { customerId: C.anjali, serviceIds: ['svc_smoothing'], staffId: S.ansita, dayOffset: 13, startTime: '12:00', status: 'confirmed', amountPaid: 1000, paymentMethod: 'khalti', notes: 'Engagement next week.' },
+  { customerId: C.kritika, serviceIds: ['svc_hair_botox'], staffId: S.ansita, dayOffset: 24, startTime: '11:00', status: 'pending', amountPaid: 1500, paymentMethod: 'esewa', notes: 'Before the reception.' },
+  { customerId: C.kritika, serviceIds: ['svc_ani_facial', 'svc_face_bleach'], staffId: S.ansita, dayOffset: 6, startTime: '11:00', status: 'confirmed' },
+  { customerId: C.alisha, serviceIds: ['svc_straightening'], staffId: S.ansita, dayOffset: 15, startTime: '11:00', status: 'pending', amountPaid: 1000, paymentMethod: 'khalti' },
+  { customerId: C.shreya, serviceIds: ['svc_hair_color'], staffId: S.sarita, dayOffset: -30, startTime: '13:00', status: 'completed', paymentMethod: 'cash', notes: 'Teej celebration.' },
+  { customerId: C.manisha, serviceIds: ['svc_pedicure'], staffId: S.rojina, dayOffset: -12, startTime: '15:00', status: 'no_show' },
 ];
 
 // ---------- Random fill configuration ----------
@@ -82,13 +82,10 @@ const STORY_BOOKINGS: StoryBooking[] = [
 const CUSTOMER_WEIGHT: Record<string, number> = { vip: 5, regular: 3, bridal: 2, student: 1.5, new: 1, inactive: 0.4 };
 
 /** Services male customers book in the seed data. */
-const MALE_SERVICES: ReadonlySet<ID> = new Set(['svc_haircut', 'svc_kids_haircut', 'svc_head_massage', 'svc_body_massage']);
-
-/** Big-ticket services appear only as story bookings. */
-const STORY_ONLY_SERVICES: ReadonlySet<ID> = new Set(['svc_bridal', 'svc_engagement']);
+const MALE_SERVICES: ReadonlySet<ID> = new Set(['svc_hair_color', 'svc_hair_protein', 'svc_pedicure']);
 
 /** Cheap add-ons that are often booked alongside a main service. */
-const ADD_ONS: readonly ID[] = ['svc_eyebrow', 'svc_upper_lip', 'svc_detan', 'svc_draping'];
+const ADD_ONS: readonly ID[] = ['svc_face_bleach'];
 
 const PAYMENT_WEIGHTS: Record<PaymentMethod, number> = { cash: 40, esewa: 22, khalti: 14, fonepay: 18, card: 6 };
 const DIGITAL_PAYMENT_WEIGHTS = { esewa: 4, khalti: 3, fonepay: 3 } as const;
@@ -219,15 +216,13 @@ const pickServices = (random: SeededRandom, staff: StaffProfile, services: reado
     (service) =>
       service.isActive &&
       staff.specialties.includes(service.categoryId) &&
-      !STORY_ONLY_SERVICES.has(service.id) &&
       !ADD_ONS.includes(service.id),
   );
   const main = random.pick(options);
   const ids = [main.id];
-  // Skin and makeup customers often add threading; makeup sometimes adds draping.
-  if (main.categoryId === CATEGORY_IDS.skin && random.chance(0.35)) ids.push(random.pick(['svc_eyebrow', 'svc_upper_lip', 'svc_detan']));
-  if (main.categoryId === CATEGORY_IDS.makeup && random.chance(0.4)) ids.push('svc_draping');
-  if (main.id === 'svc_manicure' && random.chance(0.5)) ids.push('svc_pedicure');
+  // Facial customers often add face bleaching; waxing customers sometimes add a pedicure.
+  if (main.id === 'svc_ani_facial' && random.chance(0.35)) ids.push('svc_face_bleach');
+  if (main.categoryId === CATEGORY_IDS.waxing && random.chance(0.25)) ids.push('svc_pedicure');
   // Only keep add-ons the staff member is qualified for.
   return ids.filter((id) => {
     const service = services.find((item) => item.id === id);

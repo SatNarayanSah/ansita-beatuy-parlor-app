@@ -1,6 +1,6 @@
 # Ansita – Manual QA Checklist
 
-Use this before every client demo or release. Tick each box on **one Android phone and one iPhone** (Expo Go or the preview build). Where a check says *(both themes)*, repeat it in light and dark mode.
+Use this before every client demo or release. Tick each box on **one Android phone and one iPhone** (Expo Go or the preview build). The app is light-only: it should stay light even when the phone is in dark mode.
 
 **Before you start:** Settings → Demo → **Reset demo data**. The seed is generated around today's date, so the bookings and dates below are always relative to "today".
 
@@ -112,7 +112,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | G3 | **Enroll student** at the desk with a partial first payment above the fee, then a valid one. | Over-fee rejected inline; enrollment **Active** with the paid amount. | ☐ |
 | G4 | Fee dues tab: **Record** a payment for the top student. | Total outstanding drops; student shows the new balance. | ☐ |
 | G5 | Course → ongoing batch → **Take attendance**: mark one Late, one Absent, save. Re-open the same date. | Saved; re-opening shows the saved marks; attendance % updates in the enrollment. | ☐ |
-| G6 | Enrollment of Rojita Maharjan (Nail Art, completed): **Issue certificate**. | Certificate preview card (works in dark mode too); Share/Download show demo toasts; student notified. | ☐ |
+| G6 | Enrollment of Rojita Maharjan (Nail Art, completed): **Issue certificate**. | Certificate preview card; Share/Download show demo toasts; student notified. | ☐ |
 | G7 | An active enrollment with a balance: **Issue certificate** is disabled with a reason; **Mark completed**; still blocked until fee cleared. | Clear explanations at each step. | ☐ |
 
 ## 8. Reports & settings
@@ -130,13 +130,13 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
 | X1 | **Role switch**: Settings → View the app as → Customer, then Admin. | Lands on the other role's tabs without signing out; no stale Settings screen left on top. | ☐ |
-| X2 | **Persistence**: make a booking, switch theme and language, then force-quit and reopen. | Still signed in on the same role; booking, theme and language are kept; onboarding doesn't reappear. | ☐ |
+| X2 | **Persistence**: make a booking, switch language, then force-quit and reopen. | Still signed in on the same role; booking and language are kept; onboarding doesn't reappear. | ☐ |
 | X3 | **Reset demo data** while signed in. | Fresh seed around today; your session, theme and language are kept; changes from this session are gone. | ☐ |
 | X4 | **Offline (mock)**: Settings → Simulate offline. Pull to refresh a loaded list, open a screen you haven't visited, then try to book. | Offline banner at the top. Loaded lists keep their data with a “Couldn’t refresh · Retry” notice; new screens show “Couldn’t load this” with **Try again**; actions fail with a toast. Tap the banner to reconnect and everything works. | ☐ |
 | X5 | Network errors: Demo data tools → Simulate network errors. Use the app for a minute. | Random failures show friendly messages; nothing crashes; retry works. | ☐ |
 | X6 | Unsaved changes: edit a customer/service/staff/course form, then press back. | “Discard changes?” dialog; **Keep editing** stays. | ☐ |
 | X7 | Keyboard: on small phones, fill forms near the bottom (notes, booking review, business settings). | Focused field is never hidden; tapping outside or dragging dismisses the keyboard. | ☐ |
-| X8 | Dark mode *(both themes)*: walk through Home, Booking, Dashboard, Reports, certificate. | No unreadable text or white flashes; charts use theme colours. | ☐ |
+| X8 | **Light-only + fonts**: set the phone to dark mode, then walk through Home, Booking, Dashboard, Reports, certificate; switch to नेपाली. | App stays light; all text is in Poppins (Nepali too) with no clipped matras. | ☐ |
 | X9 | Accessibility: largest system font size; TalkBack/VoiceOver on Login, Home, Booking. | Text scales (capped at 1.5×) without overlapping; controls are announced with sensible labels. | ☐ |
 | X10 | Reduce motion on (OS setting). | Skeletons stop shimmering; list entry animations are skipped. | ☐ |
 | X11 | Tablet / iPad. | Content centred at a readable width; nothing stretched edge to edge. | ☐ |

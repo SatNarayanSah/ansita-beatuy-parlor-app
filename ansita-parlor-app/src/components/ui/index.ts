@@ -28,6 +28,5 @@ export * from './Skeleton';
 export * from './StatCard';
 export * from './Stepper';
 export * from './Text';
-export * from './ThemeModeSelector';
 export * from './TimeSlotGrid';
 export * from './Toast';

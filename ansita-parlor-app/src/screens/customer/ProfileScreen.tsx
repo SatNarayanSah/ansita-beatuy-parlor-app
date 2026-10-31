@@ -14,7 +14,6 @@ import {
   SectionHeader,
   SegmentedControl,
   Text,
-  ThemeModeSelector,
   type SegmentOption,
 } from '@/components/ui';
 import { useT } from '@/i18n';
@@ -97,8 +96,6 @@ export const ProfileScreen = ({ navigation }: Props) => {
       <View style={{ gap: spacing.md }}>
         <SectionHeader title={t('profile.language')} compact />
         <SegmentedControl options={LANGUAGE_OPTIONS} value={language} onChange={setLanguage} />
-        <SectionHeader title={t('profile.appearance')} compact />
-        <ThemeModeSelector />
       </View>
 
       <Card padding="sm">

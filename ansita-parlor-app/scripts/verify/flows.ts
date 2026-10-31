@@ -49,12 +49,12 @@ const run = async (): Promise<void> => {
   // Next day Sarita works, 3+ days out.
   let day = addDaysISO(today, 3);
   while (!sarita.workingHours.find((h) => h.day === weekdayOf(day) && !h.isOff)) day = addDaysISO(day, 1);
-  const slots = await appointmentService.getAvailableSlots({ date: day, staffId: sarita.id, serviceIds: ['svc_hair_spa'] });
+  const slots = await appointmentService.getAvailableSlots({ date: day, staffId: sarita.id, serviceIds: ['svc_hair_protein'] });
   const free = slots.find((slot) => slot.available);
   check('free slots exist for customer booking', free !== undefined, `${slots.filter((s) => s.available).length} free`);
   const booked = await appointmentService.createAppointment({
     customerId,
-    serviceIds: ['svc_hair_spa'],
+    serviceIds: ['svc_hair_protein'],
     staffId: sarita.id,
     date: day,
     startTime: free?.time ?? '11:00',
@@ -81,7 +81,7 @@ const run = async (): Promise<void> => {
     () =>
       appointmentService.createAppointment({
         customerId: useCustomerStore.getState().customers[5]?.id ?? '',
-        serviceIds: ['svc_haircut'],
+        serviceIds: ['svc_cap_highlights'],
         staffId: sarita.id,
         date: day,
         startTime: booked.startTime,
@@ -95,11 +95,11 @@ const run = async (): Promise<void> => {
   let quiet = addDaysISO(today, 40);
   while (useAppointmentStore.getState().appointments.some((a) => a.date === quiet)) quiet = addDaysISO(quiet, 1);
   await businessService.addHoliday({ date: quiet, name: 'Flow test holiday' });
-  const holidaySlots = await appointmentService.getAvailableSlots({ date: quiet, staffId: sarita.id, serviceIds: ['svc_hair_spa'] });
+  const holidaySlots = await appointmentService.getAvailableSlots({ date: quiet, staffId: sarita.id, serviceIds: ['svc_hair_protein'] });
   check('holiday has no slots', holidaySlots.length === 0);
   await expectError(
     'booking on a holiday is refused',
-    () => appointmentService.createAppointment({ customerId, serviceIds: ['svc_hair_spa'], staffId: sarita.id, date: quiet, startTime: '11:00', notes: '' }),
+    () => appointmentService.createAppointment({ customerId, serviceIds: ['svc_hair_protein'], staffId: sarita.id, date: quiet, startTime: '11:00', notes: '' }),
     'closed',
   );
   await businessService.removeHoliday(quiet);

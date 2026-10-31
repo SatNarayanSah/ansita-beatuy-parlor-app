@@ -1,5 +1,4 @@
-import { createContext, useCallback, useMemo, type ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { createContext, useMemo, type ReactNode } from 'react';
 
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -18,18 +17,21 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-/** Resolves the active theme from the saved preference and the device scheme. */
+/**
+ * The app is light-only by design, whatever the phone's setting. The dark
+ * tokens stay in `colors.ts` so a dark mode can be switched back on later by
+ * resolving `scheme` from the saved preference again.
+ */
+const SCHEME: ColorScheme = 'light';
+
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const deviceScheme = useColorScheme();
-  const mode = useSettingsStore((state) => state.themeMode);
   const setMode = useSettingsStore((state) => state.setThemeMode);
+  const theme = themes[SCHEME];
 
-  const scheme: ColorScheme = mode === 'system' ? (deviceScheme === 'dark' ? 'dark' : 'light') : mode;
-  const theme = themes[scheme];
-
-  const toggle = useCallback(() => setMode(scheme === 'dark' ? 'light' : 'dark'), [scheme, setMode]);
-
-  const value = useMemo<ThemeContextValue>(() => ({ theme, mode, setMode, toggle }), [theme, mode, setMode, toggle]);
+  const value = useMemo<ThemeContextValue>(
+    () => ({ theme, mode: SCHEME, setMode, toggle: () => undefined }),
+    [theme, setMode],
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

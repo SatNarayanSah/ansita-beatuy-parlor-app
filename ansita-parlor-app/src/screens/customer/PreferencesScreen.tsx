@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Switch, View } from 'react-native';
 
 import { PaymentMethodPicker } from '@/components/customer/PaymentMethodPicker';
@@ -20,7 +21,8 @@ export const PreferencesScreen = (_props: Props) => {
   const { colors, spacing } = useTheme();
   const preferences = useSettingsStore((state) => state.preferences);
   const update = useSettingsStore((state) => state.updatePreferences);
-  const staff = useStaffStore((state) => selectActiveStaff(state.staff));
+  const allStaff = useStaffStore((state) => state.staff);
+  const staff = useMemo(() => selectActiveStaff(allStaff), [allStaff]);
 
   return (
     <Screen gap="xl">

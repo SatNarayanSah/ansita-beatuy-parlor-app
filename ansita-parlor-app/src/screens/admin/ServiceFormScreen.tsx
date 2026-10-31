@@ -89,7 +89,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ categories }) => (
           <View style={{ gap: spacing.lg }}>
-            <FormInput control={control} name="name" label="Service name" required placeholder="e.g. Hair Spa" />
+            <FormInput control={control} name="name" label="Service name" required placeholder="e.g. Hair Botox" />
             <View style={{ gap: spacing.sm }}>
               <Text variant="label" tone="secondary">
                 Category

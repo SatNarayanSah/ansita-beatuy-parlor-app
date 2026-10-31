@@ -12,7 +12,6 @@ import {
   SectionHeader,
   SegmentedControl,
   Text,
-  ThemeModeSelector,
   useToast,
   type SegmentOption,
 } from '@/components/ui';
@@ -67,12 +66,8 @@ export const SettingsScreen = ({ navigation }: Props) => {
   return (
     <Screen gap="xl">
       <View style={{ gap: spacing.md }}>
-        <SectionHeader title="Appearance" compact />
+        <SectionHeader title="Preferences" compact />
         <Card style={{ gap: spacing.md }}>
-          <Text variant="bodySmall" tone="secondary">
-            Choose a theme, or follow your phone’s setting.
-          </Text>
-          <ThemeModeSelector />
           <ListItem
             title="Haptic feedback"
             subtitle="Gentle vibrations on taps and confirmations"

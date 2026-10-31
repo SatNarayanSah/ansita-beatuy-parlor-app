@@ -78,7 +78,8 @@ export const AppointmentsScreen = ({ navigation, route }: Props) => {
   const services = useServiceMap();
   const staffMap = useStaffMap();
   const customers = useCustomerMap();
-  const activeStaff = useStaffStore((state) => selectActiveStaff(state.staff));
+  const allStaff = useStaffStore((state) => state.staff);
+  const activeStaff = useMemo(() => selectActiveStaff(allStaff), [allStaff]);
   const { holidays, profile } = useBusinessStore();
   const today = todayISO();
 

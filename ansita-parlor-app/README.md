@@ -28,7 +28,7 @@ This build is a **client demo**: everything runs on the device against a realist
 
 ## Screenshots
 
-> Screenshots are not committed yet. Capture them from the preview build (or Expo Go) in light and dark mode and save them under `docs/screenshots/` with the names below; the table will pick them up.
+> Screenshots are not committed yet. Capture them from the preview build (or Expo Go) and save them under `docs/screenshots/` with the names below; the table will pick them up.
 
 | Customer | | |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ npx eas-cli@latest build --platform ios --profile preview
 
 - The Login screen has one-tap **Demo admin** / **Demo customer** buttons.
 - **Settings → Demo → View the app as** switches between the two sides without signing out.
-- **Settings → Reset demo data** regenerates everything around today's date (your theme, language and sign-in are kept).
+- **Settings → Reset demo data** regenerates everything around today's date (your language and sign-in are kept).
 - **Forgot password** shows the 6-digit code on screen (no email is sent in the demo).
 
 ---
@@ -148,7 +148,7 @@ npx eas-cli@latest build --platform ios --profile preview
 | `npm run lint` | ESLint with Expo's config (incl. React Compiler rules) |
 | `npm run verify:seed` | Checks the generated demo data: no double-booking, shifts, payments, links, determinism |
 | `npm run verify:flows` | Runs real service flows for both roles under Node (booking → approval → notification, conflicts, holidays, payments, certificates, permissions, offline) |
-| `npm run verify:contrast` | WCAG AA contrast audit of every theme text/background pair, light and dark |
+| `npm run verify:contrast` | WCAG AA contrast audit of every theme text/background pair (light theme; dark tokens kept for later) |
 | `npm run verify` | All of the above; run before every demo or merge |
 
 ---
@@ -184,7 +184,7 @@ npx eas-cli@latest build --platform ios --profile preview
     │   └── shared/          Notifications, settings, demo tools, UI kit (dev only)
     ├── services/            ★ The fake API: the only layer screens call to change data
     ├── store/               Zustand stores (persisted). In the demo they are the "database"
-    ├── theme/               Colour tokens (light/dark, WCAG AA), typography, spacing, shadows
+    ├── theme/               Colour tokens (light-only app, WCAG AA), Poppins typography, spacing, shadows
     ├── types/               Domain types (Appointment, Customer, Course…)
     └── utils/               Dates, phone (+977), formatting, analytics, zod schemas, haptics
 ```
@@ -210,7 +210,7 @@ Screen ──calls──▶ services/*Service.ts ──read/write──▶ store
 ## Testing
 
 1. `npm run verify` must pass (typecheck, lint, seed, flows, contrast).
-2. Walk through the manual checklist in [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) on one Android phone and one iPhone, in light and dark mode.
+2. Walk through the manual checklist in [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) on one Android phone and one iPhone.
 
 ---
 
@@ -256,7 +256,7 @@ The app was built so a real backend replaces **one layer**. Screens depend only 
 In the demo, the domain stores (`appointmentStore`, `customerStore`, `courseStore`, …) **are the database**. With a backend:
 
 - **Delete** the persisted domain stores and the seed generators in `src/data/` (keep `data/` as a reference for a server seed script if useful).
-- **Keep** `settingsStore` (device preferences: theme, language, haptics, onboarding) and a slimmed `authStore` that only holds the session/current user.
+- **Keep** `settingsStore` (device preferences: language, haptics, onboarding) and a slimmed `authStore` that only holds the session/current user.
 - Screens that read catalogue data directly for lookups (below) should get it from a query instead, or from a small cache store filled by `catalogService` / `staffService` at sign-in.
 
 Direct store reads to migrate (outside `refetchOn`):
