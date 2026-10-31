@@ -35,6 +35,19 @@ export interface ChangePasswordInput {
   newPassword: string;
 }
 
+export interface PasswordResetRequest {
+  /** Masked address shown on screen, e.g. "cu•••••@ansita.com". */
+  sentTo: string;
+  /** The emailed code, returned only because this is a demo without real email. */
+  demoCode: string;
+}
+
+export interface ResetPasswordInput {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
 export interface DemoAccount {
   email: string;
   password: string;
@@ -43,6 +56,19 @@ export interface DemoAccount {
 }
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+
+const RESET_CODE_TTL_MS = 10 * 60 * 1000;
+
+/** Pending reset codes by email. In memory only, like a short-lived server cache. */
+const resetCodes = new Map<string, { code: string; expiresAt: number }>();
+
+const maskEmail = (email: string): string => {
+  const [local = '', domain = ''] = email.split('@');
+  return `${local.slice(0, 2)}${'•'.repeat(Math.max(3, local.length - 2))}@${domain}`;
+};
+
+const findUserIdByEmail = (email: string): string | undefined =>
+  useAuthStore.getState().credentials.find((credential) => normalizeEmail(credential.email) === email)?.userId;
 
 const startSession = (user: User): void => {
   useAuthStore.getState().setSession({ userId: user.id, token: generateToken(), signedInAt: nowISO() });
@@ -73,6 +99,46 @@ export const authService = {
     const { email, password } = DEMO_ACCOUNTS[role];
     return authService.login({ email, password });
   },
+
+  /**
+   * Demo-only role switcher: jumps straight into the other demo account
+   * without signing out, so both sides of the app can be shown quickly.
+   */
+  switchDemoRole: (role: UserRole): Promise<User> =>
+    simulateRequest(
+      () => {
+        const user = ensureFound(useAuthStore.getState().getUserById(DEMO_ACCOUNTS[role].userId), 'Demo account');
+        startSession(user);
+        return user;
+      },
+      { neverFail: true },
+    ),
+
+  /** Step 1 of "Forgot password": issues a 6-digit code valid for 10 minutes. */
+  requestPasswordReset: (rawEmail: string): Promise<PasswordResetRequest> =>
+    simulateRequest(() => {
+      const email = normalizeEmail(rawEmail);
+      if (!findUserIdByEmail(email)) throw new ApiError('NOT_FOUND', 'No account found with this email.');
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      resetCodes.set(email, { code, expiresAt: Date.now() + RESET_CODE_TTL_MS });
+      return { sentTo: maskEmail(email), demoCode: code };
+    }),
+
+  /** Step 2 of "Forgot password": checks the code and sets the new password. Does not sign in. */
+  resetPassword: ({ email: rawEmail, code, newPassword }: ResetPasswordInput): Promise<void> =>
+    simulateRequest(() => {
+      const email = normalizeEmail(rawEmail);
+      const pending = resetCodes.get(email);
+      if (!pending || pending.expiresAt < Date.now()) {
+        resetCodes.delete(email);
+        throw new ApiError('VALIDATION', 'This code has expired. Request a new one.');
+      }
+      if (pending.code !== code.trim()) throw new ApiError('VALIDATION', 'Incorrect code. Check it and try again.');
+      const userId = findUserIdByEmail(email);
+      if (!userId) throw new ApiError('NOT_FOUND', 'No account found with this email.');
+      useAuthStore.getState().setPassword(userId, newPassword);
+      resetCodes.delete(email);
+    }),
 
   logout: (): Promise<void> =>
     simulateRequest(() => useAuthStore.getState().clearSession(), { neverFail: true }),

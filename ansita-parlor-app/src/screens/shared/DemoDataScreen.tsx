@@ -1,4 +1,3 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { StyleSheet, Switch, View } from 'react-native';
 
@@ -11,7 +10,6 @@ import {
   Screen,
   SectionHeader,
   Text,
-  ThemeModeSelector,
   useToast,
 } from '@/components/ui';
 import { DEMO_ACCOUNTS } from '@/data/users';
@@ -40,9 +38,8 @@ import {
   useServiceStore,
   useStaffStore,
 } from '@/store';
-import type { RootStackParamList } from '@/navigation/RootNavigator';
+import type { RootStackScreenProps } from '@/navigation/types';
 import { useTheme } from '@/theme';
-import type { UserRole } from '@/types';
 import { todayISO } from '@/utils/date';
 import { formatEnumLabel } from '@/utils/format';
 
@@ -53,13 +50,13 @@ interface SmokeStep {
   ms: number;
 }
 
-type Props = NativeStackScreenProps<RootStackParamList, 'DemoData'>;
+type Props = RootStackScreenProps<'DemoData'>;
 
 /**
- * Demo controls: one-tap demo sign-in, record counts, fake-API settings, a
- * service smoke test and a data reset. Later reachable from admin settings.
+ * Demo tools, reached from Settings: record counts, fake-API settings, a
+ * read-only service smoke test and a data reset.
  */
-export const DemoDataScreen = ({ navigation }: Props) => {
+export const DemoDataScreen = (_props: Props) => {
   const { colors } = useTheme();
   const toast = useToast();
   const apiConfig = useApiConfig();
@@ -80,7 +77,6 @@ export const DemoDataScreen = ({ navigation }: Props) => {
   const [steps, setSteps] = useState<SmokeStep[]>([]);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [signingIn, setSigningIn] = useState<UserRole | 'out' | null>(null);
 
   const statusCounts = selectStatusCounts(appointments);
   const counts: [string, number][] = [
@@ -120,9 +116,9 @@ export const DemoDataScreen = ({ navigation }: Props) => {
         return `Rejected as expected: ${getErrorMessage(error)}`;
       }
     });
-    await step('Login as admin', async () => {
-      const user = await authService.login(DEMO_ACCOUNTS.admin);
-      return `${user.name} (${user.role})`;
+    await step('Current session', async () => {
+      const user = await authService.getCurrentUser();
+      return user ? `${user.name} (${user.role})` : 'Not signed in';
     });
     await step("Today's appointments", async () => {
       const list = await appointmentService.listAppointments({ date: todayISO() });
@@ -140,37 +136,11 @@ export const DemoDataScreen = ({ navigation }: Props) => {
       return `${first.title}: ${batches.map((b) => `${b.batch.name} ${b.seatsLeft} left`).join(', ')}`;
     });
     await step('Unread notifications', async () => `${await notificationService.getUnreadCount()} unread`);
-    await step('All offers (admin)', async () => `${(await offerService.listOffers()).length} offers`);
-    await step('Demo customer login', async () => {
-      const user = await authService.loginAsDemo('customer');
-      return `${user.name} (${user.role})`;
-    });
-    await step('Live offers (customer)', async () => `${(await offerService.listOffers()).length} live`);
-    await step('Logout', async () => {
-      await authService.logout();
-      return 'Session cleared';
-    });
+    await step('Offers visible to you', async () => `${(await offerService.listOffers()).length} offers`);
 
     setRunning(false);
   };
 
-  const continueAs = async (role: UserRole): Promise<void> => {
-    setSigningIn(role);
-    try {
-      const user = await authService.loginAsDemo(role);
-      toast.success(`Signed in as ${user.name}`);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    } finally {
-      setSigningIn(null);
-    }
-  };
-
-  const signOut = async (): Promise<void> => {
-    setSigningIn('out');
-    await authService.logout();
-    setSigningIn(null);
-  };
 
   const resetData = async (): Promise<void> => {
     setResetting(true);
@@ -183,45 +153,6 @@ export const DemoDataScreen = ({ navigation }: Props) => {
 
   return (
     <Screen>
-      <Card style={styles.cardGap}>
-        <SectionHeader
-          title="Demo sign-in"
-          subtitle={currentUser ? `Signed in as ${currentUser.name} (${currentUser.role})` : 'Not signed in'}
-          compact
-        />
-        <Button
-          title="Continue as demo admin"
-          leftIcon="briefcase-outline"
-          loading={signingIn === 'admin'}
-          disabled={signingIn !== null}
-          onPress={() => void continueAs('admin')}
-          fullWidth
-        />
-        <Button
-          title="Continue as demo customer"
-          leftIcon="person-outline"
-          variant="secondary"
-          loading={signingIn === 'customer'}
-          disabled={signingIn !== null}
-          onPress={() => void continueAs('customer')}
-          fullWidth
-        />
-        {currentUser ? (
-          <Button
-            title="Sign out"
-            variant="ghost"
-            leftIcon="log-out-outline"
-            loading={signingIn === 'out'}
-            onPress={() => void signOut()}
-            fullWidth
-          />
-        ) : null}
-        {Object.values(DEMO_ACCOUNTS).map((account) => (
-          <Text key={account.email} variant="caption" tone="muted">
-            {account.email} / {account.password}
-          </Text>
-        ))}
-      </Card>
 
       <Card>
         <SectionHeader title="Records in local storage" compact />
@@ -242,11 +173,6 @@ export const DemoDataScreen = ({ navigation }: Props) => {
             .map(([status, count]) => `${formatEnumLabel(status)}: ${count}`)
             .join('  ·  ')}
         </Text>
-      </Card>
-
-      <Card style={styles.cardGap}>
-        <SectionHeader title="Appearance" compact />
-        <ThemeModeSelector />
       </Card>
 
       <Card style={styles.cardGap}>
@@ -296,19 +222,6 @@ export const DemoDataScreen = ({ navigation }: Props) => {
           </View>
         ))}
       </Card>
-
-      {__DEV__ ? (
-        <Card padding="sm">
-          <ListItem
-            title="UI Kit showcase"
-            subtitle="Every component, for visual checks (dev only)"
-            leftIcon="color-palette-outline"
-            leftIconTone="accent"
-            showChevron
-            onPress={() => navigation.navigate('UIKitShowcase')}
-          />
-        </Card>
-      ) : null}
 
       <Button title="Reset demo data" variant="outline" leftIcon="refresh" onPress={() => setResetOpen(true)} fullWidth />
 
