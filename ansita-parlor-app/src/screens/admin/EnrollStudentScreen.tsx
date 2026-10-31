@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { ChipSelect, SelectSheet } from '@/components/admin/Pickers';
+import { QuickCustomerForm } from '@/components/admin/QuickCustomerForm';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import { FormInput } from '@/components/form/FormFields';
 import { Avatar, Button, Card, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
@@ -36,6 +37,7 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
   const [chosenBatchId, setBatchId] = useState<ID | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('cash');
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [newStudent, setNewStudent] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const courses = useServiceQuery(() => courseService.listCourses({ activeOnly: true }), [], { refetchOn: [useCourseStore] });
@@ -101,7 +103,7 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
                 <Button title="Choose student" leftIcon="person-outline" variant="secondary" onPress={() => setPickerOpen(true)} fullWidth />
               )}
               <Text variant="caption" tone="muted">
-                New student? Add them under Customers first.
+                New student? Tap Choose student, then New student.
               </Text>
             </View>
 
@@ -168,6 +170,22 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
           setStudentId(c.id);
           setPickerOpen(false);
         }}
+        header={
+          newStudent ? (
+            <QuickCustomerForm
+              title="New student"
+              tags={['new', 'student']}
+              onCreated={(created) => {
+                setStudentId(created.id);
+                setNewStudent(false);
+                setPickerOpen(false);
+              }}
+              onCancel={() => setNewStudent(false)}
+            />
+          ) : (
+            <Button title="New student" leftIcon="person-add-outline" variant="outline" onPress={() => setNewStudent(true)} fullWidth />
+          )
+        }
         renderItem={(c) => (
           <View style={[styles.pick, { borderRadius: radius.md, backgroundColor: c.id === studentId ? colors.primarySoft : 'transparent' }]}>
             <Avatar name={c.name} uri={c.avatar} size="sm" />

@@ -29,9 +29,7 @@ import { OnboardingScreen } from '@/screens/auth/OnboardingScreen';
 import { RegisterScreen } from '@/screens/auth/RegisterScreen';
 import { BookingScreen } from '@/screens/customer/BookingScreen';
 import { BookingSuccessScreen } from '@/screens/customer/BookingSuccessScreen';
-import { CourseDetailScreen } from '@/screens/customer/CourseDetailScreen';
 import { EditProfileScreen } from '@/screens/customer/EditProfileScreen';
-import { EnrollScreen } from '@/screens/customer/EnrollScreen';
 import { HelpContactScreen } from '@/screens/customer/HelpContactScreen';
 import { LoyaltyHistoryScreen } from '@/screens/customer/LoyaltyHistoryScreen';
 import { PreferencesScreen } from '@/screens/customer/PreferencesScreen';
@@ -127,8 +125,6 @@ export const RootNavigator = () => {
                   options={{ headerShown: false, animation: 'fade', gestureEnabled: false }}
                 />
                 <Stack.Screen name="Reschedule" component={RescheduleScreen} options={{ title: t('appointments.reschedule') }} />
-                <Stack.Screen name="CourseDetail" component={CourseDetailScreen} options={{ title: '' }} />
-                <Stack.Screen name="Enroll" component={EnrollScreen} options={{ title: t('courses.enroll') }} />
                 <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: t('profile.edit') }} />
                 <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ title: t('profile.preferences') }} />
                 <Stack.Screen name="LoyaltyHistory" component={LoyaltyHistoryScreen} options={{ title: t('profile.loyalty') }} />

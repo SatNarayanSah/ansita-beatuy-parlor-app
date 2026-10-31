@@ -38,7 +38,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 - Interactive API docs: http://localhost:8000/docs
-- Admin login: `admin@ansita.com` / `admin123`. Change these with `ADMIN_EMAIL` / `ADMIN_PASSWORD`; see `.env.example`.
+- Admin login: there is no built-in account. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` (8+ characters) in `.env` before running the seed; see `.env.example`.
 - To reach the API from a phone on the same Wi-Fi, use your PC's LAN IP, e.g. `http://192.168.1.10:8000`.
 
 Run the tests with:

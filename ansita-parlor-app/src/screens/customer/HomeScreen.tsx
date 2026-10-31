@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { CourseCard, nextOpenBatch } from '@/components/customer/CourseCards';
 import { OfferCarousel } from '@/components/customer/OfferCarousel';
 import { ratingsByService, ServiceTile } from '@/components/customer/ServiceCards';
 import { GreetingHeader } from '@/components/layout/GreetingHeader';
@@ -27,7 +26,6 @@ import type { CustomerTabScreenProps } from '@/navigation/types';
 import {
   appointmentService,
   catalogService,
-  courseService,
   customerService,
   notificationService,
   offerService,
@@ -78,17 +76,15 @@ export const HomeScreen = ({ navigation }: Props) => {
   // One parallel fetch so the whole screen has a single loading state.
   const query = useServiceQuery(
     async () => {
-      const [customer, appointments, offers, catalog, courses, reviews, unread] = await Promise.all([
+      const [customer, appointments, offers, catalog, reviews, unread] = await Promise.all([
         customerService.getCustomer(customerId),
         appointmentService.listAppointments(),
         offerService.listOffers(),
         catalogService.listServices({ activeOnly: true }),
-        courseService.listCourses({ activeOnly: true }),
         reviewService.listReviews(),
         notificationService.getUnreadCount(),
       ]);
-      const availability = await Promise.all(courses.map((course) => courseService.getBatchAvailability(course.id)));
-      return { customer, appointments, offers, catalog, courses, reviews, unread, availability };
+      return { customer, appointments, offers, catalog, reviews, unread };
     },
     [customerId],
     { refetchOn: [useAppointmentStore, useOfferStore, useNotificationStore, useCustomerStore, useReviewStore] },
@@ -96,14 +92,10 @@ export const HomeScreen = ({ navigation }: Props) => {
 
   const derived = useMemo(() => {
     if (!query.data) return null;
-    const { appointments, catalog, reviews, courses, availability } = query.data;
+    const { appointments, catalog, reviews } = query.data;
     const ratings = ratingsByService(reviews);
     const popular = [...catalog].sort((a, b) => (ratings.get(b.id)?.count ?? 0) - (ratings.get(a.id)?.count ?? 0)).slice(0, 8);
-    const featured = courses
-      .map((course, index) => ({ course, availability: availability[index] ?? [] }))
-      .filter((item) => nextOpenBatch(item.availability) !== undefined)
-      .slice(0, 4);
-    return { next: selectUpcomingAppointments(appointments, todayISO())[0], ratings, popular, featured };
+    return { next: selectUpcomingAppointments(appointments, todayISO())[0], ratings, popular };
   }, [query.data]);
 
   if (!user) return null;
@@ -192,22 +184,6 @@ export const HomeScreen = ({ navigation }: Props) => {
               </ScrollView>
             </View>
 
-            {derived && derived.featured.length > 0 ? (
-              <View style={{ gap: spacing.md }}>
-                <SectionHeader title={t('home.featuredCourses')} actionLabel={t('common.seeAll')} onAction={() => navigation.navigate('Courses')} />
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.rail, styles.railPad]}>
-                  {derived.featured.map(({ course, availability }) => (
-                    <CourseCard
-                      key={course.id}
-                      compact
-                      course={course}
-                      availability={availability}
-                      onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-            ) : null}
           </View>
         )}
       </QueryState>

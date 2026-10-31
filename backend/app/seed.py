@@ -142,9 +142,11 @@ def seed() -> None:
                 db.add(Course(**data, batches=[], image=None, certificate=True, is_active=True))
 
         email = settings.admin_email.strip().lower()
-        if db.scalar(select(User).where(User.email == email)) is None:
-            if settings.admin_password == "admin123" and not settings.database_url.startswith("sqlite"):
-                raise SystemExit("Set ADMIN_PASSWORD before creating the admin account on a real database.")
+        if not email or not settings.admin_password:
+            print("ADMIN_EMAIL / ADMIN_PASSWORD not set: no admin account created.")
+        elif db.scalar(select(User).where(User.email == email)) is None:
+            if len(settings.admin_password) < 8:
+                raise SystemExit("ADMIN_PASSWORD must be at least 8 characters.")
             db.add(User(
                 id="usr_admin",
                 role="admin",

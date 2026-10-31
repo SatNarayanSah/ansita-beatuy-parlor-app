@@ -68,11 +68,8 @@ def get_enrollment(id_: str, user: User = Depends(get_current_user), db: Session
 
 
 @router.post("", status_code=201)
-def enroll(body: EnrollInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Reserves a seat. Without a payment the enrollment is "pending"; any payment makes it "active"."""
-    assert_customer_access(user, body.student_id)
-    if body.initial_payment and user.role != "admin":
-        raise ApiError("FORBIDDEN")
+def enroll(body: EnrollInput, user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Admin-only desk enrollment. Without a payment the enrollment is "pending"; any payment makes it "active"."""
     student = ensure_found(db.get(Customer, body.student_id), "Student")
 
     # Locking the course row serialises enrollments, so the last seat can't be sold twice.
@@ -127,7 +124,7 @@ def enroll(body: EnrollInput, user: User = Depends(get_current_user), db: Sessio
     )
     notify_admins(db, "enrollment", "New course enrollment",
                   f"{_student_name(db, body.student_id)} enrolled in {course.title} ({batch['name']}).", lnk,
-                  except_user_id=user.id if user.role == "admin" else None)
+                  except_user_id=user.id)
     db.commit()
     return to_dict(enrollment)
 
@@ -149,22 +146,14 @@ def mark_batch_attendance(body: BatchAttendanceInput, _: User = Depends(require_
 
 
 @router.post("/{id_}/status")
-def update_status(id_: str, body: EnrollmentStatusInput, user: User = Depends(get_current_user),
+def update_status(id_: str, body: EnrollmentStatusInput, _: User = Depends(require_admin),
                   db: Session = Depends(get_db)):
-    """Students may drop their own pending/active enrollment; other changes are admin-only."""
     enrollment = _enrollment(db, id_)
-    assert_customer_access(user, enrollment.student_id)
-    if user.role == "customer" and body.status != "dropped":
-        raise ApiError("FORBIDDEN")
     if enrollment.status == body.status:
         return to_dict(enrollment)
     if enrollment.status in ("completed", "dropped"):
         raise ApiError("VALIDATION", f"This enrollment is already {enrollment.status}.")
     enrollment.status = body.status
-    if user.role == "customer":
-        notify_admins(db, "enrollment", "Student dropped a course",
-                      f"{_student_name(db, enrollment.student_id)} dropped out of an enrollment.",
-                      link("enrollment", id_))
     db.commit()
     return to_dict(enrollment)
 

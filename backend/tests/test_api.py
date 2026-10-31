@@ -24,7 +24,7 @@ def test_errors_use_app_shape(client, admin):
     response = client.get("/customers")
     assert response.status_code == 401
     assert response.json()["code"] == "UNAUTHORIZED"
-    response = client.post("/auth/login", json={"email": "admin@ansita.com", "password": "wrong"})
+    response = client.post("/auth/login", json={"email": "owner@test.local", "password": "wrong"})
     assert response.status_code == 401
     assert response.json()["message"] == "Invalid email or password."
     response = client.post("/services", json={"name": "x"}, headers=admin)
@@ -164,15 +164,18 @@ def test_enrollment_seats(client, admin):
     batch_id = course["batches"][-1]["id"]
 
     first, first_h = register(client, "Mina Das", "mina@example.com", "9812000004")
-    second, second_h = register(client, "Tara Sah", "tara@example.com", "9812000005")
+    second, _ = register(client, "Tara Sah", "tara@example.com", "9812000005")
+    own = client.post("/enrollments", json={"studentId": first["customerId"], "courseId": "crs_nail_art",
+                                            "batchId": batch_id}, headers=first_h)
+    assert own.status_code == 403  # only the parlour enrolls students
     response = client.post("/enrollments", json={"studentId": first["customerId"], "courseId": "crs_nail_art",
-                                                 "batchId": batch_id}, headers=first_h)
+                                                 "batchId": batch_id}, headers=admin)
     assert response.status_code == 201, response.text
     enrollment = response.json()
     assert enrollment["status"] == "pending" and enrollment["feeTotal"] == 12000
 
     full = client.post("/enrollments", json={"studentId": second["customerId"], "courseId": "crs_nail_art",
-                                             "batchId": batch_id}, headers=second_h)
+                                             "batchId": batch_id}, headers=admin)
     assert full.status_code == 409
 
     paid = client.post(f"/enrollments/{enrollment['id']}/payments", json={"amount": 12000, "method": "khalti"},

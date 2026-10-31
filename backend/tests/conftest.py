@@ -10,6 +10,8 @@ _tmp = tempfile.mkdtemp(prefix="ansita-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_tmp) / 'test.db'}"
 os.environ["JWT_SECRET"] = "test-secret-that-is-long-enough-for-hs256"
 os.environ["EXPOSE_RESET_CODE"] = "true"
+os.environ["ADMIN_EMAIL"] = ADMIN_EMAIL = "owner@test.local"
+os.environ["ADMIN_PASSWORD"] = ADMIN_PASSWORD = "test-admin-pass"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi.testclient import TestClient  # noqa: E402
@@ -31,7 +33,7 @@ def auth(token: str) -> dict:
 
 @pytest.fixture(scope="session")
 def admin(client):
-    response = client.post("/auth/login", json={"email": "admin@ansita.com", "password": "admin123"})
+    response = client.post("/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
     assert response.status_code == 200, response.text
     return auth(response.json()["token"])
 

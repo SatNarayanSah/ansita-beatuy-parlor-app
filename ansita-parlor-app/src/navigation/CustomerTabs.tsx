@@ -2,7 +2,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { TabBar, tabIcon } from '@/components/navigation/TabBar';
 import { useT } from '@/i18n';
-import { CoursesScreen } from '@/screens/customer/CoursesScreen';
 import { HomeScreen } from '@/screens/customer/HomeScreen';
 import { MyAppointmentsScreen } from '@/screens/customer/MyAppointmentsScreen';
 import { ProfileScreen } from '@/screens/customer/ProfileScreen';
@@ -34,11 +33,6 @@ export const CustomerTabs = () => {
         name="MyAppointments"
         component={MyAppointmentsScreen}
         options={{ title: t('appointments.title'), tabBarLabel: t('tab.bookings'), tabBarIcon: tabIcon('calendar-outline', 'calendar') }}
-      />
-      <Tab.Screen
-        name="Courses"
-        component={CoursesScreen}
-        options={{ title: t('courses.title'), tabBarLabel: t('tab.courses'), tabBarIcon: tabIcon('school-outline', 'school') }}
       />
       <Tab.Screen
         name="Profile"

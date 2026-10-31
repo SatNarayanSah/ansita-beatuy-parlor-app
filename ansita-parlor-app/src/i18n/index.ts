@@ -11,7 +11,6 @@ const en = {
   'tab.home': 'Home',
   'tab.book': 'Book',
   'tab.bookings': 'Bookings',
-  'tab.courses': 'Courses',
   'tab.profile': 'Profile',
 
   'greeting.morning': 'Good morning',
@@ -21,7 +20,6 @@ const en = {
   'home.loyaltyPoints': 'Loyalty points',
   'home.nextVisit': 'Your next visit',
   'home.popular': 'Popular services',
-  'home.featuredCourses': 'Featured courses',
   'home.bookNow': 'Book an appointment',
   'common.seeAll': 'See all',
   'common.next': 'Next',
@@ -55,15 +53,6 @@ const en = {
   'appointments.rebook': 'Rebook',
   'appointments.review': 'Rate & review',
 
-  'courses.title': 'Beauty courses',
-  'courses.all': 'All courses',
-  'courses.mine': 'My enrollments',
-  'courses.enroll': 'Enroll now',
-  'courses.syllabus': 'Syllabus',
-  'courses.instructor': 'Instructor',
-  'courses.batches': 'Batches',
-  'courses.seatsLeft': 'seats left',
-
   'profile.title': 'Profile',
   'profile.edit': 'Edit profile',
   'profile.preferences': 'Preferences',
@@ -84,7 +73,6 @@ const ne: Record<TranslationKey, string> = {
   'tab.home': 'गृहपृष्ठ',
   'tab.book': 'बुक',
   'tab.bookings': 'बुकिङ',
-  'tab.courses': 'कोर्स',
   'tab.profile': 'प्रोफाइल',
 
   'greeting.morning': 'शुभ प्रभात',
@@ -94,7 +82,6 @@ const ne: Record<TranslationKey, string> = {
   'home.loyaltyPoints': 'लोयल्टी अंक',
   'home.nextVisit': 'तपाईंको अर्को भेट',
   'home.popular': 'लोकप्रिय सेवाहरू',
-  'home.featuredCourses': 'विशेष कोर्सहरू',
   'home.bookNow': 'अपोइन्टमेन्ट बुक गर्नुहोस्',
   'common.seeAll': 'सबै हेर्नुहोस्',
   'common.next': 'अर्को',
@@ -127,15 +114,6 @@ const ne: Record<TranslationKey, string> = {
   'appointments.cancel': 'रद्द गर्नुहोस्',
   'appointments.rebook': 'फेरि बुक',
   'appointments.review': 'मूल्याङ्कन गर्नुहोस्',
-
-  'courses.title': 'ब्युटी कोर्सहरू',
-  'courses.all': 'सबै कोर्स',
-  'courses.mine': 'मेरा भर्नाहरू',
-  'courses.enroll': 'भर्ना हुनुहोस्',
-  'courses.syllabus': 'पाठ्यक्रम',
-  'courses.instructor': 'प्रशिक्षक',
-  'courses.batches': 'ब्याचहरू',
-  'courses.seatsLeft': 'सिट बाँकी',
 
   'profile.title': 'प्रोफाइल',
   'profile.edit': 'प्रोफाइल सम्पादन',

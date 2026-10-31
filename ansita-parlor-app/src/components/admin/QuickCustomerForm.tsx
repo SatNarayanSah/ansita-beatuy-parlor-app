@@ -7,16 +7,20 @@ import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Button, Card, Text, useToast } from '@/components/ui';
 import { customerService, getErrorMessage } from '@/services';
 import { useTheme } from '@/theme';
-import type { Customer } from '@/types';
+import type { Customer, CustomerTag } from '@/types';
 import { quickCustomerSchema } from '@/utils/formSchemas';
 
 interface QuickCustomerFormProps {
   onCreated: (customer: Customer) => void;
   onCancel: () => void;
+  /** Heading, e.g. "New student" when adding from course enrollment. */
+  title?: string;
+  /** Account type tags the new record starts with. */
+  tags?: CustomerTag[];
 }
 
 /** Name + phone only, for walk-ins and phone bookings. Full details can be added later. */
-export const QuickCustomerForm = ({ onCreated, onCancel }: QuickCustomerFormProps) => {
+export const QuickCustomerForm = ({ onCreated, onCancel, title = 'New customer', tags = ['new'] }: QuickCustomerFormProps) => {
   const { spacing } = useTheme();
   const toast = useToast();
   const { control, handleSubmit, formState } = useForm<z.input<typeof quickCustomerSchema>, unknown, z.output<typeof quickCustomerSchema>>({
@@ -36,7 +40,7 @@ export const QuickCustomerForm = ({ onCreated, onCancel }: QuickCustomerFormProp
         address: { line1: '', line2: '', city: 'Janakpur', province: 'Madhesh', postalCode: '' },
         notes: '',
         avatar: null,
-        tags: ['new'],
+        tags,
       });
       toast.success(`${customer.name} added`);
       onCreated(customer);
@@ -48,7 +52,7 @@ export const QuickCustomerForm = ({ onCreated, onCancel }: QuickCustomerFormProp
 
   return (
     <Card variant="filled" style={{ gap: spacing.md }}>
-      <Text variant="label">New customer</Text>
+      <Text variant="label">{title}</Text>
       <FormInput control={control} name="name" label="Full name" required autoFocus />
       <FormPhoneInput control={control} name="phone" required />
       <View style={styles.row}>

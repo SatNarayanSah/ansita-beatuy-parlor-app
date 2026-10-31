@@ -4,10 +4,7 @@ Use this before every client demo or release. Tick each box on **one Android pho
 
 **Before you start:** Settings → Demo → **Reset demo data**. The seed is generated around today's date, so the bookings and dates below are always relative to "today".
 
-| Account | Email | Password |
-| --- | --- | --- |
-| Admin (Ansita Shrestha) | `admin@ansita.com` | `admin123` |
-| Customer (Priya Sharma) | `customer@ansita.com` | `customer123` |
+There are no demo accounts. Sign in as admin with the `ADMIN_EMAIL` / `ADMIN_PASSWORD` set in `backend/.env` before seeding, and register a fresh customer account (A7) for the customer checks.
 
 Automated checks cover the business rules below the UI. Run `npm run verify` first; it must pass before manual QA starts.
 
@@ -18,22 +15,22 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
 | A1 | Fresh install (or Settings → Replay onboarding, then sign out) and open the app. | Native splash (logo on ivory/dark) hands over to the animated splash with no blank flash, then onboarding. | ☐ |
-| A2 | Swipe through the 3 onboarding slides; tap **Get started**. | Dots animate; lands on Login. Onboarding never shows again after this. | ☐ |
+| A2 | Swipe through the 2 onboarding slides; tap **Get started**. | Dots animate; lands on Login. Onboarding never shows again after this. | ☐ |
 | A3 | Login with an empty form. | Inline “Enter a valid email address” and “Enter your password”. | ☐ |
-| A4 | Login with `admin@ansita.com` / `wrong`. | Red banner “Invalid email or password.”; no navigation. | ☐ |
+| A4 | Login with your admin email / `wrong`. | Red banner “Invalid email or password.”; no navigation. | ☐ |
 | A5 | Login as admin with the correct password. | Admin tabs: Dashboard, Appointments, Customers, Training, More. | ☐ |
-| A6 | Sign out (More → Sign out → confirm). Tap **Demo customer**. | Customer tabs: Home, Book, Bookings, Courses, Profile. | ☐ |
+| A6 | Sign out (More → Sign out → confirm). Sign in with the customer account from A7. | Customer tabs: Home, Book, Bookings, Profile. No course screens anywhere. | ☐ |
 | A7 | Register: mismatched passwords, invalid phone (`12345`), then valid details with a new email and `98XXXXXXXX` phone. | Field errors first; then the new account is signed in on the customer tabs with 0 points. | ☐ |
 | A8 | Register again with the same email. | “An account with this email already exists.” | ☐ |
 | A9 | Forgot password: unknown email. | “No account found with this email.” | ☐ |
-| A10 | Forgot password for `customer@ansita.com`: request code, enter a wrong code, then the demo code shown on screen with a new password. | Wrong code is rejected; success returns to Login with the email filled in; the new password works and the old one doesn't. | ☐ |
+| A10 | Forgot password for the customer account from A7: request code, enter a wrong code, then the demo code shown on screen with a new password. | Wrong code is rejected; success returns to Login with the email filled in; the new password works and the old one doesn't. | ☐ |
 
 ## 2. Customer – browsing & booking
 
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
-| B1 | Open Home. | Skeletons, then greeting, loyalty card, next visit, auto-scrolling offer banners, popular services, featured courses. | ☐ |
-| B2 | Pull down to refresh on Home, Book, Bookings, Courses, Notifications. | Spinner shows and the list reloads. | ☐ |
+| B1 | Open Home. | Skeletons, then greeting, loyalty card, next visit, auto-scrolling offer banners, popular services. No courses section. | ☐ |
+| B2 | Pull down to refresh on Home, Book, Bookings, Notifications. | Spinner shows and the list reloads. | ☐ |
 | B3 | Book tab: search “facial”, then filter by a category chip, then search “zzz”. | Results narrow; “No services found” empty state with **Clear filters**. | ☐ |
 | B4 | Open a service → **Book this**. | Booking opens on step 2 (Stylist) with the service selected. | ☐ |
 | B5 | Booking step 1: select a Hair service and a Nails service. | Footer warns “Can't combine”; **Next** disabled. Remove one to continue. | ☐ |
@@ -54,14 +51,10 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | C4 | Past/Cancelled: **Rebook**. | Booking opens with the same services and stylist prefilled. | ☐ |
 | C5 | Empty states: a tab with no bookings. | Friendly empty state with a CTA, not a blank screen. | ☐ |
 
-## 4. Customer – courses, profile, notifications
+## 4. Customer – profile, notifications
 
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
-| D1 | Courses → open a course → expand syllabus modules. | Instructor, fee, batches with “N seats left”. | ☐ |
-| D2 | **Enroll now** on a course you're not in → pick a batch → **Reserve my seat**. | Toast; Courses → My enrollments shows it as **Fee pending** with fee 0 paid. | ☐ |
-| D3 | Try to enroll in the same course again. | Course detail shows “My enrollment” instead of Enroll. | ☐ |
-| D4 | My enrollments: check Nail Art. | Fee progress (paid/total), attendance %, present/late/absent counts. | ☐ |
 | D5 | Profile → Edit profile: clear the name, invalid email; then valid changes. Back out without saving. | Field errors; leaving with edits asks “Discard changes?”. After saving, Home greets the new name. | ☐ |
 | D6 | Profile photo: gallery, camera (deny permission once), remove. | Photo updates everywhere; denied camera shows a helpful toast. | ☐ |
 | D7 | Preferences: favourite stylist, payment method, reminders, offer alerts. | Saved instantly; a new booking preselects the favourite stylist and payment method. | ☐ |
@@ -77,8 +70,9 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | E1 | As admin, open Dashboard right after C2/B9. | Pending count and list include the customer's booking; notifications bell has unread items. | ☐ |
 | E2 | Charts: drag on the revenue line; tap a top-services bar. | Tooltip with date and rupees; bar caption shows the full service name. | ☐ |
 | E3 | Pending row → **Confirm**. | Toast; row leaves the list; customer sees **Confirmed** and a notification (switch role to check). | ☐ |
-| E4 | Appointments → Day view: move between days; tap an empty slot. | Staff columns; day-off columns greyed; red “now” line today; new-booking form opens prefilled with stylist, date and time. | ☐ |
-| E5 | Week view, then List view with status/staff/date filters. | Week columns per day with overlapping bookings side by side; list groups by date; filters combine. | ☐ |
+| E4 | Appointments → **Schedule**: tap days on the week strip, use the arrows and **Today**; pick one stylist chip. | Dots mark days with bookings; holidays are struck through. The day lists bookings under To do / Done / Cancelled & no-show; pending ones have an inline **Confirm**. | ☐ |
+| E5 | Tap the grid icon on a day, then tap an empty slot. | Staff timeline with day-off columns greyed and a red “now” line today; the new-booking form opens prefilled with stylist, date and time. Tap the list icon to go back. | ☐ |
+| E5b | **Requests** tab: confirm one; then **History** with the Completed / Cancelled / No-show chips. | The tab shows the pending count; a confirmed booking leaves Requests; History lists past bookings newest first and filters by status. | ☐ |
 | E6 | **New appointment** (walk-in): add a new customer inline (try a duplicate phone first). | Duplicate phone is rejected; the new customer is created and selected. | ☐ |
 | E7 | **Conflict detection**: pick a stylist and a time already booked. | Busy slots are disabled; the conflict panel lists that day's bookings and marks the clash; **Book** stays disabled. | ☐ |
 | E8 | Book a valid walk-in. | Created as **Confirmed**; opens its detail screen. | ☐ |
@@ -110,6 +104,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | G1 | Training → Courses → create a course with 2 syllabus modules; leave a module title empty first. | Field error on the module; then created and opens the course. | ☐ |
 | G2 | Add a batch: pick an end date, then move the start date after it; fix it and save. | Inline “Ends before it starts”; then the batch is listed with seats. | ☐ |
 | G3 | **Enroll student** at the desk with a partial first payment above the fee, then a valid one. | Over-fee rejected inline; enrollment **Active** with the paid amount. | ☐ |
+| G3b | **Enroll student** → Choose student → **New student**: enter a name and phone, add, then enroll. | The new student is selected straight away and shows the **Student** tag under Customers. | ☐ |
 | G4 | Fee dues tab: **Record** a payment for the top student. | Total outstanding drops; student shows the new balance. | ☐ |
 | G5 | Course → ongoing batch → **Take attendance**: mark one Late, one Absent, save. Re-open the same date. | Saved; re-opening shows the saved marks; attendance % updates in the enrollment. | ☐ |
 | G6 | Enrollment of Rojita Maharjan (Nail Art, completed): **Issue certificate**. | Certificate preview card; Share/Download show demo toasts; student notified. | ☐ |

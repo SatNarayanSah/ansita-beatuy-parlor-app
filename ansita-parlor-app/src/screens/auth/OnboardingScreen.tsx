@@ -33,14 +33,6 @@ const SLIDES: readonly Slide[] = [
     body: 'Pick a service, your favourite stylist and a time that suits you. No phone calls, no waiting.',
   },
   {
-    key: 'learn',
-    icon: 'school',
-    accents: ['brush-outline', 'ribbon-outline'],
-    tone: 'accent',
-    title: 'Learn from the experts',
-    body: 'Join our certified beautician, makeup and nail art courses, and track your classes and fees in one place.',
-  },
-  {
     key: 'reward',
     icon: 'gift',
     accents: ['star-outline', 'sparkles-outline'],

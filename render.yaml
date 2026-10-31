@@ -17,7 +17,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ADMIN_EMAIL
-        value: admin@ansita.com
+        sync: false
       - key: ADMIN_PASSWORD
         sync: false
       - key: EXPOSE_RESET_CODE

@@ -143,7 +143,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                   value={view.todayCount}
                   icon="calendar-outline"
                   caption={`${view.upcomingToday.length} still to come`}
-                  onPress={() => navigation.navigate('Appointments', { view: 'day', date: today })}
+                  onPress={() => navigation.navigate('Appointments', { view: 'schedule', date: today })}
                   style={styles.cell}
                 />
                 <StatCard
@@ -152,7 +152,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                   icon="hourglass-outline"
                   tone="warning"
                   caption="Tap to review"
-                  onPress={() => navigation.navigate('Appointments', { view: 'list', status: 'pending' })}
+                  onPress={() => navigation.navigate('Appointments', { view: 'requests' })}
                   style={styles.cell}
                 />
                 <StatCard
@@ -194,7 +194,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                   title="Pending approval"
                   subtitle={view.pending.length ? `${view.pending.length} requests` : undefined}
                   actionLabel={view.pending.length > 3 ? 'See all' : undefined}
-                  onAction={() => navigation.navigate('Appointments', { view: 'list', status: 'pending' })}
+                  onAction={() => navigation.navigate('Appointments', { view: 'requests' })}
                 />
                 {view.pending.length === 0 ? (
                   <Card variant="outlined" padding="none">
@@ -218,7 +218,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
               </View>
 
               <View style={{ gap: spacing.md }}>
-                <SectionHeader title="Still to come today" actionLabel="Calendar" onAction={() => navigation.navigate('Appointments', { view: 'day', date: today })} />
+                <SectionHeader title="Still to come today" actionLabel="Calendar" onAction={() => navigation.navigate('Appointments', { view: 'schedule', date: today })} />
                 {view.upcomingToday.length === 0 ? (
                   <Card variant="outlined" padding="none">
                     <EmptyState

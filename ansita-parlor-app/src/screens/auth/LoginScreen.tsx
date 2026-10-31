@@ -46,7 +46,7 @@ export const LoginScreen = ({ navigation, route }: Props) => {
     <AuthLayout
       showLogo
       title="Welcome back"
-      subtitle="Sign in to book appointments and manage your courses."
+      subtitle="Sign in to book appointments and earn rewards."
       footer={
         <View style={styles.row}>
           <Text variant="body" tone="secondary">

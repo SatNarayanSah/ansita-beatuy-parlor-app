@@ -3,8 +3,8 @@
  *
  *   EXPO_PUBLIC_API_URL=http://localhost:8000 npm run verify:api
  *
- * Uses the admin from `python -m app.seed` (ADMIN_EMAIL / ADMIN_PASSWORD, default
- * admin@ansita.com / admin123) and registers a fresh test customer each run.
+ * Uses the admin from `python -m app.seed` (pass the same ADMIN_EMAIL / ADMIN_PASSWORD)
+ * and registers a fresh test customer each run.
  */
 import {
   appointmentService,
@@ -18,7 +18,11 @@ import {
 import { useAppointmentStore, useAuthStore, useBusinessStore, useServiceStore, useStaffStore } from '@/store';
 import { addDaysISO, todayISO, weekdayOf } from '@/utils/date';
 
-const ADMIN = { email: process.env.ADMIN_EMAIL ?? 'admin@ansita.com', password: process.env.ADMIN_PASSWORD ?? 'admin123' };
+if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD to the admin account created by the seed.');
+  process.exit(1);
+}
+const ADMIN = { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD };
 
 let failures = 0;
 const check = (label: string, condition: boolean, detail = ''): void => {

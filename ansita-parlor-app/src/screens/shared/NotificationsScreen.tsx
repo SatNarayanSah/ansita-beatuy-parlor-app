@@ -135,15 +135,12 @@ export const NotificationsScreen = ({ navigation }: Props) => {
       case 'appointment':
         navigation.navigate('CustomerTabs', { screen: 'MyAppointments' });
         return;
-      case 'enrollment':
-        navigation.navigate('CustomerTabs', { screen: 'Courses', params: { view: 'mine' } });
-        return;
-      case 'course':
-        navigation.navigate('CourseDetail', { courseId: link.id });
-        return;
       case 'offer':
         navigation.navigate('CustomerTabs', { screen: 'Home' });
         return;
+      // Courses are managed by the parlour; customers have no course screens.
+      case 'enrollment':
+      case 'course':
       case 'customer':
         return;
     }

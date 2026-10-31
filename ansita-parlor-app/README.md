@@ -133,7 +133,7 @@ npx eas-cli@latest build --platform ios --profile preview
    ```
 2. Run `npx expo start`. In development the app automatically talks to **port 8000 on the computer running Expo**, so a phone on the same Wi-Fi works with no setup. Allow Python through Windows Firewall if the phone can't connect.
 3. To use another server, set `EXPO_PUBLIC_API_URL` (e.g. in a `.env` file: `EXPO_PUBLIC_API_URL=https://ansita-api.onrender.com`) and restart Expo with `-c`.
-4. Sign in with the admin account created by the seed (`ADMIN_EMAIL` / `ADMIN_PASSWORD`, default `admin@ansita.com` / `admin123`; change it before going live). Customers create their own accounts from **Create an account**; admins add walk-in customers in the CRM.
+4. Sign in with the admin account created by the seed (the `ADMIN_EMAIL` / `ADMIN_PASSWORD` you set in `backend/.env`; there is no built-in login). Customers create their own accounts from **Create an account**; admins add walk-in customers in the CRM.
 
 **Settings → App → Server** shows which server the app is using and whether it can reach it. A banner appears at the top whenever the server can't be reached; tap it to retry.
 

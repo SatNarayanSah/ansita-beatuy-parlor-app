@@ -26,9 +26,10 @@ class Settings(BaseSettings):
     expose_reset_code: bool = True
     reset_code_ttl_minutes: int = 10
 
-    # Used by `python -m app.seed` to create the first admin account.
-    admin_email: str = "admin@ansita.com"
-    admin_password: str = "admin123"
+    # Used by `python -m app.seed` to create the first admin account. No default:
+    # the seed skips the admin until both are set.
+    admin_email: str = ""
+    admin_password: str = ""
     admin_name: str = "Ansita Shrestha"
     admin_phone: str = "+9779841500100"
 

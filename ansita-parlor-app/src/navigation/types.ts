@@ -2,7 +2,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { AppointmentStatus, ID, ISODate, TimeString } from '@/types';
+import type { ID, ISODate, TimeString } from '@/types';
 
 /** Root stack. Guest and signed-in screens are mutually exclusive groups. */
 export type RootStackParamList = {
@@ -25,8 +25,6 @@ export type RootStackParamList = {
   Booking: { serviceIds?: ID[]; staffId?: ID } | undefined;
   BookingSuccess: { appointmentId: ID };
   Reschedule: { appointmentId: ID };
-  CourseDetail: { courseId: ID };
-  Enroll: { courseId: ID; batchId?: ID };
   EditProfile: undefined;
   Preferences: undefined;
   LoyaltyHistory: undefined;
@@ -54,15 +52,14 @@ export type RootStackParamList = {
 };
 
 export type AppointmentsTab = 'upcoming' | 'past' | 'cancelled';
-export type CoursesView = 'all' | 'mine';
 
-export type AppointmentsView = 'day' | 'week' | 'list';
+export type AppointmentsView = 'schedule' | 'requests' | 'history';
 export type TrainingView = 'courses' | 'students' | 'dues';
 
 export type AdminTabParamList = {
   Dashboard: undefined;
   /** `status` opens the list filtered, e.g. pending approvals. */
-  Appointments: { view?: AppointmentsView; date?: ISODate; status?: AppointmentStatus } | undefined;
+  Appointments: { view?: AppointmentsView; date?: ISODate } | undefined;
   Customers: undefined;
   Training: { view?: TrainingView } | undefined;
   More: undefined;
@@ -73,7 +70,6 @@ export type CustomerTabParamList = {
   /** Service catalogue; `categoryId` preselects a category chip. */
   Book: { categoryId?: ID } | undefined;
   MyAppointments: { tab?: AppointmentsTab } | undefined;
-  Courses: { view?: CoursesView } | undefined;
   Profile: undefined;
 };
 
