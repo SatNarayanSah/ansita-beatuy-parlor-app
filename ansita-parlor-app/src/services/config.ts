@@ -1,42 +1,44 @@
+import Constants from 'expo-constants';
+
+/** Port the Python backend listens on during development (`uvicorn ... --port 8000`). */
+const DEV_API_PORT = 8000;
+
+/**
+ * Where the backend lives:
+ * 1. `EXPO_PUBLIC_API_URL` (set it for production builds, e.g. https://ansita-api.onrender.com).
+ * 2. In development, the computer running `expo start` on port 8000, so a phone on the
+ *    same Wi-Fi reaches the local backend with no setup.
+ */
+const resolveApiUrl = (): string => {
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/+$/, '');
+  const host = Constants.expoConfig?.hostUri?.split(':')[0];
+  return `http://${host || 'localhost'}:${DEV_API_PORT}`;
+};
+
+export const API_URL = resolveApiUrl();
+
+/** A cold server (e.g. Render's free plan waking up) can take up to a minute to answer. */
+export const REQUEST_TIMEOUT_MS = 70_000;
+
 export interface ApiConfig {
-  /** Minimum simulated network latency in ms. */
-  minLatencyMs: number;
-  /** Maximum simulated network latency in ms. */
-  maxLatencyMs: number;
-  /** When true, requests randomly fail with a NETWORK error. Off by default. */
-  simulateErrors: boolean;
-  /** Probability (0-1) that a request fails when `simulateErrors` is on. */
-  errorRate: number;
-  /** Demo "airplane mode": every request fails with a NETWORK error. */
+  apiUrl: string;
+  /** True after a request could not reach the server; cleared by the next successful one. */
   offline: boolean;
 }
 
-const DEFAULT_CONFIG: ApiConfig = {
-  minLatencyMs: 300,
-  maxLatencyMs: 700,
-  simulateErrors: false,
-  errorRate: 0.2,
-  offline: false,
-};
-
-let currentConfig: ApiConfig = { ...DEFAULT_CONFIG };
+let currentConfig: ApiConfig = { apiUrl: API_URL, offline: false };
 
 type Listener = (config: ApiConfig) => void;
 const listeners = new Set<Listener>();
 
 export const getApiConfig = (): ApiConfig => currentConfig;
 
-export const configureApi = (patch: Partial<ApiConfig>): ApiConfig => {
-  const next: ApiConfig = { ...currentConfig, ...patch };
-  next.minLatencyMs = Math.max(0, next.minLatencyMs);
-  next.maxLatencyMs = Math.max(next.minLatencyMs, next.maxLatencyMs);
-  next.errorRate = Math.min(1, Math.max(0, next.errorRate));
-  currentConfig = next;
+export const setOffline = (offline: boolean): void => {
+  if (currentConfig.offline === offline) return;
+  currentConfig = { ...currentConfig, offline };
   listeners.forEach((listener) => listener(currentConfig));
-  return currentConfig;
 };
-
-export const resetApiConfig = (): ApiConfig => configureApi(DEFAULT_CONFIG);
 
 export const subscribeApiConfig = (listener: Listener): (() => void) => {
   listeners.add(listener);

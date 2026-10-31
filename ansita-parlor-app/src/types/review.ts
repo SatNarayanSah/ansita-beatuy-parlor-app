@@ -11,4 +11,6 @@ export interface Review extends BaseEntity {
   comment: string;
   /** Optional reply from the parlor. */
   reply: string | null;
+  /** Reviewer's first name, added by the server so customers can see who wrote it. */
+  customerName?: string;
 }

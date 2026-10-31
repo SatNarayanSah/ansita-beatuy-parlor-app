@@ -1,82 +1,35 @@
-import { newEntityMeta } from '@/store/entityHelpers';
-import { selectLiveOffers, useOfferStore } from '@/store/offerStore';
+import { useOfferStore } from '@/store/offerStore';
 import type { ID, Offer } from '@/types';
-import { todayISO } from '@/utils/date';
 
-import { ApiError, ensureFound, simulateRequest } from './client';
-import { requireAdmin, requireUser } from './session';
+import { api } from './client';
 
 export type OfferInput = Omit<Offer, 'id' | 'createdAt' | 'updatedAt'>;
 
-const validateOffer = (input: Partial<OfferInput>, current?: Offer): void => {
-  const merged = { ...current, ...input };
-  if (merged.discountValue !== undefined && merged.discountValue <= 0) {
-    throw new ApiError('VALIDATION', 'Discount must be more than zero.');
-  }
-  if (merged.discountType === 'percent' && (merged.discountValue ?? 0) > 100) {
-    throw new ApiError('VALIDATION', 'A percentage discount cannot exceed 100%.');
-  }
-  if (merged.validFrom && merged.validTo && merged.validTo < merged.validFrom) {
-    throw new ApiError('VALIDATION', 'The end date must be on or after the start date.');
-  }
-  const code = input.code?.trim().toUpperCase();
-  if (code) {
-    const taken = useOfferStore
-      .getState()
-      .offers.some((offer) => offer.id !== current?.id && offer.code?.toUpperCase() === code);
-    if (taken) throw new ApiError('CONFLICT', 'Another offer already uses this code.');
-  }
+const cacheOffer = (offer: Offer): Offer => {
+  useOfferStore.getState().mergeOffers([offer]);
+  return offer;
 };
 
 /** Promotions. Customers see only live offers; admins see drafts and expired ones too. */
 export const offerService = {
-  listOffers: (): Promise<Offer[]> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      const { offers } = useOfferStore.getState();
-      if (user.role === 'customer') return selectLiveOffers(offers, todayISO());
-      return [...offers].sort((a, b) => b.validFrom.localeCompare(a.validFrom));
-    }),
+  listOffers: async (): Promise<Offer[]> => {
+    const list = await api<Offer[]>('GET', '/offers');
+    useOfferStore.getState().setOffers(list);
+    return list;
+  },
 
-  getOffer: (id: ID): Promise<Offer> =>
-    simulateRequest(() => ensureFound(useOfferStore.getState().getOfferById(id), 'Offer')),
+  getOffer: async (id: ID): Promise<Offer> => cacheOffer(await api<Offer>('GET', `/offers/${id}`)),
 
-  createOffer: (input: OfferInput): Promise<Offer> =>
-    simulateRequest(() => {
-      requireAdmin();
-      validateOffer(input);
-      const offer: Offer = {
-        ...newEntityMeta('ofr'),
-        ...input,
-        title: input.title.trim(),
-        code: input.code?.trim().toUpperCase() || null,
-      };
-      useOfferStore.getState().addOffer(offer);
-      return offer;
-    }),
+  createOffer: async (input: OfferInput): Promise<Offer> => cacheOffer(await api<Offer>('POST', '/offers', { body: input })),
 
-  updateOffer: (id: ID, input: Partial<OfferInput>): Promise<Offer> =>
-    simulateRequest(() => {
-      requireAdmin();
-      const current = ensureFound(useOfferStore.getState().getOfferById(id), 'Offer');
-      validateOffer(input, current);
-      const patch = input.code !== undefined ? { ...input, code: input.code?.trim().toUpperCase() || null } : input;
-      useOfferStore.getState().updateOffer(id, patch);
-      return ensureFound(useOfferStore.getState().getOfferById(id), 'Offer');
-    }),
+  updateOffer: async (id: ID, input: Partial<OfferInput>): Promise<Offer> =>
+    cacheOffer(await api<Offer>('PATCH', `/offers/${id}`, { body: input })),
 
-  setOfferActive: (id: ID, isActive: boolean): Promise<Offer> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useOfferStore.getState().getOfferById(id), 'Offer');
-      useOfferStore.getState().updateOffer(id, { isActive });
-      return ensureFound(useOfferStore.getState().getOfferById(id), 'Offer');
-    }),
+  setOfferActive: async (id: ID, isActive: boolean): Promise<Offer> =>
+    cacheOffer(await api<Offer>('POST', `/offers/${id}/active`, { body: { isActive } })),
 
-  deleteOffer: (id: ID): Promise<void> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useOfferStore.getState().getOfferById(id), 'Offer');
-      useOfferStore.getState().deleteOffer(id);
-    }),
+  deleteOffer: async (id: ID): Promise<void> => {
+    await api<null>('DELETE', `/offers/${id}`);
+    useOfferStore.getState().removeOffer(id);
+  },
 };

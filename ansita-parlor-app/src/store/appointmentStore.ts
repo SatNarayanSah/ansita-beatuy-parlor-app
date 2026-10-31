@@ -1,54 +1,42 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildAppointments } from '@/data/appointments';
-import type { Appointment, AppointmentStatus, ID, ISODate, UpdateInput } from '@/types';
+import type { Appointment, AppointmentStatus, ID, ISODate } from '@/types';
 
-import { findEntity, insertEntity, removeEntity, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, mergeEntities, replaceEntities, withoutEntity } from './entityHelpers';
 
 interface AppointmentData {
   appointments: Appointment[];
 }
 
 interface AppointmentActions {
-  addAppointment: (appointment: Appointment) => void;
-  updateAppointment: (id: ID, patch: UpdateInput<Appointment>) => void;
-  deleteAppointment: (id: ID) => void;
+  setAppointments: (appointments: readonly Appointment[]) => void;
+  mergeAppointments: (appointments: readonly Appointment[]) => void;
+  removeAppointment: (id: ID) => void;
   getAppointmentById: (id: ID) => Appointment | undefined;
   reset: () => void;
 }
 
 export type AppointmentState = AppointmentData & AppointmentActions;
 
-const createInitialData = (): AppointmentData => ({
-  appointments: buildAppointments(),
-});
+/** Cache of appointments loaded from the server. */
+export const useAppointmentStore = create<AppointmentState>()((set, get) => ({
+  appointments: [],
 
-export const useAppointmentStore = create<AppointmentState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
-
-      addAppointment: (appointment) =>
-        set((state) => ({ appointments: insertEntity(state.appointments, appointment) })),
-      updateAppointment: (id, patch) =>
-        set((state) => ({ appointments: updateEntity(state.appointments, id, patch) })),
-      deleteAppointment: (id) =>
-        set((state) => ({ appointments: removeEntity(state.appointments, id) })),
-      getAppointmentById: (id) => findEntity(get().appointments, id),
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.appointments,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ appointments }): AppointmentData => ({ appointments }),
-    },
-  ),
-);
+  setAppointments: (list) => {
+    const next = replaceEntities(get().appointments, list);
+    if (next) set({ appointments: next });
+  },
+  mergeAppointments: (list) => {
+    const next = mergeEntities(get().appointments, list);
+    if (next) set({ appointments: next });
+  },
+  removeAppointment: (id) => {
+    const next = withoutEntity(get().appointments, id);
+    if (next) set({ appointments: next });
+  },
+  getAppointmentById: (id) => findEntity(get().appointments, id),
+  reset: () => set({ appointments: [] }),
+}));
 
 // ---------- Selectors ----------
 
@@ -79,6 +67,7 @@ export const selectFilteredAppointments = (
     .filter((appointment) => (from ? appointment.date >= from : true))
     .filter((appointment) => (to ? appointment.date <= to : true))
     .sort(byDateTimeAsc);
+
 /** Pending/confirmed bookings from `today` onwards, soonest first. */
 export const selectUpcomingAppointments = (appointments: readonly Appointment[], today: ISODate): Appointment[] =>
   appointments
@@ -87,6 +76,7 @@ export const selectUpcomingAppointments = (appointments: readonly Appointment[],
         appointment.date >= today && ACTIVE_APPOINTMENT_STATUSES.includes(appointment.status),
     )
     .sort(byDateTimeAsc);
+
 export const selectStatusCounts = (
   appointments: readonly Appointment[],
 ): Record<AppointmentStatus, number> =>

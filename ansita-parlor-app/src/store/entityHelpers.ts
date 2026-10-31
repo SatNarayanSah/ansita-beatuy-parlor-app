@@ -1,36 +1,7 @@
-import type { BaseEntity, ID, UpdateInput } from '@/types';
-import { nowISO } from '@/utils/date';
-import { generateId, type IdPrefix } from '@/utils/id';
-
-/** Fresh id + timestamps for a new entity. */
-export const newEntityMeta = (prefix: IdPrefix): BaseEntity => {
-  const timestamp = nowISO();
-  return { id: generateId(prefix), createdAt: timestamp, updatedAt: timestamp };
-};
+import type { BaseEntity, ID } from '@/types';
 
 export const findEntity = <T extends BaseEntity>(items: readonly T[], id: ID): T | undefined =>
   items.find((item) => item.id === id);
-
-/** Newest first, matching how lists are displayed. */
-export const insertEntity = <T extends BaseEntity>(items: readonly T[], item: T): T[] => [
-  item,
-  ...items.filter((existing) => existing.id !== item.id),
-];
-
-export const patchEntity = <T extends BaseEntity>(item: T, patch: UpdateInput<T>): T => ({
-  ...item,
-  ...patch,
-  updatedAt: nowISO(),
-});
-
-export const updateEntity = <T extends BaseEntity>(
-  items: readonly T[],
-  id: ID,
-  patch: UpdateInput<T>,
-): T[] => items.map((item) => (item.id === id ? patchEntity(item, patch) : item));
-
-export const removeEntity = <T extends BaseEntity>(items: readonly T[], id: ID): T[] =>
-  items.filter((item) => item.id !== id);
 
 export const sortByCreatedDesc = <T extends BaseEntity>(items: readonly T[]): T[] =>
   [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -41,3 +12,37 @@ export const matchesQuery = (query: string, ...fields: readonly (string | null |
   if (needle.length === 0) return true;
   return fields.some((field) => field?.toLowerCase().includes(needle) ?? false);
 };
+
+// ---------- Cache helpers ----------
+// The domain stores are a client-side cache of server data. These return `undefined`
+// when nothing changed, so stores can skip `set()` and avoid needless re-renders and
+// refetches (screens refetch whenever a store they watch changes).
+
+const sameEntity = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** Inserts or replaces each incoming entity; existing order is kept, new ones go first. */
+export const mergeEntities = <T extends BaseEntity>(items: readonly T[], incoming: readonly T[]): T[] | undefined => {
+  if (incoming.length === 0) return undefined;
+  const byId = new Map(incoming.map((item) => [item.id, item]));
+  let changed = false;
+  const updated = items.map((item) => {
+    const next = byId.get(item.id);
+    if (!next) return item;
+    byId.delete(item.id);
+    if (sameEntity(item, next)) return item;
+    changed = true;
+    return next;
+  });
+  const added = [...byId.values()];
+  if (!changed && added.length === 0) return undefined;
+  return [...added, ...updated];
+};
+
+/** The complete server list replaces the cache. */
+export const replaceEntities = <T extends BaseEntity>(items: readonly T[], incoming: readonly T[]): T[] | undefined => {
+  if (items.length === incoming.length && items.every((item, index) => sameEntity(item, incoming[index]))) return undefined;
+  return [...incoming];
+};
+
+export const withoutEntity = <T extends BaseEntity>(items: readonly T[], id: ID): T[] | undefined =>
+  items.some((item) => item.id === id) ? items.filter((item) => item.id !== id) : undefined;

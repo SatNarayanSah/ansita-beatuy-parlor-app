@@ -50,7 +50,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
     mode: 'onTouched',
   });
 
-  // Pick up external changes (e.g. demo reset) while the screen is open.
+  // Pick up changes loaded from the server while the screen is open.
   const resetProfile = profileForm.reset;
   const resetLoyalty = loyaltyForm.reset;
   useEffect(() => resetProfile(profile), [profile, resetProfile]);

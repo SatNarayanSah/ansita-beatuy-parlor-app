@@ -103,7 +103,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
         <Divider inset={56} />
         <ListItem
           title="Settings"
-          subtitle="Demo role switcher, reset data"
+          subtitle="Preferences, server status"
           leftIcon="settings-outline"
           leftIconTone="neutral"
           showChevron

@@ -4,12 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, Text } from '@/components/ui';
 import { useApiConfig } from '@/hooks/useApiConfig';
-import { configureApi } from '@/services';
+import { refreshLiveData } from '@/services';
 import { useTheme } from '@/theme';
 
 /**
- * Shown while the demo "offline" switch is on (Settings → Demo). Every request
- * then fails, so each screen's error state can be shown. Tap to go back online.
+ * Shown after a request could not reach the server (no internet, or the server is
+ * waking up). Hidden again by the next successful request. Tap to retry.
  */
 export const OfflineBanner = () => {
   const { colors, spacing } = useTheme();
@@ -26,17 +26,17 @@ export const OfflineBanner = () => {
       accessibilityLiveRegion="polite"
     >
       <Pressable
-        onPress={() => configureApi({ offline: false })}
+        onPress={() => void refreshLiveData().catch(() => undefined)}
         accessibilityRole="button"
-        accessibilityLabel="You are offline. Tap to reconnect."
+        accessibilityLabel="Can't reach the server. Tap to retry."
         style={[styles.content, { paddingBottom: spacing.sm, paddingHorizontal: spacing.lg }]}
       >
         <Icon name="cloud-offline-outline" size={16} color={colors.textInverse} />
         <Text variant="label" color={colors.textInverse} style={styles.flex}>
-          You’re offline (demo)
+          Can’t reach the server
         </Text>
         <Text variant="caption" color={colors.textInverse}>
-          Tap to reconnect
+          Tap to retry
         </Text>
       </Pressable>
     </Animated.View>

@@ -1,4 +1,4 @@
-import type { BaseEntity, ID, ISODateTime, ImageUri } from './common';
+import type { BaseEntity, ID, ImageUri } from './common';
 
 export type UserRole = 'admin' | 'customer';
 
@@ -15,15 +15,3 @@ export interface User extends BaseEntity {
   staffId: ID | null;
 }
 
-/** Demo-only credentials. Never store plain passwords in a real app. */
-export interface DemoCredential {
-  email: string;
-  password: string;
-  userId: ID;
-}
-
-export interface Session {
-  userId: ID;
-  token: string;
-  signedInAt: ISODateTime;
-}

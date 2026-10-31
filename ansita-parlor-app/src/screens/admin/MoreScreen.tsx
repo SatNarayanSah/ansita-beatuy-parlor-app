@@ -28,7 +28,7 @@ const MANAGE: readonly MenuItem[] = [
 const APP: readonly MenuItem[] = [
   { title: 'Business settings', subtitle: 'Profile, hours, holidays, loyalty, alerts', icon: 'storefront-outline', tone: 'highlight', route: 'BusinessSettings' },
   { title: 'Notifications', subtitle: 'Booking requests, payments, reviews', icon: 'notifications-outline', tone: 'info', route: 'Notifications' },
-  { title: 'App settings', subtitle: 'Theme, demo role switcher, reset data', icon: 'settings-outline', tone: 'neutral', route: 'Settings' },
+  { title: 'App settings', subtitle: 'Preferences, server status', icon: 'settings-outline', tone: 'neutral', route: 'Settings' },
 ];
 
 export const MoreScreen = ({ navigation }: Props) => {

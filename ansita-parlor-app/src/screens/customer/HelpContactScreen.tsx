@@ -11,8 +11,6 @@ import { formatPhone } from '@/utils/phone';
 
 type Props = RootStackScreenProps<'HelpContact'>;
 
-/** Map pin for the demo address. Contact details come from the business profile in admin Settings. */
-const MAP_PIN = { latitude: 26.7288, longitude: 85.9263 };
 
 const FAQS = [
   { q: 'How do I cancel or reschedule?', a: 'Open Bookings, choose the appointment and tap Reschedule or Cancel. There is no fee for changes made before your visit.' },
@@ -22,12 +20,12 @@ const FAQS = [
   { q: 'Can I bring my own products?', a: 'Yes. Tell your stylist when you book so they can do a patch test first.' },
 ];
 
+/** Directions search for the business address from the profile (Settings → Business profile). */
 const mapsUrl = (name: string, address: string): string => {
-  const { latitude, longitude } = MAP_PIN;
-  const label = encodeURIComponent(`${name}, ${address}`);
-  if (Platform.OS === 'ios') return `maps:0,0?q=${label}@${latitude},${longitude}`;
-  if (Platform.OS === 'android') return `geo:0,0?q=${latitude},${longitude}(${label})`;
-  return `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  const query = encodeURIComponent([name, address].filter(Boolean).join(', '));
+  if (Platform.OS === 'ios') return `maps:0,0?q=${query}`;
+  if (Platform.OS === 'android') return `geo:0,0?q=${query}`;
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
 };
 
 const FaqItem = ({ q, a }: { q: string; a: string }) => {
@@ -117,10 +115,6 @@ export const HelpContactScreen = (_props: Props) => {
           ))}
         </Card>
       </View>
-
-      <Text variant="caption" tone="muted" align="center">
-        Demo contact details. Admins can change them in Settings → Business profile.
-      </Text>
     </Screen>
   );
 };

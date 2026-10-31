@@ -1,61 +1,42 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildCustomers } from '@/data/customers';
-import type { Customer, CustomerTag, ID, UpdateInput } from '@/types';
+import type { Customer, CustomerTag, ID } from '@/types';
 
-import { findEntity, insertEntity, matchesQuery, removeEntity, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, matchesQuery, mergeEntities, replaceEntities, withoutEntity } from './entityHelpers';
 
 interface CustomerData {
   customers: Customer[];
 }
 
 interface CustomerActions {
-  addCustomer: (customer: Customer) => void;
-  updateCustomer: (id: ID, patch: UpdateInput<Customer>) => void;
-  deleteCustomer: (id: ID) => void;
+  setCustomers: (customers: readonly Customer[]) => void;
+  mergeCustomers: (customers: readonly Customer[]) => void;
+  removeCustomer: (id: ID) => void;
   getCustomerById: (id: ID) => Customer | undefined;
-  adjustLoyaltyPoints: (id: ID, delta: number) => void;
   reset: () => void;
 }
 
 export type CustomerState = CustomerData & CustomerActions;
 
-const createInitialData = (): CustomerData => ({ customers: buildCustomers() });
+/** Cache of customers loaded from the server (all of them for admins, their own profile for customers). */
+export const useCustomerStore = create<CustomerState>()((set, get) => ({
+  customers: [],
 
-export const useCustomerStore = create<CustomerState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
-
-      addCustomer: (customer) => set((state) => ({ customers: insertEntity(state.customers, customer) })),
-
-      updateCustomer: (id, patch) =>
-        set((state) => ({ customers: updateEntity(state.customers, id, patch) })),
-
-      deleteCustomer: (id) => set((state) => ({ customers: removeEntity(state.customers, id) })),
-
-      getCustomerById: (id) => findEntity(get().customers, id),
-
-      adjustLoyaltyPoints: (id, delta) => {
-        const customer = findEntity(get().customers, id);
-        if (!customer) return;
-        const loyaltyPoints = Math.max(0, customer.loyaltyPoints + delta);
-        set((state) => ({ customers: updateEntity(state.customers, id, { loyaltyPoints }) }));
-      },
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.customers,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ customers }): CustomerData => ({ customers }),
-    },
-  ),
-);
+  setCustomers: (list) => {
+    const next = replaceEntities(get().customers, list);
+    if (next) set({ customers: next });
+  },
+  mergeCustomers: (list) => {
+    const next = mergeEntities(get().customers, list);
+    if (next) set({ customers: next });
+  },
+  removeCustomer: (id) => {
+    const next = withoutEntity(get().customers, id);
+    if (next) set({ customers: next });
+  },
+  getCustomerById: (id) => findEntity(get().customers, id),
+  reset: () => set({ customers: [] }),
+}));
 
 // ---------- Selectors (pure; memoise in components with useMemo) ----------
 

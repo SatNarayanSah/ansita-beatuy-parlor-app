@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..errors import ApiError, ensure_found
-from ..models import Appointment, Review, Staff, User
+from ..models import Appointment, Customer, Review, Staff, User
 from ..notify import link, notify_admins, notify_customer
 from ..schemas import ReplyInput, ReviewInput
 from ..security import assert_customer_access, get_current_user, require_admin
-from ..serializers import to_dict, to_list
+from ..serializers import to_dict
 from ..utils import generate_id, round_rating
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
@@ -21,6 +21,14 @@ def _sync_staff_rating(db: Session, staff_id: str) -> None:
     member = db.get(Staff, staff_id)
     if member is not None:
         member.rating = round_rating(float(average)) if average is not None else 0
+
+
+def with_names(db: Session, reviews: list[Review]) -> list[dict]:
+    """Adds the reviewer's first name, so customers can see who wrote a review without the CRM."""
+    ids = {review.customer_id for review in reviews}
+    names = {c.id: c.name for c in db.scalars(select(Customer).where(Customer.id.in_(ids)))} if ids else {}
+    return [{**to_dict(review), "customerName": (names.get(review.customer_id) or "").split(" ")[0] or "Customer"}
+            for review in reviews]
 
 
 def _review(db: Session, id_: str) -> Review:
@@ -36,14 +44,14 @@ def list_reviews(staff_id: str | None = Query(None, alias="staffId"),
         stmt = stmt.where(Review.staff_id == staff_id)
     elif customer_id:
         stmt = stmt.where(Review.customer_id == customer_id)
-    return to_list(list(db.scalars(stmt.order_by(Review.created_at.desc()))))
+    return with_names(db, list(db.scalars(stmt.order_by(Review.created_at.desc()))))
 
 
 @router.get("/by-appointment/{appointment_id}")
 def get_review_for_appointment(appointment_id: str, _: User = Depends(get_current_user),
                                db: Session = Depends(get_db)):
     review = db.scalar(select(Review).where(Review.appointment_id == appointment_id))
-    return to_dict(review) if review else None
+    return with_names(db, [review])[0] if review else None
 
 
 @router.post("", status_code=201)
@@ -72,7 +80,7 @@ def create_review(body: ReviewInput, user: User = Depends(get_current_user), db:
     notify_admins(db, "system", f"New {body.rating}★ review", f"{user.name}: “{review.comment or 'No comment'}”",
                   link("appointment", appointment.id))
     db.commit()
-    return to_dict(review)
+    return with_names(db, [review])[0]
 
 
 @router.post("/{id_}/reply")
@@ -84,7 +92,7 @@ def reply_to_review(id_: str, body: ReplyInput, _: User = Depends(require_admin)
         notify_customer(db, review.customer_id, "system", "Ansita replied to your review", trimmed,
                         link("appointment", review.appointment_id))
     db.commit()
-    return to_dict(review)
+    return with_names(db, [review])[0]
 
 
 @router.delete("/{id_}", status_code=204)

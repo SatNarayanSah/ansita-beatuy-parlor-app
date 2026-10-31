@@ -17,7 +17,6 @@ export type RootStackParamList = {
   CustomerTabs: NavigatorScreenParams<CustomerTabParamList> | undefined;
   Settings: undefined;
   Notifications: undefined;
-  DemoData: undefined;
   /** Dev-only; not registered in production builds. */
   UIKitShowcase: undefined;
   // Customer

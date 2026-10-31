@@ -1,57 +1,37 @@
-import {
-  selectNotificationsForUser,
-  selectUnreadCount,
-  useNotificationStore,
-} from '@/store/notificationStore';
+import { useNotificationStore } from '@/store/notificationStore';
 import type { ID, Notification } from '@/types';
 
-import { ApiError, ensureFound, simulateRequest } from './client';
-import { requireUser } from './session';
-
-const getOwnNotification = (id: ID, userId: ID): Notification => {
-  const notification = ensureFound(useNotificationStore.getState().getNotificationById(id), 'Notification');
-  if (notification.userId !== userId) throw new ApiError('FORBIDDEN');
-  return notification;
-};
+import { api } from './client';
 
 /** Notifications for the signed-in user only. */
 export const notificationService = {
-  listMine: (): Promise<Notification[]> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      return selectNotificationsForUser(useNotificationStore.getState().notifications, user.id);
-    }),
+  listMine: async (): Promise<Notification[]> => {
+    const list = await api<Notification[]>('GET', '/notifications');
+    useNotificationStore.getState().setNotifications(list);
+    return list;
+  },
 
-  getUnreadCount: (): Promise<number> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      return selectUnreadCount(useNotificationStore.getState().notifications, user.id);
-    }),
+  getUnreadCount: async (): Promise<number> => (await api<{ count: number }>('GET', '/notifications/unread-count')).count,
 
-  markAsRead: (id: ID): Promise<Notification> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      getOwnNotification(id, user.id);
-      useNotificationStore.getState().markAsRead(id);
-      return getOwnNotification(id, user.id);
-    }),
+  markAsRead: async (id: ID): Promise<Notification> => {
+    const notification = await api<Notification>('POST', `/notifications/${id}/read`);
+    useNotificationStore.getState().mergeNotifications([notification]);
+    return notification;
+  },
 
-  markAllAsRead: (): Promise<void> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      useNotificationStore.getState().markAllAsRead(user.id);
-    }),
+  markAllAsRead: async (): Promise<void> => {
+    await api<null>('POST', '/notifications/read-all');
+    const { notifications, setNotifications } = useNotificationStore.getState();
+    setNotifications(notifications.map((notification) => ({ ...notification, isRead: true })));
+  },
 
-  deleteNotification: (id: ID): Promise<void> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      getOwnNotification(id, user.id);
-      useNotificationStore.getState().deleteNotification(id);
-    }),
+  deleteNotification: async (id: ID): Promise<void> => {
+    await api<null>('DELETE', `/notifications/${id}`);
+    useNotificationStore.getState().removeNotification(id);
+  },
 
-  clearAll: (): Promise<void> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      useNotificationStore.getState().clearForUser(user.id);
-    }),
+  clearAll: async (): Promise<void> => {
+    await api<null>('DELETE', '/notifications');
+    useNotificationStore.getState().setNotifications([]);
+  },
 };

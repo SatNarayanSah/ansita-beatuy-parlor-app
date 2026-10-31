@@ -2,6 +2,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 
+import { useLiveSync } from '@/hooks/useLiveSync';
+
 import { useT } from '@/i18n';
 import { AppointmentDetailScreen } from '@/screens/admin/AppointmentDetailScreen';
 import { AppointmentFormScreen } from '@/screens/admin/AppointmentFormScreen';
@@ -35,7 +37,6 @@ import { LoyaltyHistoryScreen } from '@/screens/customer/LoyaltyHistoryScreen';
 import { PreferencesScreen } from '@/screens/customer/PreferencesScreen';
 import { RescheduleScreen } from '@/screens/customer/RescheduleScreen';
 import { ServiceDetailScreen } from '@/screens/customer/ServiceDetailScreen';
-import { DemoDataScreen } from '@/screens/shared/DemoDataScreen';
 import { NotificationsScreen } from '@/screens/shared/NotificationsScreen';
 import { SettingsScreen } from '@/screens/shared/SettingsScreen';
 import { UIKitShowcaseScreen } from '@/screens/shared/UIKitShowcaseScreen';
@@ -53,9 +54,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * flow pattern), so signing in, signing out and switching roles swap the
  * available screens and the navigator moves to the right first screen itself.
  *
- * The signed-in group's `navigationKey` is the user id: switching demo roles
- * from Settings resets that group, landing on the new role's tabs instead of
- * leaving Settings orphaned on top.
+ * The signed-in group's `navigationKey` is the user id, so a different account
+ * always starts from its own role's tabs.
  */
 export const RootNavigator = () => {
   const theme = useTheme();
@@ -64,6 +64,8 @@ export const RootNavigator = () => {
   // Persisted session: a valid stored session goes straight to the tabs on relaunch.
   const user = useAuthStore(selectCurrentUser);
   const hasSeenOnboarding = useSettingsStore((state) => state.hasSeenOnboarding);
+  // Pull new bookings and notifications made on other devices.
+  useLiveSync(user !== null);
 
   return (
     <NavigationContainer theme={navigationTheme}>
@@ -135,7 +137,6 @@ export const RootNavigator = () => {
             )}
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="DemoData" component={DemoDataScreen} options={{ title: 'Demo Data' }} />
             {__DEV__ ? <Stack.Screen name="UIKitShowcase" component={UIKitShowcaseScreen} options={{ title: 'UI Kit' }} /> : null}
           </Stack.Group>
         )}

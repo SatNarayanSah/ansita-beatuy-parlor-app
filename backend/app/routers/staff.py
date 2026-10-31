@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Appointment, Course, Review, Staff, User
+from .reviews import with_names
 from ..queries import upcoming_appointments
 from ..schemas import ActiveInput, StaffInput, StaffUpdate
 from ..security import require_admin
@@ -154,4 +155,4 @@ def get_schedule(id_: str, date: str, _: User = Depends(require_admin), db: Sess
 @router.get("/{id_}/reviews")
 def get_reviews(id_: str, db: Session = Depends(get_db)):
     stmt = select(Review).where(Review.staff_id == id_).order_by(Review.created_at.desc())
-    return to_list(list(db.scalars(stmt)))
+    return with_names(db, list(db.scalars(stmt)))

@@ -55,7 +55,7 @@ export const PaymentMethodPicker = ({ value, onChange }: PaymentMethodPickerProp
         })}
       </View>
       <View style={styles.note}>
-        <Badge label="Demo" tone="highlight" size="sm" />
+        <Badge label="Info" tone="highlight" size="sm" />
         <Text variant="caption" tone="muted" style={styles.flex}>
           Pay at the parlour after your visit. No money is charged in the app.
         </Text>

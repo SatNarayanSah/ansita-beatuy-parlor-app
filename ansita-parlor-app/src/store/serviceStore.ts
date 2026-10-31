@@ -1,12 +1,8 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildCategories } from '@/data/categories';
-import { buildServices } from '@/data/services';
-import type { ID, Service, ServiceCategory, UpdateInput } from '@/types';
+import type { ID, Service, ServiceCategory } from '@/types';
 
-import { findEntity, insertEntity, matchesQuery, removeEntity, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, matchesQuery, mergeEntities, replaceEntities, withoutEntity } from './entityHelpers';
 
 interface ServiceData {
   services: Service[];
@@ -14,14 +10,14 @@ interface ServiceData {
 }
 
 interface ServiceActions {
-  addService: (service: Service) => void;
-  updateService: (id: ID, patch: UpdateInput<Service>) => void;
-  deleteService: (id: ID) => void;
+  setServices: (services: readonly Service[]) => void;
+  mergeServices: (services: readonly Service[]) => void;
+  removeService: (id: ID) => void;
   getServiceById: (id: ID) => Service | undefined;
 
-  addCategory: (category: ServiceCategory) => void;
-  updateCategory: (id: ID, patch: UpdateInput<ServiceCategory>) => void;
-  deleteCategory: (id: ID) => void;
+  setCategories: (categories: readonly ServiceCategory[]) => void;
+  mergeCategories: (categories: readonly ServiceCategory[]) => void;
+  removeCategory: (id: ID) => void;
   getCategoryById: (id: ID) => ServiceCategory | undefined;
 
   reset: () => void;
@@ -29,39 +25,41 @@ interface ServiceActions {
 
 export type ServiceState = ServiceData & ServiceActions;
 
-const createInitialData = (): ServiceData => ({
-  services: buildServices(),
-  categories: buildCategories(),
-});
+/** Cache of the parlour's services and categories, loaded from the server. */
+export const useServiceStore = create<ServiceState>()((set, get) => ({
+  services: [],
+  categories: [],
 
-export const useServiceStore = create<ServiceState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
+  setServices: (list) => {
+    const next = replaceEntities(get().services, list);
+    if (next) set({ services: next });
+  },
+  mergeServices: (list) => {
+    const next = mergeEntities(get().services, list);
+    if (next) set({ services: next });
+  },
+  removeService: (id) => {
+    const next = withoutEntity(get().services, id);
+    if (next) set({ services: next });
+  },
+  getServiceById: (id) => findEntity(get().services, id),
 
-      addService: (service) => set((state) => ({ services: insertEntity(state.services, service) })),
-      updateService: (id, patch) => set((state) => ({ services: updateEntity(state.services, id, patch) })),
-      deleteService: (id) => set((state) => ({ services: removeEntity(state.services, id) })),
-      getServiceById: (id) => findEntity(get().services, id),
+  setCategories: (list) => {
+    const next = replaceEntities(get().categories, list);
+    if (next) set({ categories: next });
+  },
+  mergeCategories: (list) => {
+    const next = mergeEntities(get().categories, list);
+    if (next) set({ categories: next });
+  },
+  removeCategory: (id) => {
+    const next = withoutEntity(get().categories, id);
+    if (next) set({ categories: next });
+  },
+  getCategoryById: (id) => findEntity(get().categories, id),
 
-      addCategory: (category) =>
-        set((state) => ({ categories: insertEntity(state.categories, category) })),
-      updateCategory: (id, patch) =>
-        set((state) => ({ categories: updateEntity(state.categories, id, patch) })),
-      deleteCategory: (id) => set((state) => ({ categories: removeEntity(state.categories, id) })),
-      getCategoryById: (id) => findEntity(get().categories, id),
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.services,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ services, categories }): ServiceData => ({ services, categories }),
-    },
-  ),
-);
+  reset: () => set({ services: [], categories: [] }),
+}));
 
 // ---------- Selectors ----------
 

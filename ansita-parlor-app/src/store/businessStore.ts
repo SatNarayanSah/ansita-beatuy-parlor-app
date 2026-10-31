@@ -1,41 +1,41 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildBusinessSettings } from '@/data/business';
-import type { AdminAlerts, BusinessProfile, BusinessSettings, Holiday, ISODate, LoyaltyRules, NotificationType } from '@/types';
+import type { AdminAlerts, BusinessSettings, Holiday, ISODate, LoyaltyRules, NotificationType } from '@/types';
 
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+interface BusinessData extends BusinessSettings {
+  /** False until the settings have been loaded from the server once. */
+  loaded: boolean;
+}
 
 interface BusinessActions {
-  updateProfile: (patch: Partial<BusinessProfile>) => void;
-  setHolidays: (holidays: Holiday[]) => void;
-  updateLoyalty: (patch: Partial<LoyaltyRules>) => void;
-  updateAlerts: (patch: Partial<AdminAlerts>) => void;
+  setSettings: (settings: BusinessSettings) => void;
   reset: () => void;
 }
 
-export type BusinessState = BusinessSettings & BusinessActions;
+export type BusinessState = BusinessData & BusinessActions;
 
-/** Parlour-wide settings. Part of the demo data, so "Reset demo data" restores them. */
-export const useBusinessStore = create<BusinessState>()(
-  persist(
-    (set) => ({
-      ...buildBusinessSettings(),
-      updateProfile: (patch) => set((state) => ({ profile: { ...state.profile, ...patch } })),
-      setHolidays: (holidays) => set({ holidays: [...holidays].sort((a, b) => a.date.localeCompare(b.date)) }),
-      updateLoyalty: (patch) => set((state) => ({ loyalty: { ...state.loyalty, ...patch } })),
-      updateAlerts: (patch) => set((state) => ({ alerts: { ...state.alerts, ...patch } })),
-      reset: () => set(buildBusinessSettings()),
-    }),
-    {
-      name: STORAGE_KEYS.business,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(buildBusinessSettings()),
-      partialize: ({ profile, holidays, loyalty, alerts }): BusinessSettings => ({ profile, holidays, loyalty, alerts }),
-    },
-  ),
-);
+/** Neutral placeholders shown only until the real settings arrive from the server. */
+const emptySettings = (): BusinessData => ({
+  profile: { name: '', tagline: '', phone: '', whatsapp: '', email: '', address: '', openTime: '10:00', closeTime: '19:00' },
+  holidays: [],
+  loyalty: { enabled: false, rupeesPerPoint: 100, pointValue: 1 },
+  alerts: { newBookings: true, cancellations: true, payments: true, enrollments: true },
+  loaded: false,
+});
+
+/** Cache of the parlour-wide settings (profile, holidays, loyalty rules, admin alerts). */
+export const useBusinessStore = create<BusinessState>()((set, get) => ({
+  ...emptySettings(),
+  setSettings: ({ profile, holidays, loyalty, alerts }) => {
+    const current = get();
+    const unchanged =
+      current.loaded &&
+      JSON.stringify({ profile: current.profile, holidays: current.holidays, loyalty: current.loyalty, alerts: current.alerts }) ===
+        JSON.stringify({ profile, holidays, loyalty, alerts });
+    if (!unchanged) set({ profile, holidays, loyalty, alerts, loaded: true });
+  },
+  reset: () => set(emptySettings()),
+}));
 
 // ---------- Selectors ----------
 

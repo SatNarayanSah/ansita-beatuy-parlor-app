@@ -1,4 +1,6 @@
-import { getApiConfig } from './config';
+import { useAuthStore } from '@/store/authStore';
+
+import { API_URL, REQUEST_TIMEOUT_MS, setOffline } from './config';
 
 export type ApiErrorCode =
   | 'NETWORK'
@@ -9,7 +11,7 @@ export type ApiErrorCode =
   | 'CONFLICT';
 
 const DEFAULT_MESSAGES: Record<ApiErrorCode, string> = {
-  NETWORK: 'Network error. Please check your connection and try again.',
+  NETWORK: 'Can’t reach the Ansita server. Check your internet connection and try again.',
   UNAUTHORIZED: 'Your session has expired. Please sign in again.',
   FORBIDDEN: 'You do not have permission to do that.',
   NOT_FOUND: 'The requested item could not be found.',
@@ -36,38 +38,85 @@ export const getErrorMessage = (error: unknown): string => {
   return 'Something went wrong. Please try again.';
 };
 
-const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-const randomLatency = (): number => {
-  const { minLatencyMs, maxLatencyMs } = getApiConfig();
-  return Math.round(minLatencyMs + Math.random() * (maxLatencyMs - minLatencyMs));
+const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
+  400: 'VALIDATION',
+  401: 'UNAUTHORIZED',
+  403: 'FORBIDDEN',
+  404: 'NOT_FOUND',
+  409: 'CONFLICT',
+  422: 'VALIDATION',
 };
 
+type QueryValue = string | number | boolean | null | undefined | readonly string[];
+
 export interface RequestOptions {
-  /** Skip random error injection (e.g. for sign-out, which must always succeed). */
-  neverFail?: boolean;
+  body?: unknown;
+  query?: Record<string, QueryValue>;
 }
 
+const buildUrl = (path: string, query?: Record<string, QueryValue>): string => {
+  const params = Object.entries(query ?? {})
+    .filter(([, value]) => value !== null && value !== undefined && value !== '')
+    .map(([key, value]) => {
+      const text = Array.isArray(value) ? value.join(',') : String(value);
+      return `${encodeURIComponent(key)}=${encodeURIComponent(text)}`;
+    });
+  return `${API_URL}${path}${params.length > 0 ? `?${params.join('&')}` : ''}`;
+};
+
+const parseBody = (text: string): unknown => {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
 /**
- * Simulates a network round-trip: waits 300-700ms, optionally fails at random,
- * then runs the handler (which reads/writes the local stores as if it were the server).
- *
- * To connect a real backend, replace each service function body with an HTTP call;
- * screens only depend on the service signatures.
+ * Calls the backend with the signed-in user's token and maps failures to ApiError:
+ * 401 → UNAUTHORIZED (and signs out), 403 → FORBIDDEN, 404 → NOT_FOUND,
+ * 409 → CONFLICT, 400/422 → VALIDATION, unreachable / 5xx → NETWORK.
  */
-export const simulateRequest = async <T>(
-  handler: () => T,
-  { neverFail = false }: RequestOptions = {},
-): Promise<T> => {
-  await wait(randomLatency());
-  const { simulateErrors, errorRate, offline } = getApiConfig();
-  if (!neverFail && offline) {
-    throw new ApiError('NETWORK', 'You are offline. Check your connection and try again.');
-  }
-  if (!neverFail && simulateErrors && Math.random() < errorRate) {
+export const api = async <T>(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', path: string, options: RequestOptions = {}): Promise<T> => {
+  const token = useAuthStore.getState().token;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, options.query), {
+      method,
+      headers: {
+        Accept: 'application/json',
+        ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch {
+    setOffline(true);
     throw new ApiError('NETWORK');
+  } finally {
+    clearTimeout(timer);
   }
-  return handler();
+  setOffline(false);
+
+  const data = parseBody(await response.text());
+  if (response.ok) return data as T;
+
+  const payload = (data ?? {}) as { code?: string; message?: string };
+  const message = typeof payload.message === 'string' && payload.message.length > 0 ? payload.message : undefined;
+  if (response.status >= 500) {
+    throw new ApiError('NETWORK', 'The server had a problem. Please try again in a moment.');
+  }
+  const code = STATUS_TO_CODE[response.status] ?? 'VALIDATION';
+  // An expired or revoked token: drop the session so the app returns to sign-in.
+  if (code === 'UNAUTHORIZED' && token && useAuthStore.getState().token === token) {
+    useAuthStore.getState().clearSession();
+  }
+  throw new ApiError(code, message);
 };
 
 /** Narrow a possibly-missing entity or throw NOT_FOUND. */

@@ -145,6 +145,7 @@ def test_completion_points_and_review(client, admin):
     review = client.post("/reviews", json={"appointmentId": appointment_id, "rating": 4, "comment": "Lovely"},
                          headers=customer)
     assert review.status_code == 201, review.text
+    assert review.json()["customerName"] == "Rita"
     assert client.post("/reviews", json={"appointmentId": appointment_id, "rating": 5},
                        headers=customer).status_code == 409
     assert client.get("/staff/stf_rojina").json()["rating"] == 4

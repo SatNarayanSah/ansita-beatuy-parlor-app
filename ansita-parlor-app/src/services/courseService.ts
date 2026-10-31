@@ -1,19 +1,9 @@
-import {
-  selectBatch,
-  selectFilteredCourses,
-  selectSeatsLeft,
-  selectSeatsTaken,
-  useCourseStore,
-} from '@/store/courseStore';
-import { newEntityMeta } from '@/store/entityHelpers';
-import { useStaffStore } from '@/store/staffStore';
+import { useCourseStore } from '@/store/courseStore';
 import type { Batch, Course, ID, SyllabusModule } from '@/types';
-import { generateId } from '@/utils/id';
 
-import { ApiError, ensureFound, simulateRequest } from './client';
-import { requireAdmin, requireUser } from './session';
+import { api } from './client';
 
-/** Syllabus modules may omit an id when created; the service assigns one. */
+/** Syllabus modules may omit an id when created; the server assigns one. */
 export type SyllabusModuleInput = Omit<SyllabusModule, 'id'> & { id?: ID };
 
 export type CourseInput = Pick<
@@ -46,141 +36,45 @@ export interface BatchAvailability {
   isOpen: boolean;
 }
 
-const toSyllabus = (modules: readonly SyllabusModuleInput[]): SyllabusModule[] =>
-  modules.map((module) => ({ ...module, id: module.id ?? generateId('mod') }));
-
-const assertInstructorExists = (staffId: ID): void => {
-  ensureFound(useStaffStore.getState().getStaffById(staffId), 'Instructor');
+const cacheCourse = (course: Course): Course => {
+  useCourseStore.getState().mergeCourses([course]);
+  return course;
 };
-
-const validateBatch = (batch: BatchInput): void => {
-  if (batch.endDate < batch.startDate) {
-    throw new ApiError('VALIDATION', 'Batch end date must be on or after the start date.');
-  }
-  if (batch.endTime <= batch.startTime) {
-    throw new ApiError('VALIDATION', 'Class end time must be after the start time.');
-  }
-  if (batch.days.length === 0) throw new ApiError('VALIDATION', 'Select at least one class day.');
-  if (batch.seats < 1) throw new ApiError('VALIDATION', 'A batch needs at least one seat.');
-};
-
-const getCourseOrThrow = (id: ID): Course => ensureFound(useCourseStore.getState().getCourseById(id), 'Course');
-
-const hasLiveEnrollments = (predicate: (enrollmentBatchId: ID, enrollmentCourseId: ID) => boolean): boolean =>
-  useCourseStore
-    .getState()
-    .enrollments.some(
-      (enrollment) =>
-        (enrollment.status === 'active' || enrollment.status === 'pending') &&
-        predicate(enrollment.batchId, enrollment.courseId),
-    );
 
 export const courseService = {
-  /** Customers only ever see active courses. */
-  listCourses: ({ query = '', activeOnly = false }: CourseFilter = {}): Promise<Course[]> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      return selectFilteredCourses(useCourseStore.getState().courses, query, user.role === 'customer' || activeOnly);
-    }),
+  /** Customers only ever see active courses (enforced by the server). */
+  listCourses: async ({ query = '', activeOnly = false }: CourseFilter = {}): Promise<Course[]> => {
+    const list = await api<Course[]>('GET', '/courses', { query: { query, activeOnly: activeOnly || undefined } });
+    useCourseStore.getState().mergeCourses(list);
+    return list;
+  },
 
-  getCourse: (id: ID): Promise<Course> => simulateRequest(() => getCourseOrThrow(id)),
+  getCourse: async (id: ID): Promise<Course> => cacheCourse(await api<Course>('GET', `/courses/${id}`)),
 
   getBatchAvailability: (courseId: ID): Promise<BatchAvailability[]> =>
-    simulateRequest(() => {
-      const course = getCourseOrThrow(courseId);
-      const { enrollments } = useCourseStore.getState();
-      return course.batches.map((batch) => {
-        const seatsLeft = selectSeatsLeft(enrollments, batch);
-        return {
-          batch,
-          seatsTaken: selectSeatsTaken(enrollments, batch.id),
-          seatsLeft,
-          isFull: seatsLeft === 0,
-          isOpen: batch.status !== 'completed' && seatsLeft > 0,
-        };
-      });
-    }),
+    api<BatchAvailability[]>('GET', `/courses/${courseId}/batches/availability`),
 
-  createCourse: (input: CourseInput): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      assertInstructorExists(input.instructor);
-      const course: Course = {
-        ...newEntityMeta('crs'),
-        ...input,
-        title: input.title.trim(),
-        syllabus: toSyllabus(input.syllabus),
-        batches: [],
-      };
-      useCourseStore.getState().addCourse(course);
-      return course;
-    }),
+  createCourse: async (input: CourseInput): Promise<Course> =>
+    cacheCourse(await api<Course>('POST', '/courses', { body: input })),
 
-  updateCourse: (id: ID, input: Partial<CourseInput>): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      getCourseOrThrow(id);
-      if (input.instructor !== undefined) assertInstructorExists(input.instructor);
-      const { syllabus, ...rest } = input;
-      useCourseStore
-        .getState()
-        .updateCourse(id, syllabus !== undefined ? { ...rest, syllabus: toSyllabus(syllabus) } : rest);
-      return getCourseOrThrow(id);
-    }),
+  updateCourse: async (id: ID, input: Partial<CourseInput>): Promise<Course> =>
+    cacheCourse(await api<Course>('PATCH', `/courses/${id}`, { body: input })),
 
-  setCourseActive: (id: ID, isActive: boolean): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      getCourseOrThrow(id);
-      useCourseStore.getState().updateCourse(id, { isActive });
-      return getCourseOrThrow(id);
-    }),
+  setCourseActive: async (id: ID, isActive: boolean): Promise<Course> =>
+    cacheCourse(await api<Course>('POST', `/courses/${id}/active`, { body: { isActive } })),
 
-  deleteCourse: (id: ID): Promise<void> =>
-    simulateRequest(() => {
-      requireAdmin();
-      getCourseOrThrow(id);
-      if (hasLiveEnrollments((_batchId, courseId) => courseId === id)) {
-        throw new ApiError('CONFLICT', 'This course has active students. Deactivate it instead.');
-      }
-      const { enrollments, deleteEnrollment, deleteCourse } = useCourseStore.getState();
-      enrollments.filter((enrollment) => enrollment.courseId === id).forEach((enrollment) => deleteEnrollment(enrollment.id));
-      deleteCourse(id);
-    }),
+  /** Refused while students are active; past enrollments are removed with the course. */
+  deleteCourse: async (id: ID): Promise<void> => {
+    await api<null>('DELETE', `/courses/${id}`);
+    useCourseStore.getState().removeCourse(id);
+  },
 
-  addBatch: (courseId: ID, input: BatchInput): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      getCourseOrThrow(courseId);
-      validateBatch(input);
-      useCourseStore.getState().addBatch(courseId, { ...input, id: generateId('bat') });
-      return getCourseOrThrow(courseId);
-    }),
+  addBatch: async (courseId: ID, input: BatchInput): Promise<Course> =>
+    cacheCourse(await api<Course>('POST', `/courses/${courseId}/batches`, { body: input })),
 
-  updateBatch: (courseId: ID, batchId: ID, input: Partial<BatchInput>): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      const course = getCourseOrThrow(courseId);
-      const batch = ensureFound(selectBatch(course, batchId), 'Batch');
-      const merged: BatchInput = { ...batch, ...input };
-      validateBatch(merged);
-      const taken = selectSeatsTaken(useCourseStore.getState().enrollments, batchId);
-      if (merged.seats < taken) {
-        throw new ApiError('VALIDATION', `${taken} students are already enrolled. Seats cannot be fewer than that.`);
-      }
-      useCourseStore.getState().updateBatch(courseId, batchId, input);
-      return getCourseOrThrow(courseId);
-    }),
+  updateBatch: async (courseId: ID, batchId: ID, input: Partial<BatchInput>): Promise<Course> =>
+    cacheCourse(await api<Course>('PATCH', `/courses/${courseId}/batches/${batchId}`, { body: input })),
 
-  deleteBatch: (courseId: ID, batchId: ID): Promise<Course> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(selectBatch(getCourseOrThrow(courseId), batchId), 'Batch');
-      const hasEnrollments = useCourseStore.getState().enrollments.some((enrollment) => enrollment.batchId === batchId);
-      if (hasEnrollments) {
-        throw new ApiError('CONFLICT', 'Students are enrolled in this batch. It cannot be deleted.');
-      }
-      useCourseStore.getState().deleteBatch(courseId, batchId);
-      return getCourseOrThrow(courseId);
-    }),
+  deleteBatch: async (courseId: ID, batchId: ID): Promise<Course> =>
+    cacheCourse(await api<Course>('DELETE', `/courses/${courseId}/batches/${batchId}`)),
 };

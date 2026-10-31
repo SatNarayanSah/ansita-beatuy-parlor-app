@@ -31,7 +31,7 @@ type Props = RootStackScreenProps<'ForgotPassword'>;
 
 /**
  * Two steps: request a code by email, then enter it with a new password.
- * There is no real email, so the demo code is shown on screen.
+ * Until the server sends email/SMS, it returns the code and it is shown on screen.
  */
 export const ForgotPasswordScreen = ({ navigation, route }: Props) => {
   const { colors, radius, spacing } = useTheme();
@@ -106,12 +106,15 @@ export const ForgotPasswordScreen = ({ navigation, route }: Props) => {
         reset.reset();
       }}
     >
-      <View style={[styles.demoCode, { backgroundColor: colors.highlightSoft, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm }]}>
-        <Icon name="information-circle" size={18} color={colors.highlight} />
-        <Text variant="bodySmall" style={styles.flex}>
-          Demo mode: your code is <Text variant="label">{sent.demoCode}</Text>
-        </Text>
-      </View>
+      {sent.demoCode ? (
+        // Only while the server has no email/SMS sending set up (EXPOSE_RESET_CODE).
+        <View style={[styles.demoCode, { backgroundColor: colors.highlightSoft, borderRadius: radius.md, padding: spacing.md, gap: spacing.sm }]}>
+          <Icon name="information-circle" size={18} color={colors.highlight} />
+          <Text variant="bodySmall" style={styles.flex}>
+            Your code is <Text variant="label">{sent.demoCode}</Text>
+          </Text>
+        </View>
+      ) : null}
       <FormErrorBanner message={reset.error} />
       <FormInput
         control={resetForm.control}

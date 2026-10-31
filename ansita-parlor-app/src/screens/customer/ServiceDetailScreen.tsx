@@ -159,7 +159,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
                       <View key={review.id} style={{ gap: spacing.xs }}>
                         {index > 0 ? <Divider spacing="sm" /> : null}
                         <View style={styles.reviewHead}>
-                          <Text variant="label">{shortName(customers.find((c) => c.id === review.customerId)?.name)}</Text>
+                          <Text variant="label">{shortName(review.customerName ?? customers.find((c) => c.id === review.customerId)?.name)}</Text>
                           <Text variant="caption" tone="muted">
                             {formatTimeAgo(review.createdAt)}
                           </Text>

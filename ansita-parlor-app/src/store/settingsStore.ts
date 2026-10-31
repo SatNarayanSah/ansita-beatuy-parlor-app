@@ -46,8 +46,7 @@ const createInitialData = (): SettingsData => ({
 });
 
 /**
- * Device-level preferences. Not part of the demo data, so "Reset demo data"
- * leaves them untouched.
+ * Device-level preferences, saved on this device only (not on the server).
  */
 export const useSettingsStore = create<SettingsState>()(
   persist(

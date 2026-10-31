@@ -1,13 +1,8 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildCourses } from '@/data/courses';
-import { buildEnrollments } from '@/data/enrollments';
-import type { Batch, Course, Enrollment, EnrollmentStatus, ID, UpdateInput } from '@/types';
-import { nowISO } from '@/utils/date';
+import type { Batch, Course, Enrollment, EnrollmentStatus, ID } from '@/types';
 
-import { findEntity, insertEntity, matchesQuery, removeEntity, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, matchesQuery, mergeEntities, replaceEntities, withoutEntity } from './entityHelpers';
 
 interface CourseData {
   courses: Course[];
@@ -15,18 +10,13 @@ interface CourseData {
 }
 
 interface CourseActions {
-  addCourse: (course: Course) => void;
-  updateCourse: (id: ID, patch: UpdateInput<Course>) => void;
-  deleteCourse: (id: ID) => void;
+  setCourses: (courses: readonly Course[]) => void;
+  mergeCourses: (courses: readonly Course[]) => void;
+  removeCourse: (id: ID) => void;
   getCourseById: (id: ID) => Course | undefined;
 
-  addBatch: (courseId: ID, batch: Batch) => void;
-  updateBatch: (courseId: ID, batchId: ID, patch: Partial<Omit<Batch, 'id'>>) => void;
-  deleteBatch: (courseId: ID, batchId: ID) => void;
-
-  addEnrollment: (enrollment: Enrollment) => void;
-  updateEnrollment: (id: ID, patch: UpdateInput<Enrollment>) => void;
-  deleteEnrollment: (id: ID) => void;
+  setEnrollments: (enrollments: readonly Enrollment[]) => void;
+  mergeEnrollments: (enrollments: readonly Enrollment[]) => void;
   getEnrollmentById: (id: ID) => Enrollment | undefined;
 
   reset: () => void;
@@ -34,59 +24,38 @@ interface CourseActions {
 
 export type CourseState = CourseData & CourseActions;
 
-const createInitialData = (): CourseData => ({
-  courses: buildCourses(),
-  enrollments: buildEnrollments(),
-});
+/** Cache of courses (with their batches) and enrollments loaded from the server. */
+export const useCourseStore = create<CourseState>()((set, get) => ({
+  courses: [],
+  enrollments: [],
 
-const mapBatches = (courses: readonly Course[], courseId: ID, mapper: (batches: Batch[]) => Batch[]): Course[] =>
-  courses.map((course) =>
-    course.id === courseId ? { ...course, batches: mapper(course.batches), updatedAt: nowISO() } : course,
-  );
+  setCourses: (list) => {
+    const next = replaceEntities(get().courses, list);
+    if (next) set({ courses: next });
+  },
+  mergeCourses: (list) => {
+    const next = mergeEntities(get().courses, list);
+    if (next) set({ courses: next });
+  },
+  /** Removing a course also drops its enrollments, as the server does. */
+  removeCourse: (id) => {
+    const courses = withoutEntity(get().courses, id);
+    if (courses) set({ courses, enrollments: get().enrollments.filter((enrollment) => enrollment.courseId !== id) });
+  },
+  getCourseById: (id) => findEntity(get().courses, id),
 
-export const useCourseStore = create<CourseState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
+  setEnrollments: (list) => {
+    const next = replaceEntities(get().enrollments, list);
+    if (next) set({ enrollments: next });
+  },
+  mergeEnrollments: (list) => {
+    const next = mergeEntities(get().enrollments, list);
+    if (next) set({ enrollments: next });
+  },
+  getEnrollmentById: (id) => findEntity(get().enrollments, id),
 
-      addCourse: (course) => set((state) => ({ courses: insertEntity(state.courses, course) })),
-      updateCourse: (id, patch) => set((state) => ({ courses: updateEntity(state.courses, id, patch) })),
-      deleteCourse: (id) => set((state) => ({ courses: removeEntity(state.courses, id) })),
-      getCourseById: (id) => findEntity(get().courses, id),
-
-      addBatch: (courseId, batch) =>
-        set((state) => ({ courses: mapBatches(state.courses, courseId, (batches) => [...batches, batch]) })),
-      updateBatch: (courseId, batchId, patch) =>
-        set((state) => ({
-          courses: mapBatches(state.courses, courseId, (batches) =>
-            batches.map((batch) => (batch.id === batchId ? { ...batch, ...patch } : batch)),
-          ),
-        })),
-      deleteBatch: (courseId, batchId) =>
-        set((state) => ({
-          courses: mapBatches(state.courses, courseId, (batches) =>
-            batches.filter((batch) => batch.id !== batchId),
-          ),
-        })),
-
-      addEnrollment: (enrollment) =>
-        set((state) => ({ enrollments: insertEntity(state.enrollments, enrollment) })),
-      updateEnrollment: (id, patch) =>
-        set((state) => ({ enrollments: updateEntity(state.enrollments, id, patch) })),
-      deleteEnrollment: (id) => set((state) => ({ enrollments: removeEntity(state.enrollments, id) })),
-      getEnrollmentById: (id) => findEntity(get().enrollments, id),
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.courses,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ courses, enrollments }): CourseData => ({ courses, enrollments }),
-    },
-  ),
-);
+  reset: () => set({ courses: [], enrollments: [] }),
+}));
 
 // ---------- Selectors ----------
 

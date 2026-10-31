@@ -76,7 +76,7 @@ export const PreferencesScreen = (_props: Props) => {
           />
         </Card>
         <Text variant="caption" tone="muted">
-          Demo: reminders are not actually scheduled on this device.
+          Reminders are not sent yet; this saves your preference for when they are.
         </Text>
       </View>
     </Screen>

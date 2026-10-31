@@ -1,16 +1,7 @@
-import { ACTIVE_APPOINTMENT_STATUSES, useAppointmentStore } from '@/store/appointmentStore';
-import { newEntityMeta } from '@/store/entityHelpers';
-import {
-  selectFilteredServices,
-  selectSortedCategories,
-  useServiceStore,
-  type ServiceFilter,
-} from '@/store/serviceStore';
+import { useServiceStore, type ServiceFilter } from '@/store/serviceStore';
 import type { ID, Service, ServiceCategory } from '@/types';
-import { todayISO } from '@/utils/date';
 
-import { ApiError, ensureFound, simulateRequest } from './client';
-import { requireAdmin, requireUser } from './session';
+import { api } from './client';
 
 export type ServiceInput = Pick<
   Service,
@@ -19,111 +10,56 @@ export type ServiceInput = Pick<
 
 export type CategoryInput = Pick<ServiceCategory, 'name' | 'icon' | 'color'>;
 
-const assertCategoryExists = (categoryId: ID): void => {
-  ensureFound(useServiceStore.getState().getCategoryById(categoryId), 'Category');
+const cacheService = (service: Service): Service => {
+  useServiceStore.getState().mergeServices([service]);
+  return service;
 };
 
-const isServiceBookedAhead = (serviceId: ID): boolean => {
-  const today = todayISO();
-  return useAppointmentStore
-    .getState()
-    .appointments.some(
-      (appointment) =>
-        appointment.date >= today &&
-        ACTIVE_APPOINTMENT_STATUSES.includes(appointment.status) &&
-        appointment.serviceIds.includes(serviceId),
-    );
+const cacheCategory = (category: ServiceCategory): ServiceCategory => {
+  useServiceStore.getState().mergeCategories([category]);
+  return category;
 };
 
 /** Parlor services ("catalog") and their categories. Named to avoid "serviceService". */
 export const catalogService = {
-  listCategories: (): Promise<ServiceCategory[]> =>
-    simulateRequest(() => selectSortedCategories(useServiceStore.getState().categories)),
+  listCategories: async (): Promise<ServiceCategory[]> => {
+    const list = await api<ServiceCategory[]>('GET', '/categories');
+    useServiceStore.getState().setCategories(list);
+    return list;
+  },
 
-  /** Customers only ever see active services. */
-  listServices: (filter: ServiceFilter = {}): Promise<Service[]> =>
-    simulateRequest(() => {
-      const user = requireUser();
-      const activeOnly = user.role === 'customer' ? true : (filter.activeOnly ?? false);
-      return selectFilteredServices(useServiceStore.getState().services, { ...filter, activeOnly });
-    }),
+  /** Customers only ever see active services (enforced by the server). */
+  listServices: async (filter: ServiceFilter = {}): Promise<Service[]> => {
+    const list = await api<Service[]>('GET', '/services', { query: { ...filter } });
+    useServiceStore.getState().mergeServices(list);
+    return list;
+  },
 
-  getService: (id: ID): Promise<Service> =>
-    simulateRequest(() => ensureFound(useServiceStore.getState().getServiceById(id), 'Service')),
+  getService: async (id: ID): Promise<Service> => cacheService(await api<Service>('GET', `/services/${id}`)),
 
-  createService: (input: ServiceInput): Promise<Service> =>
-    simulateRequest(() => {
-      requireAdmin();
-      assertCategoryExists(input.categoryId);
-      const service: Service = { ...newEntityMeta('svc'), ...input, name: input.name.trim() };
-      useServiceStore.getState().addService(service);
-      return service;
-    }),
+  createService: async (input: ServiceInput): Promise<Service> =>
+    cacheService(await api<Service>('POST', '/services', { body: input })),
 
-  updateService: (id: ID, input: Partial<ServiceInput>): Promise<Service> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useServiceStore.getState().getServiceById(id), 'Service');
-      if (input.categoryId !== undefined) assertCategoryExists(input.categoryId);
-      useServiceStore.getState().updateService(id, input);
-      return ensureFound(useServiceStore.getState().getServiceById(id), 'Service');
-    }),
+  updateService: async (id: ID, input: Partial<ServiceInput>): Promise<Service> =>
+    cacheService(await api<Service>('PATCH', `/services/${id}`, { body: input })),
 
-  setServiceActive: (id: ID, isActive: boolean): Promise<Service> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useServiceStore.getState().getServiceById(id), 'Service');
-      useServiceStore.getState().updateService(id, { isActive });
-      return ensureFound(useServiceStore.getState().getServiceById(id), 'Service');
-    }),
+  setServiceActive: async (id: ID, isActive: boolean): Promise<Service> =>
+    cacheService(await api<Service>('POST', `/services/${id}/active`, { body: { isActive } })),
 
-  /** Past appointments keep their snapshot price; upcoming bookings block deletion. */
-  deleteService: (id: ID): Promise<void> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useServiceStore.getState().getServiceById(id), 'Service');
-      if (isServiceBookedAhead(id)) {
-        throw new ApiError(
-          'CONFLICT',
-          'This service has upcoming bookings. Deactivate it instead, or reschedule those bookings first.',
-        );
-      }
-      useServiceStore.getState().deleteService(id);
-    }),
+  /** Upcoming bookings block deletion (the server answers with a CONFLICT). */
+  deleteService: async (id: ID): Promise<void> => {
+    await api<null>('DELETE', `/services/${id}`);
+    useServiceStore.getState().removeService(id);
+  },
 
-  createCategory: (input: CategoryInput): Promise<ServiceCategory> =>
-    simulateRequest(() => {
-      requireAdmin();
-      const { categories } = useServiceStore.getState();
-      const name = input.name.trim();
-      if (categories.some((category) => category.name.toLowerCase() === name.toLowerCase())) {
-        throw new ApiError('CONFLICT', 'A category with this name already exists.');
-      }
-      const category: ServiceCategory = {
-        ...newEntityMeta('cat'),
-        ...input,
-        name,
-        sortOrder: categories.reduce((max, item) => Math.max(max, item.sortOrder), 0) + 1,
-      };
-      useServiceStore.getState().addCategory(category);
-      return category;
-    }),
+  createCategory: async (input: CategoryInput): Promise<ServiceCategory> =>
+    cacheCategory(await api<ServiceCategory>('POST', '/categories', { body: input })),
 
-  updateCategory: (id: ID, input: Partial<CategoryInput>): Promise<ServiceCategory> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useServiceStore.getState().getCategoryById(id), 'Category');
-      useServiceStore.getState().updateCategory(id, input);
-      return ensureFound(useServiceStore.getState().getCategoryById(id), 'Category');
-    }),
+  updateCategory: async (id: ID, input: Partial<CategoryInput>): Promise<ServiceCategory> =>
+    cacheCategory(await api<ServiceCategory>('PATCH', `/categories/${id}`, { body: input })),
 
-  deleteCategory: (id: ID): Promise<void> =>
-    simulateRequest(() => {
-      requireAdmin();
-      ensureFound(useServiceStore.getState().getCategoryById(id), 'Category');
-      if (useServiceStore.getState().services.some((service) => service.categoryId === id)) {
-        throw new ApiError('CONFLICT', 'Move or delete the services in this category first.');
-      }
-      useServiceStore.getState().deleteCategory(id);
-    }),
+  deleteCategory: async (id: ID): Promise<void> => {
+    await api<null>('DELETE', `/categories/${id}`);
+    useServiceStore.getState().removeCategory(id);
+  },
 };

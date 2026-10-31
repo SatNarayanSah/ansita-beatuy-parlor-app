@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 
 import { OfflineBanner } from '@/components/layout/OfflineBanner';
+import { useSessionBootstrap } from '@/hooks/useSessionBootstrap';
 import { useStoresHydrated } from '@/hooks/useStoresHydrated';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { fontAssets, useTheme } from '@/theme';
@@ -17,16 +18,18 @@ import { SplashScreen } from './SplashScreen';
 NativeSplash.preventAutoHideAsync().catch(() => undefined);
 
 /**
- * Mounts the navigator as soon as fonts and persisted stores are ready, under
- * the animated splash, so the first screen is already drawn when the splash fades.
+ * Mounts the navigator once fonts, the saved session and (for a signed-in user)
+ * their data from the server are ready, under the animated splash, so the first
+ * screen is already drawn when the splash fades.
  */
 const AppContent = () => {
   const { isDark } = useTheme();
   const hydrated = useStoresHydrated();
+  const sessionReady = useSessionBootstrap(hydrated);
   // On a font load error fall back to system fonts rather than blocking the app.
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const fontsReady = fontsLoaded || fontError !== null;
-  const ready = hydrated && fontsReady;
+  const ready = hydrated && sessionReady && fontsReady;
   const [splashDone, setSplashDone] = useState(false);
   const finishSplash = useCallback(() => setSplashDone(true), []);
   const hideNativeSplash = useCallback(() => {

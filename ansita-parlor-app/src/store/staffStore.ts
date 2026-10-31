@@ -1,50 +1,43 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildStaff } from '@/data/staff';
-import type { ID, ISODate, Staff, UpdateInput, WorkingHours } from '@/types';
+import type { ID, ISODate, Staff, WorkingHours } from '@/types';
 import { weekdayOf } from '@/utils/date';
 
-import { findEntity, insertEntity, matchesQuery, removeEntity, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, matchesQuery, mergeEntities, replaceEntities, withoutEntity } from './entityHelpers';
 
 interface StaffData {
   staff: Staff[];
 }
 
 interface StaffActions {
-  addStaff: (member: Staff) => void;
-  updateStaff: (id: ID, patch: UpdateInput<Staff>) => void;
-  deleteStaff: (id: ID) => void;
+  setStaff: (staff: readonly Staff[]) => void;
+  mergeStaff: (staff: readonly Staff[]) => void;
+  removeStaff: (id: ID) => void;
   getStaffById: (id: ID) => Staff | undefined;
   reset: () => void;
 }
 
 export type StaffState = StaffData & StaffActions;
 
-const createInitialData = (): StaffData => ({ staff: buildStaff() });
+/** Cache of staff members loaded from the server. */
+export const useStaffStore = create<StaffState>()((set, get) => ({
+  staff: [],
 
-export const useStaffStore = create<StaffState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
-
-      addStaff: (member) => set((state) => ({ staff: insertEntity(state.staff, member) })),
-      updateStaff: (id, patch) => set((state) => ({ staff: updateEntity(state.staff, id, patch) })),
-      deleteStaff: (id) => set((state) => ({ staff: removeEntity(state.staff, id) })),
-      getStaffById: (id) => findEntity(get().staff, id),
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.staff,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ staff }): StaffData => ({ staff }),
-    },
-  ),
-);
+  setStaff: (list) => {
+    const next = replaceEntities(get().staff, list);
+    if (next) set({ staff: next });
+  },
+  mergeStaff: (list) => {
+    const next = mergeEntities(get().staff, list);
+    if (next) set({ staff: next });
+  },
+  removeStaff: (id) => {
+    const next = withoutEntity(get().staff, id);
+    if (next) set({ staff: next });
+  },
+  getStaffById: (id) => findEntity(get().staff, id),
+  reset: () => set({ staff: [] }),
+}));
 
 // ---------- Selectors ----------
 

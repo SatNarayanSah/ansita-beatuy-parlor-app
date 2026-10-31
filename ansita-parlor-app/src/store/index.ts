@@ -22,9 +22,8 @@ export * from './serviceStore';
 export * from './settingsStore';
 export * from './staffStore';
 
-/** Every persisted store, used for hydration tracking and resets. */
-export const persistedStores = [
-  useAuthStore,
+/** In-memory caches of server data. Cleared on sign-out so the next account starts clean. */
+export const cacheStores = [
   useCustomerStore,
   useServiceStore,
   useStaffStore,
@@ -36,20 +35,12 @@ export const persistedStores = [
   useBusinessStore,
 ] as const;
 
-/**
- * Restores every store to fresh seed data.
- * The current session is kept when `keepSession` is true and the user still exists.
- */
-export const resetAllStores = ({ keepSession = false }: { keepSession?: boolean } = {}): void => {
-  const { session } = useAuthStore.getState();
-  persistedStores.forEach((store) => store.getState().reset());
-  if (keepSession && session && useAuthStore.getState().getUserById(session.userId)) {
-    useAuthStore.getState().setSession(session);
-  }
+export const resetCacheStores = (): void => {
+  cacheStores.forEach((store) => store.getState().reset());
 };
 
-/** Demo-data stores plus device settings: everything that must load before first render. */
-export const hydratableStores = [...persistedStores, useSettingsStore] as const;
+/** Stores saved on the device (session and preferences): these must load before first render. */
+export const hydratableStores = [useAuthStore, useSettingsStore] as const;
 
 export const areStoresHydrated = (): boolean =>
   hydratableStores.every((store) => store.persist.hasHydrated());

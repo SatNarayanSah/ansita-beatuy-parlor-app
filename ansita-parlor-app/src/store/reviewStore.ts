@@ -1,50 +1,43 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-import { buildReviews } from '@/data/reviews';
-import type { ID, Review, UpdateInput } from '@/types';
+import type { ID, Review } from '@/types';
 import { roundRating } from '@/utils/format';
 
-import { findEntity, insertEntity, removeEntity, sortByCreatedDesc, updateEntity } from './entityHelpers';
-import { persistStorage, resetOnVersionMismatch, STORAGE_KEYS, STORE_VERSION } from './storage';
+import { findEntity, mergeEntities, replaceEntities, sortByCreatedDesc, withoutEntity } from './entityHelpers';
 
 interface ReviewData {
   reviews: Review[];
 }
 
 interface ReviewActions {
-  addReview: (review: Review) => void;
-  updateReview: (id: ID, patch: UpdateInput<Review>) => void;
-  deleteReview: (id: ID) => void;
+  setReviews: (reviews: readonly Review[]) => void;
+  mergeReviews: (reviews: readonly Review[]) => void;
+  removeReview: (id: ID) => void;
   getReviewById: (id: ID) => Review | undefined;
   reset: () => void;
 }
 
 export type ReviewState = ReviewData & ReviewActions;
 
-const createInitialData = (): ReviewData => ({ reviews: buildReviews() });
+/** Cache of reviews loaded from the server. */
+export const useReviewStore = create<ReviewState>()((set, get) => ({
+  reviews: [],
 
-export const useReviewStore = create<ReviewState>()(
-  persist(
-    (set, get) => ({
-      ...createInitialData(),
-
-      addReview: (review) => set((state) => ({ reviews: insertEntity(state.reviews, review) })),
-      updateReview: (id, patch) => set((state) => ({ reviews: updateEntity(state.reviews, id, patch) })),
-      deleteReview: (id) => set((state) => ({ reviews: removeEntity(state.reviews, id) })),
-      getReviewById: (id) => findEntity(get().reviews, id),
-
-      reset: () => set(createInitialData()),
-    }),
-    {
-      name: STORAGE_KEYS.reviews,
-      storage: persistStorage,
-      version: STORE_VERSION,
-      migrate: resetOnVersionMismatch(createInitialData()),
-      partialize: ({ reviews }): ReviewData => ({ reviews }),
-    },
-  ),
-);
+  setReviews: (list) => {
+    const next = replaceEntities(get().reviews, list);
+    if (next) set({ reviews: next });
+  },
+  mergeReviews: (list) => {
+    const next = mergeEntities(get().reviews, list);
+    if (next) set({ reviews: next });
+  },
+  removeReview: (id) => {
+    const next = withoutEntity(get().reviews, id);
+    if (next) set({ reviews: next });
+  },
+  getReviewById: (id) => findEntity(get().reviews, id),
+  reset: () => set({ reviews: [] }),
+}));
 
 // ---------- Selectors ----------
 
