@@ -562,3 +562,16 @@ def test_payment_request_before_any_account_is_set_up(client, admin):
         with SessionLocal() as db:
             get_business(db).payment_accounts = saved
             db.commit()
+
+
+def test_service_benefits(client, admin):
+    seeded = client.get("/services/svc_pedicure").json()
+    assert len(seeded["benefits"]) == 4  # starter benefits for the seeded services
+    created = client.post("/services", json={"name": "Threading", "categoryId": "cat_skin", "duration": 15, "price": 100,
+                                              "benefits": ["  Neat  brows ", "", "neat brows", "Quick"]}, headers=admin)
+    assert created.status_code == 201 and created.json()["benefits"] == ["Neat brows", "Quick"]
+    sid = created.json()["id"]
+    assert client.patch(f"/services/{sid}", json={"benefits": ["x" * 121]}, headers=admin).status_code == 422
+    assert client.patch(f"/services/{sid}", json={"benefits": [str(i) for i in range(9)]}, headers=admin).status_code == 422
+    assert client.patch(f"/services/{sid}", json={"price": 150}, headers=admin).json()["benefits"] == ["Neat brows", "Quick"]
+    assert client.patch(f"/services/{sid}", json={"benefits": []}, headers=admin).json()["benefits"] == []

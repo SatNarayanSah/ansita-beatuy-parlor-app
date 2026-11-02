@@ -129,6 +129,23 @@ class RedeemPointsInput(CamelModel):
 # ---------- Catalog ----------
 
 
+def _clean_benefits(items: list[str]) -> list[str]:
+    """Trimmed, non-empty, without repeats; at most 8 points of up to 120 characters."""
+    seen: list[str] = []
+    for item in items:
+        text = " ".join(item.split())
+        if text and text.lower() not in (s.lower() for s in seen):
+            if len(text) > 120:
+                raise ValueError("Keep each benefit under 120 characters.")
+            seen.append(text)
+    if len(seen) > 8:
+        raise ValueError("Add at most 8 benefits.")
+    return seen
+
+
+Benefits = Annotated[list[str], AfterValidator(_clean_benefits)]
+
+
 class ServiceInput(CamelModel):
     name: str = Field(min_length=2, max_length=120)
     category_id: str
@@ -136,6 +153,7 @@ class ServiceInput(CamelModel):
     price: int = Field(ge=0)
     description: str = ""
     image: ImageUrl = None
+    benefits: Benefits = []
     is_active: bool = True
 
 
@@ -146,6 +164,7 @@ class ServiceUpdate(CamelModel):
     price: int | None = Field(default=None, ge=0)
     description: str | None = None
     image: ImageUrl = None
+    benefits: Benefits | None = None
     is_active: bool | None = None
 
 

@@ -90,6 +90,8 @@ class Service(EntityMixin, Base):
     price: Mapped[int] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(Text, default="")
     image: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
+    # Short points shown on the service's page ("Repairs damaged hair", ...).
+    benefits: Mapped[list[str]] = mapped_column(JSON, default=list)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 

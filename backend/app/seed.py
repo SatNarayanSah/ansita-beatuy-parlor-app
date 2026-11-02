@@ -14,6 +14,7 @@ from .config import settings
 from .db import SessionLocal, init_db
 from .models import Course, Service, ServiceCategory, Staff, User
 from .security import hash_password
+from .service_benefits import DEFAULT_BENEFITS
 
 ALL_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
@@ -133,7 +134,8 @@ def seed() -> None:
         for id_, name, category_id, duration, price, description in SERVICES:
             if db.get(Service, id_) is None:
                 db.add(Service(id=id_, name=name, category_id=category_id, duration=duration, price=price,
-                               description=description, image=None, is_active=True))
+                               description=description, image=None, is_active=True,
+                               benefits=DEFAULT_BENEFITS.get(id_, [])))
         for data in STAFF:
             if db.get(Staff, data["id"]) is None:
                 db.add(Staff(**data, avatar=None, rating=0, is_active=True))

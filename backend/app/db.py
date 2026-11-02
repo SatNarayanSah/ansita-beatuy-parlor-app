@@ -33,6 +33,25 @@ def init_db() -> None:
     _add_appointment_payments()
     _strip_upload_hosts()
     _add_payment_accounts()
+    _add_service_benefits()
+
+
+def _add_service_benefits() -> None:
+    """Adds `services.benefits` to older databases and fills in the starter benefits
+    (app/service_benefits.py) for seeded services that have none yet."""
+    from .service_benefits import DEFAULT_BENEFITS
+
+    if "benefits" not in {column["name"] for column in inspect(engine).get_columns("services")}:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE services ADD COLUMN benefits JSON"))
+    with engine.begin() as conn:
+        for id_, value in conn.execute(text("SELECT id, benefits FROM services")).all():
+            current = json.loads(value) if isinstance(value, str) else value
+            if not current and id_ in DEFAULT_BENEFITS:
+                conn.execute(text("UPDATE services SET benefits = :b WHERE id = :id"),
+                             {"b": json.dumps(DEFAULT_BENEFITS[id_]), "id": id_})
+            elif current is None:
+                conn.execute(text("UPDATE services SET benefits = :b WHERE id = :id"), {"b": "[]", "id": id_})
 
 
 def _add_payment_accounts() -> None:
