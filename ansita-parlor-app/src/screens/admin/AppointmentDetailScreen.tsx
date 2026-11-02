@@ -51,6 +51,7 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [noShowOpen, setNoShowOpen] = useState(false);
+  const [earlyOpen, setEarlyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const run = async (key: string, action: () => Promise<unknown>, success: string): Promise<boolean> => {
@@ -83,6 +84,12 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
     } finally {
       setBusy(null);
     }
+  };
+
+  /** With a balance due, completing goes through the payment sheet. */
+  const complete = (due: number): void => {
+    if (due > 0) setPaymentMode('complete');
+    else void setStatus('completed', 'Marked as completed');
   };
 
   const completeWithoutPayment = async (): Promise<void> => {
@@ -235,12 +242,11 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                 ) : null}
                 {appointment.status === 'confirmed' ? (
                   <Button
-                    title={!started ? `Complete (from ${formatTime12(appointment.startTime)})` : due > 0 ? 'Complete & take payment' : 'Mark completed'}
+                    title={due > 0 ? 'Complete & take payment' : 'Mark completed'}
                     leftIcon="checkmark-done-outline"
                     size="lg"
-                    disabled={!started}
                     loading={busy === 'completed'}
-                    onPress={() => (due > 0 ? setPaymentMode('complete') : void setStatus('completed', 'Marked as completed'))}
+                    onPress={() => (started ? complete(due) : setEarlyOpen(true))}
                     fullWidth
                   />
                 ) : null}
@@ -303,6 +309,18 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                 summary={summary}
                 reasons={ADMIN_CANCEL_REASONS}
                 onClose={() => setCancelOpen(false)}
+              />
+              <ConfirmDialog
+                visible={earlyOpen}
+                icon="checkmark-done-outline"
+                title="Complete before the booked time?"
+                message={`This booking is for ${formatRelativeDay(appointment.date)} at ${formatTime12(appointment.startTime)}. Completing it now moves the visit to today, ending now.`}
+                confirmLabel="Complete now"
+                onConfirm={() => {
+                  setEarlyOpen(false);
+                  complete(due);
+                }}
+                onCancel={() => setEarlyOpen(false)}
               />
               <ConfirmDialog
                 visible={noShowOpen}

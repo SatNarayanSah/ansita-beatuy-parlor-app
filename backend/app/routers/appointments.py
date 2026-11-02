@@ -28,6 +28,9 @@ from ..utils import (
     generate_id,
     generate_time_slots,
     is_past_date_time,
+    minutes_to_time,
+    now_local,
+    today_iso,
     is_valid_iso_date,
     is_valid_time,
     time_ranges_overlap,
@@ -247,6 +250,7 @@ def create_appointment(body: AppointmentInput, user: User = Depends(get_current_
         notes=body.notes.strip(),
         total_price=total,
         amount_paid=0,
+        payments=[],
         payment_status="unpaid",
         payment_method=None,
         preferred_payment_method=body.preferred_payment_method,
@@ -325,7 +329,14 @@ def update_status(id_: str, body: StatusInput, user: User = Depends(get_current_
             f"A {format_enum_label(appointment.status)} appointment cannot be marked {format_enum_label(status)}.",
         )
     if status == "completed" and not is_past_date_time(appointment.date, appointment.start_time):
-        raise ApiError("VALIDATION", "An appointment can only be completed after it has started.")
+        # Served ahead of the booked slot (e.g. the customer came in early): the visit
+        # happened now, so it moves to today, ending now, for the calendar and reports.
+        duration = time_to_minutes(appointment.end_time) - time_to_minutes(appointment.start_time)
+        now = now_local()
+        end = now.hour * 60 + now.minute
+        appointment.date = today_iso()
+        appointment.start_time = minutes_to_time(max(0, end - duration))
+        appointment.end_time = minutes_to_time(end)
 
     appointment.status = status
     if status == "cancelled":
@@ -372,6 +383,10 @@ def record_payment(id_: str, body: PaymentInput, _: User = Depends(require_admin
     if body.amount > due:
         raise ApiError("VALIDATION", f"Amount exceeds the balance due ({format_currency(due)}).")
     appointment.amount_paid += body.amount
+    appointment.payments = [
+        *(appointment.payments or []),
+        {"id": generate_id("pay"), "amount": body.amount, "paidOn": today_iso(), "method": body.method},
+    ]
     appointment.payment_method = body.method
     appointment.payment_status = _payment_status(appointment.amount_paid, appointment.total_price)
     notify_customer(db, appointment.customer_id, "payment", "Payment received",

@@ -30,6 +30,11 @@ def today_iso() -> str:
     return now_local().date().isoformat()
 
 
+def local_date_of(timestamp: str) -> str:
+    """The parlour's calendar day for a stored UTC timestamp like "2026-10-31T17:38:35.464Z"."""
+    return datetime.fromisoformat(timestamp.replace("Z", "+00:00")).astimezone(TZ).date().isoformat()
+
+
 def is_valid_iso_date(value: str) -> bool:
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
         return False

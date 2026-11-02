@@ -98,8 +98,6 @@ def test_booking_flow(client, admin):
 
     response = client.post(f"/appointments/{appointment['id']}/status", json={"status": "confirmed"}, headers=admin)
     assert response.json()["status"] == "confirmed"
-    response = client.post(f"/appointments/{appointment['id']}/status", json={"status": "completed"}, headers=admin)
-    assert response.status_code == 422  # not started yet
 
     # Payments can't exceed the balance.
     pay = f"/appointments/{appointment['id']}/payments"
@@ -152,6 +150,32 @@ def test_completion_points_and_review(client, admin):
 
     stats = client.get(f"/customers/{user['customerId']}/stats", headers=customer).json()
     assert stats["totalVisits"] == 1 and stats["lastVisit"] == yesterday
+
+
+def test_complete_early_moves_visit_to_today(client, admin):
+    """A customer served before the booked slot: completing moves the visit to today, and the payment is dated today."""
+    user, _ = register(client, "Asha Jha", "asha@example.com", "9812000016")
+    later = (now_local().date() + timedelta(days=9)).isoformat()
+    with SessionLocal() as db:
+        appointment = Appointment(
+            id=generate_id("apt"), customer_id=user["customerId"], service_ids=["svc_pedicure"],
+            staff_id="stf_rojina", date=later, start_time="14:00", end_time="14:50", status="confirmed",
+            notes="", total_price=1680, amount_paid=0, payment_status="unpaid", payments=[],
+        )
+        db.add(appointment)
+        db.commit()
+        appointment_id = appointment.id
+
+    response = client.post(f"/appointments/{appointment_id}/status", json={"status": "completed"}, headers=admin)
+    assert response.status_code == 200, response.text
+    done = response.json()
+    today = now_local().date().isoformat()
+    assert done["status"] == "completed" and done["date"] == today
+
+    paid = client.post(f"/appointments/{appointment_id}/payments", json={"amount": 1680, "method": "cash"},
+                       headers=admin).json()
+    assert paid["paymentStatus"] == "paid"
+    assert [(p["amount"], p["paidOn"]) for p in paid["payments"]] == [(1680, today)]
 
 
 def test_enrollment_seats(client, admin):

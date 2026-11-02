@@ -11,7 +11,7 @@ import { appointmentService, enrollmentService } from '@/services';
 import { useAppointmentStore, useCourseStore } from '@/store';
 import { useTheme } from '@/theme';
 import type { ISODate } from '@/types';
-import { feesCollected, inRange, retention, revenueByDay, revenueByService, revenueByStaff, sumCollected } from '@/utils/analytics';
+import { collectedBetween, feesCollected, inRange, retention, revenueByDay, revenueByService, revenueByStaff, sumCollected } from '@/utils/analytics';
 import { addDaysISO, formatShortDate, todayISO, toISODate } from '@/utils/date';
 import { formatCurrency, toPercent } from '@/utils/format';
 
@@ -72,7 +72,7 @@ export const ReportsScreen = ({ navigation }: Props) => {
     const inPeriod = appointments.filter((a) => inRange(a.date, range.from, range.to));
     const completed = inPeriod.filter((a) => a.status === 'completed');
     const booked = inPeriod.filter((a) => a.status !== 'cancelled');
-    const revenue = sumCollected(inPeriod);
+    const revenue = collectedBetween(appointments, range.from, range.to);
     return {
       revenue,
       fees: feesCollected(enrollments, range.from, range.to),
@@ -82,8 +82,8 @@ export const ReportsScreen = ({ navigation }: Props) => {
       cancelRate: toPercent(inPeriod.filter((a) => a.status === 'cancelled').length, inPeriod.length),
       noShowRate: toPercent(inPeriod.filter((a) => a.status === 'no_show').length, booked.length),
       trend: revenueByDay(appointments, range.from, range.to),
-      byService: revenueByService(inPeriod, services),
-      byStaff: revenueByStaff(inPeriod, staff),
+      byService: revenueByService(appointments, services, range.from, range.to),
+      byStaff: revenueByStaff(appointments, staff, range.from, range.to),
       retention: retention(appointments, range.from, range.to),
     };
   }, [query.data, range.from, range.to, services, staff]);

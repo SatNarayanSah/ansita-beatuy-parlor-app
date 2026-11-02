@@ -25,7 +25,7 @@ import type { AdminTabScreenProps } from '@/navigation/types';
 import { appointmentService, customerService, getErrorMessage } from '@/services';
 import { selectCurrentUser, selectUnreadCount, useAppointmentStore, useAuthStore, useCustomerStore, useNotificationStore } from '@/store';
 import { getToneColors, useTheme, type Tone } from '@/theme';
-import { inRange, revenueByDay, statusCounts, sumCollected, topServicesByBookings } from '@/utils/analytics';
+import { collectedBetween, inRange, revenueByDay, statusCounts, topServicesByBookings } from '@/utils/analytics';
 import { addDaysISO, formatDisplayDate, formatRelativeDay, todayISO } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 
@@ -82,9 +82,10 @@ export const DashboardScreen = ({ navigation }: Props) => {
     const nowTime = format(new Date(), 'HH:mm');
     return {
       todayCount: appointments.filter((a) => a.date === today && a.status !== 'cancelled').length,
-      revenueToday: sumCollected(appointments.filter((a) => a.date === today)),
-      revenueWeek: sumCollected(appointments.filter((a) => inRange(a.date, addDaysISO(today, -6), today))),
-      revenueMonth: sumCollected(recent),
+      // Counted on the day the money came in, not the booking date.
+      revenueToday: collectedBetween(appointments, today, today),
+      revenueWeek: collectedBetween(appointments, addDaysISO(today, -6), today),
+      revenueMonth: collectedBetween(appointments, monthFrom, today),
       newCustomers: query.data.customers.filter((c) => c.joinedAt.slice(0, 10) >= monthFrom).length,
       pending: appointments.filter((a) => a.status === 'pending' && a.date >= today),
       upcomingToday: appointments.filter((a) => a.date === today && a.status === 'confirmed' && a.endTime > nowTime),

@@ -76,7 +76,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | E6 | **New appointment** (walk-in): add a new customer inline (try a duplicate phone first). | Duplicate phone is rejected; the new customer is created and selected. | ☐ |
 | E7 | **Conflict detection**: pick a stylist and a time already booked. | Busy slots are disabled; the conflict panel lists that day's bookings and marks the clash; **Book** stays disabled. | ☐ |
 | E8 | Book a valid walk-in. | Created as **Confirmed**; opens its detail screen. | ☐ |
-| E9 | Detail of a future confirmed booking: **Complete**. | Disabled until the start time (“Complete (from 3:00 PM)”). | ☐ |
+| E9 | Detail of a future confirmed booking: **Mark completed** (or **Complete & take payment**). | Asks “Complete before the booked time?”; after confirming, the booking moves to today ending now, shows Completed, and appears in today’s Schedule. | ☐ |
 | E10 | Detail of a started confirmed booking: **Complete & take payment** with an amount above the balance, then a partial amount. | Over-balance rejected inline; partial recorded; status Completed / Partly paid; customer earns points at the configured rate. | ☐ |
 | E11 | Record the remaining balance. | Payment status **Paid**. | ☐ |
 | E12 | **Mark no-show** on a started booking; **Cancel** another with an admin reason. | Confirm dialogs; statuses update; customer notified of the cancellation. | ☐ |

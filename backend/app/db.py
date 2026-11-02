@@ -1,6 +1,7 @@
+import json
 from collections.abc import Iterator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from .config import settings
@@ -29,3 +30,26 @@ def init_db() -> None:
     from . import models  # noqa: F401  (registers the tables)
 
     Base.metadata.create_all(bind=engine)
+    _add_appointment_payments()
+
+
+def _add_appointment_payments() -> None:
+    """Adds `appointments.payments` to databases created before it existed.
+
+    Money already collected becomes one payment dated the day the row was last
+    updated, which is when the admin recorded it.
+    """
+    from .utils import local_date_of
+
+    if "payments" in {column["name"] for column in inspect(engine).get_columns("appointments")}:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE appointments ADD COLUMN payments JSON"))
+        rows = conn.execute(text("SELECT id, amount_paid, payment_method, updated_at FROM appointments")).all()
+        for id_, amount_paid, method, updated_at in rows:
+            payments = (
+                [{"id": f"pay_{id_}", "amount": amount_paid, "paidOn": local_date_of(str(updated_at)), "method": method or "cash"}]
+                if amount_paid else []
+            )
+            conn.execute(text("UPDATE appointments SET payments = :payments WHERE id = :id"),
+                         {"payments": json.dumps(payments), "id": id_})
