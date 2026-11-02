@@ -137,6 +137,7 @@ function UserCard() {
       </div>
       <motion.button
         whileHover={{ scale: 1.1 }}
+        transition={{ type: "spring", stiffness: 170, damping: 16 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => {
           logout();

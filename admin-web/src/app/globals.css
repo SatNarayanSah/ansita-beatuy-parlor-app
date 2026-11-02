@@ -105,6 +105,9 @@
   --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --shadow-soft: 0 1px 2px rgb(var(--shadow) / 0.04), 0 8px 24px -12px rgb(var(--shadow) / 0.12);
   --shadow-lift: 0 2px 4px rgb(var(--shadow) / 0.05), 0 18px 40px -16px rgb(var(--shadow) / 0.22);
+  /* Default for transition-colors/-shadow/-all etc. (Tailwind's own is a snappy 150ms). */
+  --default-transition-duration: 35000ms;
+  --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   --animate-shimmer: shimmer 1.6s linear infinite;
   --animate-float: float 14s ease-in-out infinite;
   --animate-spin-slow: spin 18s linear infinite;
@@ -156,6 +159,54 @@ body {
   svg,
   video {
     max-width: 100%;
+  }
+}
+
+/*
+ * Hover lifts, done in CSS rather than Motion's whileHover. Motion reuses an element's entry
+ * transition (stagger delay + spring) for hover, which made cards wait, then bounce. These
+ * use the separate `translate`/`scale` properties, so they never fight Motion's inline
+ * `transform`, and only react to a real mouse (no stuck hover after a tap on phones).
+ */
+@utility hover-lift {
+  transition-property: translate, scale, box-shadow, border-color, background-color;
+  transition-duration: 2s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  @media (hover: hover) {
+    &:hover {
+      translate: 0 -5px;
+      box-shadow: var(--shadow-lift);
+    }
+  }
+}
+@utility hover-lift-sm {
+  transition-property: translate, scale, box-shadow, border-color, background-color, color;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      translate: 0 -2px;
+    }
+  }
+}
+@utility hover-grow {
+  transition-property: scale, box-shadow;
+  transition-duration: 500ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  @media (hover: hover) {
+    &:hover {
+      scale: 1.03;
+    }
+  }
+}
+@utility hover-nudge {
+  transition-property: translate;
+  transition-duration: 500ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  @media (hover: hover) {
+    &:hover {
+      translate: 6px 0;
+    }
   }
 }
 

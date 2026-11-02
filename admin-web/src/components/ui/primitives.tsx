@@ -46,7 +46,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       whileHover={disabled || loading ? undefined : { y: -1 }}
       whileTap={disabled || loading ? undefined : { scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      transition={{ type: "tween", duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       disabled={disabled || loading}
       className={cn(
         "relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium whitespace-nowrap transition-[background,box-shadow,color,border-color] outline-none select-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50",
@@ -271,9 +271,7 @@ export function Badge({
 export function Card({ className, children, hover, ...props }: HTMLMotionProps<"div"> & { hover?: boolean }) {
   return (
     <motion.div
-      whileHover={hover ? { y: -4, boxShadow: "var(--shadow-lift)" } : undefined}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className={cn("rounded-2xl border border-line bg-surface shadow-soft", className)}
+      className={cn("rounded-2xl border border-line bg-surface shadow-soft", hover && "hover-lift", className)}
       {...props}
     >
       {children}

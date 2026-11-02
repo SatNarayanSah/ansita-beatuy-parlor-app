@@ -227,7 +227,6 @@ export default function BookPage() {
                               <motion.button
                                 key={s.id}
                                 type="button"
-                                whileHover={{ y: -2 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => {
                                   setServiceIds((ids) => (on ? ids.filter((id) => id !== s.id) : [...ids, s.id]));
@@ -235,7 +234,7 @@ export default function BookPage() {
                                   setTime("");
                                 }}
                                 className={cn(
-                                  "relative flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 text-left transition-colors",
+                                  "hover-lift-sm relative flex cursor-pointer items-start gap-3 rounded-2xl border p-3.5 text-left",
                                   on ? "border-primary bg-primary-soft/50" : "border-line bg-surface hover:border-line-strong",
                                 )}
                               >
@@ -279,14 +278,13 @@ export default function BookPage() {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: Math.min(i, 14) * 0.02 }}
-                            whileHover={holiday ? undefined : { y: -3 }}
                             onClick={() => {
                               setDate(d);
                               setStaffId("");
                               setTime("");
                             }}
                             className={cn(
-                              "flex w-16 shrink-0 cursor-pointer flex-col items-center rounded-2xl border py-2.5 transition-colors",
+                              "hover-lift-sm flex w-16 shrink-0 cursor-pointer flex-col items-center rounded-2xl border py-2.5",
                               on
                                 ? "border-primary bg-gradient-to-b from-primary to-primary-dark text-white shadow-[0_8px_20px_-8px_var(--ring)] dark:text-[#2a1520]"
                                 : holiday
@@ -325,13 +323,12 @@ export default function BookPage() {
                               <motion.button
                                 key={m.id}
                                 type="button"
-                                whileHover={{ y: -2 }}
                                 onClick={() => {
                                   setStaffId(m.id);
                                   setTime("");
                                 }}
                                 className={cn(
-                                  "relative flex cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left transition-colors",
+                                  "hover-lift-sm relative flex cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left",
                                   on ? "border-primary" : "border-line hover:border-line-strong",
                                 )}
                               >

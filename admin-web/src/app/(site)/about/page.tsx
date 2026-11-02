@@ -82,8 +82,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, type: "spring", stiffness: 160, damping: 20 }}
-                whileHover={{ scale: 1.03, rotate: i % 2 ? 1 : -1 }}
-                className={`group relative overflow-hidden rounded-3xl p-5 text-white shadow-lift ${tile.span}`}
+                className={`group hover-grow relative overflow-hidden rounded-3xl p-5 text-white shadow-lift ${tile.span}`}
                 style={{ background: `linear-gradient(135deg, ${tile.from}, ${tile.to})` }}
               >
                 <div className="absolute -right-8 -bottom-8 h-32 w-32 rounded-full bg-white/15 blur-xl transition-transform duration-700 group-hover:scale-150" />
@@ -116,16 +115,17 @@ export default function AboutPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {VALUES.map(({ icon: Icon, title, text }, i) => (
               <Reveal key={title} delay={i * 0.08}>
-                <motion.div whileHover={{ y: -6 }} className="h-full rounded-3xl border border-line bg-surface p-6 shadow-soft transition-shadow hover:shadow-lift">
+                <div className="group hover-lift h-full rounded-3xl border border-line bg-surface p-6 shadow-soft">
                   <motion.span
                     whileHover={{ rotate: 12, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 170, damping: 16 }}
                     className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-soft to-plum-soft text-primary"
                   >
                     <Icon className="h-5 w-5" />
                   </motion.span>
                   <h3 className="mt-4 font-display text-lg font-semibold text-ink">{title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{text}</p>
-                </motion.div>
+                </div>
               </Reveal>
             ))}
           </div>

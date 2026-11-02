@@ -63,6 +63,7 @@ function CategoryModal({
                 key={swatch}
                 type="button"
                 whileHover={{ scale: 1.15 }}
+                transition={{ type: "spring", stiffness: 170, damping: 16 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setColor(swatch)}
                 className={cn(

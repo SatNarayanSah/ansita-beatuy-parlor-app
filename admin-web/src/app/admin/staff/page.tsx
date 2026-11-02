@@ -380,7 +380,7 @@ export default function StaffPage() {
                 >
                   <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft opacity-70 transition-opacity group-hover:opacity-100" />
                   <div className="relative flex items-start justify-between">
-                    <motion.div whileHover={{ scale: 1.06, rotate: -3 }}>
+                    <motion.div whileHover={{ scale: 1.06, rotate: -3 }} transition={{ type: "spring", stiffness: 170, damping: 16 }}>
                       <Avatar name={member.name} src={member.avatar} size={64} className="ring-4" />
                     </motion.div>
                     <div onClick={(e) => e.stopPropagation()}>

@@ -151,7 +151,7 @@ export default function AccountNotificationsPage() {
                         onClick={() => open(n)}
                       >
                         {!n.isRead && <motion.span layoutId={`unread-${n.id}`} className="absolute inset-y-0 left-0 w-1 bg-primary" />}
-                        <motion.span whileHover={{ rotate: -10, scale: 1.1 }} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", style.className)}>
+                        <motion.span whileHover={{ rotate: -10, scale: 1.1 }} transition={{ type: "spring", stiffness: 170, damping: 16 }} className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", style.className)}>
                           <Icon className="h-5 w-5" />
                         </motion.span>
                         <div className="min-w-0 flex-1">

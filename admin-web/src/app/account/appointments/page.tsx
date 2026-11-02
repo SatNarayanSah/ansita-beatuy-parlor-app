@@ -342,9 +342,8 @@ export default function MyAppointmentsPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i, 10) * 0.04 } }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  whileHover={{ y: -4 }}
                   onClick={() => setSelectedId(a.id)}
-                  className="group flex cursor-pointer gap-4 rounded-2xl border border-line bg-surface p-4 text-left shadow-soft transition-shadow hover:shadow-lift"
+                  className="group hover-lift flex cursor-pointer gap-4 rounded-2xl border border-line bg-surface p-4 text-left shadow-soft"
                 >
                   <div className="flex w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-primary-soft to-plum-soft py-2">
                     <span className="text-[10px] font-semibold text-primary-dark uppercase">{formatDate(a.date, "MMM")}</span>

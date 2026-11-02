@@ -49,10 +49,9 @@ export default function ContactPage() {
                     href={c.href}
                     target={c.href.startsWith("http") ? "_blank" : undefined}
                     rel="noreferrer"
-                    whileHover={{ y: -5 }}
-                    className="group flex items-center gap-4 rounded-3xl border border-line bg-surface p-5 shadow-soft transition-shadow hover:shadow-lift"
+                    className="group hover-lift flex items-center gap-4 rounded-3xl border border-line bg-surface p-5 shadow-soft"
                   >
-                    <motion.span whileHover={{ rotate: -12 }} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg ${c.tint}`}>
+                    <motion.span whileHover={{ rotate: -12 }} transition={{ type: "spring", stiffness: 170, damping: 16 }} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg ${c.tint}`}>
                       <c.icon className="h-5 w-5" />
                     </motion.span>
                     <div className="min-w-0">

@@ -27,8 +27,7 @@ export function SiteFooter() {
             {profile?.tagline || "Beauty, care and training under one roof."}
           </p>
           <motion.div
-            whileHover={{ y: -3 }}
-            className="flex items-start gap-3 rounded-2xl border border-line bg-bg/60 p-3"
+            className="hover-lift-sm flex items-start gap-3 rounded-2xl border border-line bg-bg/60 p-3"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-plum text-white">
               <Smartphone className="h-4 w-4" />

@@ -516,7 +516,7 @@ export default function CoursesPage() {
                   <div className="relative h-32 overflow-hidden bg-gradient-to-br from-plum via-primary-dark to-primary">
                     {course.image && /^https?:\/\//.test(course.image) && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={course.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-110" />
+                      <img src={course.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-700 ease-in-out group-hover:scale-105" />
                     )}
                     <motion.div
                       className="absolute -right-6 -bottom-8 text-white/15"

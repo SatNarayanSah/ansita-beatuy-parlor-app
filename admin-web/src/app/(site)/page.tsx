@@ -277,6 +277,7 @@ function Categories() {
                   />
                   <motion.span
                     whileHover={{ rotate: -12, scale: 1.1 }}
+                    transition={{ type: "spring", stiffness: 170, damping: 16 }}
                     className="relative flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-500 group-hover:-translate-y-1"
                     style={{ background: `linear-gradient(135deg, ${category.color}, ${category.color}bb)` }}
                   >
@@ -399,7 +400,7 @@ function AcademyTeaser() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.15 + i * 0.1, type: "spring", stiffness: 140, damping: 20 }}
-                    whileHover={{ x: 6 }}
+                    className="hover-nudge"
                   >
                     <Link href="/academy" className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md transition-colors hover:bg-white/15 sm:gap-4 sm:p-4">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-12 sm:w-12">

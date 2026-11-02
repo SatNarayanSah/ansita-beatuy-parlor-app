@@ -72,8 +72,7 @@ export function ServiceCard({ service, category, index = 0 }: { service: Service
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
       transition={{ delay: Math.min(index, 12) * 0.04, type: "spring", stiffness: 220, damping: 24 }}
-      whileHover={{ y: -6 }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-soft transition-shadow hover:shadow-lift"
+      className="group hover-lift relative flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-soft"
     >
       <Link
         href={`/services/${service.id}`}
@@ -83,7 +82,7 @@ export function ServiceCard({ service, category, index = 0 }: { service: Service
       >
         {service.image && /^https?:\/\//.test(service.image) ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={service.image} alt={service.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+          <img src={service.image} alt={service.name} className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" />
         ) : (
           <>
             <div className="absolute -right-6 -bottom-8 h-32 w-32 rounded-full opacity-40 blur-2xl transition-transform duration-700 group-hover:scale-150" style={{ background: color }} />
@@ -91,6 +90,7 @@ export function ServiceCard({ service, category, index = 0 }: { service: Service
               className="absolute top-5 left-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-surface/90 shadow-lg backdrop-blur"
               style={{ color }}
               whileHover={{ rotate: -10, scale: 1.08 }}
+              transition={{ type: "spring", stiffness: 170, damping: 16 }}
             >
               <CategoryIcon category={category} className="h-6 w-6" />
             </motion.span>
@@ -289,7 +289,6 @@ export function OfferBanner({
     whileInView: { opacity: 1, y: 0, scale: 1 },
     viewport: { once: true, margin: "-40px" },
     transition: { delay: Math.min(index, 8) * 0.07, type: "spring" as const, stiffness: 170, damping: 22 },
-    whileHover: { y: -6 },
   };
 
   if (hasImage) {
@@ -297,7 +296,7 @@ export function OfferBanner({
       <motion.article
         {...motionProps}
         className={cn(
-          "group relative flex h-full flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-primary-dark via-plum to-[#2b1626] text-white shadow-lift",
+          "group hover-lift relative flex h-full flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-primary-dark via-plum to-[#2b1626] text-white shadow-lift",
           featured && "lg:flex-row",
         )}
       >
@@ -309,7 +308,7 @@ export function OfferBanner({
           <img
             src={offer.image!}
             alt={offer.title}
-            className="relative h-full w-full object-contain transition-transform duration-[1.2s] ease-out group-hover:scale-[1.04]"
+            className="relative h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
           <div className="absolute top-3 right-3">
             <EndsChip validTo={offer.validTo} />
@@ -328,7 +327,7 @@ export function OfferBanner({
     <motion.article
       {...motionProps}
       className={cn(
-        "group relative isolate flex h-full flex-col justify-end overflow-hidden rounded-3xl text-white shadow-lift",
+        "group hover-lift relative isolate flex h-full flex-col justify-end overflow-hidden rounded-3xl text-white shadow-lift",
         featured ? "min-h-[340px] sm:min-h-[400px]" : "min-h-[300px]",
       )}
     >
@@ -376,15 +375,14 @@ export function StaffCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ delay: Math.min(index, 10) * 0.06, type: "spring", stiffness: 200, damping: 24 }}
-      whileHover={{ y: -6 }}
       onClick={onClick}
       className={cn(
-        "group relative flex h-full flex-col items-center overflow-hidden rounded-3xl border border-line bg-surface p-4 text-center shadow-soft transition-shadow hover:shadow-lift sm:p-6",
+        "group hover-lift relative flex h-full flex-col items-center overflow-hidden rounded-3xl border border-line bg-surface p-4 text-center shadow-soft sm:p-6",
         onClick && "cursor-pointer",
       )}
     >
       <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft opacity-80" />
-      <motion.div className="relative" whileHover={{ scale: 1.06, rotate: 3 }}>
+      <motion.div className="relative" whileHover={{ scale: 1.06, rotate: 3 }} transition={{ type: "spring", stiffness: 170, damping: 16 }}>
         <span className="absolute -inset-1.5 rounded-full bg-gradient-to-br from-primary via-plum to-gold opacity-0 blur-sm transition-opacity duration-500 group-hover:opacity-70" />
         <Avatar name={member.name} src={member.avatar} size={compact ? 72 : 88} className="relative ring-4" />
       </motion.div>

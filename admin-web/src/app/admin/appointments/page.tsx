@@ -139,11 +139,10 @@ function DayBoard({ onOpen }: { onOpen: (id: string) => void }) {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.85 }}
                             transition={{ delay: 0.1 + i * 0.04, type: "spring", stiffness: 300, damping: 24 }}
-                            whileHover={{ scale: 1.03, zIndex: 5 }}
                             onClick={() => onOpen(a.id)}
                             style={{ top, height }}
                             className={cn(
-                              "absolute inset-x-1.5 cursor-pointer overflow-hidden rounded-xl border-l-4 px-2 py-1 text-left shadow-sm",
+                              "hover-grow absolute inset-x-1.5 cursor-pointer overflow-hidden rounded-xl border-l-4 px-2 py-1 text-left shadow-sm hover:z-[5]",
                               BLOCK_STYLE[a.status],
                             )}
                           >

@@ -64,11 +64,10 @@ export function SlotPicker({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: Math.min(i, 30) * 0.012 }}
-            whileHover={slot.available ? { y: -2 } : undefined}
             whileTap={slot.available ? { scale: 0.94 } : undefined}
             onClick={() => onChange(slot.time)}
             className={cn(
-              "relative cursor-pointer rounded-xl border px-1 py-2 text-xs font-medium transition-colors",
+              "hover-lift-sm relative cursor-pointer rounded-xl border px-1 py-2 text-xs font-medium",
               selected
                 ? "border-primary bg-primary text-white shadow-[0_6px_16px_-6px_var(--ring)] dark:text-[#2a1520]"
                 : slot.available

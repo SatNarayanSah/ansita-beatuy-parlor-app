@@ -111,7 +111,7 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
             >
               {hasImage ? (
                 // eslint-disable-next-line @next/next/no-img-element -- uploaded image on the API host
-                <img src={service.image!} alt={service.name} className="h-full w-full object-cover transition-transform duration-[1.4s] group-hover:scale-105" />
+                <img src={service.image!} alt={service.name} className="h-full w-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-105" />
               ) : (
                 <>
                   <div className="absolute -top-10 -left-10 h-60 w-60 rounded-full bg-white/15 blur-2xl" />

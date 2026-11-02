@@ -28,9 +28,8 @@ function LoyaltyCard({ points, pointValue, minRedeem, enabled, name }: { points:
     <motion.div
       initial={{ opacity: 0, y: 24, rotateX: 12 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
-      whileHover={{ y: -4, rotate: -0.6 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#b08b3e] p-6 text-white shadow-lift"
+      className="hover-lift relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#b08b3e] p-6 text-white shadow-lift"
     >
       {/* moving sheen */}
       <motion.div

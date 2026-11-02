@@ -72,6 +72,7 @@ export function StatCard({
         </div>
         <motion.div
           whileHover={{ rotate: 12, scale: 1.08 }}
+          transition={{ type: "spring", stiffness: 170, damping: 16 }}
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg sm:h-11 sm:w-11 sm:rounded-2xl [&_svg]:h-4 [&_svg]:w-4 sm:[&_svg]:h-5 sm:[&_svg]:w-5",
             accents[accent],

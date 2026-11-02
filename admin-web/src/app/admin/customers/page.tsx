@@ -249,9 +249,8 @@ export default function CustomersPage() {
                 initial={{ opacity: 0, y: 20, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: Math.min(i, 16) * 0.035, type: "spring", stiffness: 260, damping: 24 } }}
                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
-                whileHover={{ y: -5 }}
                 onClick={() => setSelectedId(c.id)}
-                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface p-5 text-left shadow-soft transition-shadow hover:shadow-lift"
+                className="group hover-lift relative cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface p-5 text-left shadow-soft"
               >
                 <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft opacity-70 transition-opacity group-hover:opacity-100" />
                 <div className="relative flex items-start justify-between">
