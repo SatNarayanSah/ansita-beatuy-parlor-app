@@ -16,6 +16,15 @@
         "EXPO_PUBLIC_API_URL": "https://ansita-api.onrender.com"
       }
     },
+    "device": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://ansita-api.onrender.com"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": {

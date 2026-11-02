@@ -13,6 +13,7 @@ from .routers import (
     appointments,
     auth,
     catalog,
+    contact,
     courses,
     customers,
     enrollments,
@@ -71,6 +72,6 @@ def health():
     return {"status": "ok"}
 
 
-for module in (auth, appointments, catalog, staff, customers, courses, enrollments, reviews, notifications, offers,
+for module in (auth, appointments, catalog, contact, staff, customers, courses, enrollments, reviews, notifications, offers,
                settings_router):
     app.include_router(module.router)

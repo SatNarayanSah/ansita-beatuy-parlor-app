@@ -47,6 +47,14 @@ def list_reviews(staff_id: str | None = Query(None, alias="staffId"),
     return with_names(db, list(db.scalars(stmt.order_by(Review.created_at.desc()))))
 
 
+@router.get("/featured")
+def featured_reviews(limit: int = Query(6, ge=1, le=20), db: Session = Depends(get_db)):
+    """Public testimonials: the latest 4- and 5-star reviews that have a comment."""
+    stmt = (select(Review).where(Review.rating >= 4, Review.comment != "")
+            .order_by(Review.created_at.desc()).limit(limit))
+    return with_names(db, list(db.scalars(stmt)))
+
+
 @router.get("/by-appointment/{appointment_id}")
 def get_review_for_appointment(appointment_id: str, _: User = Depends(get_current_user),
                                db: Session = Depends(get_db)):

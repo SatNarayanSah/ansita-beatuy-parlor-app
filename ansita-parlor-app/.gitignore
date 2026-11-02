@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase service-account keys (push setup) are private; google-services.json is not
+*-firebase-adminsdk-*.json

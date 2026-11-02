@@ -6,7 +6,7 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Course, Enrollment, Staff, User
 from ..schemas import ActiveInput, BatchInput, BatchUpdate, CourseInput, CourseUpdate
-from ..security import get_current_user, require_admin
+from ..security import get_optional_user, require_admin
 from ..serializers import apply, changes, to_dict, to_list
 from ..utils import generate_id, is_valid_iso_date, is_valid_time
 
@@ -56,10 +56,10 @@ def _validate_batch(batch: dict) -> None:
 
 @router.get("")
 def list_courses(query: str = "", active_only: bool = Query(False, alias="activeOnly"),
-                 user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Customers only ever see active courses."""
+                 user: User | None = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Public. Visitors and customers only ever see active courses."""
     stmt = select(Course)
-    if user.role == "customer" or active_only:
+    if user is None or user.role == "customer" or active_only:
         stmt = stmt.where(Course.is_active.is_(True))
     if query.strip():
         needle = f"%{query.strip().lower()}%"

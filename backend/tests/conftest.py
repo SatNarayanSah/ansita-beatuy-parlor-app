@@ -10,6 +10,7 @@ _tmp = tempfile.mkdtemp(prefix="ansita-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(_tmp) / 'test.db'}"
 os.environ["JWT_SECRET"] = "test-secret-that-is-long-enough-for-hs256"
 os.environ["EXPOSE_RESET_CODE"] = "true"
+os.environ["PUSH_ENABLED"] = "false"
 os.environ["ADMIN_EMAIL"] = ADMIN_EMAIL = "owner@test.local"
 os.environ["ADMIN_PASSWORD"] = ADMIN_PASSWORD = "test-admin-pass"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))

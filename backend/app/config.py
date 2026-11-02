@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     expose_reset_code: bool = True
     reset_code_ttl_minutes: int = 10
 
+    # Phone notifications through Expo's push service. Off in tests. The access token
+    # is only needed if "Enhanced push security" is turned on for the Expo project.
+    push_enabled: bool = True
+    expo_access_token: str = ""
+
     # Used by `python -m app.seed` to create the first admin account. No default:
     # the seed skips the admin until both are set.
     admin_email: str = ""

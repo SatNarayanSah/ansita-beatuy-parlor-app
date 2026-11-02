@@ -253,3 +253,60 @@ def test_settings_and_offers(client, admin):
     draft = {**offer, "code": None, "isActive": False}
     client.post("/offers", json=draft, headers=admin)
     assert [o["title"] for o in client.get("/offers", headers=customer).json()] == ["Tihar Glow"]
+
+
+def test_public_website_reads(client, admin):
+    """Visitors (no token) can browse the catalogue, but only what customers would see."""
+    services = client.get("/services")
+    assert services.status_code == 200 and services.json()
+    assert all(s["isActive"] for s in services.json())
+    assert client.get("/courses").status_code == 200
+    assert client.get("/offers").status_code == 200
+    staff = client.get("/staff").json()
+    assert staff and all(member["phone"] == "" and member["email"] == "" for member in staff)
+    public = client.get("/settings/public").json()
+    assert set(public) == {"profile", "holidays", "loyalty"} and "alerts" not in public
+    assert client.get("/reviews/featured").status_code == 200
+    # Admin-only data stays private.
+    assert client.get("/customers").status_code == 401
+    assert client.get("/settings").status_code == 401
+
+
+def test_contact_form_notifies_admins(client, admin):
+    response = client.post("/contact", json={"name": "Visitor", "message": "Do you do bridal trials?"})
+    assert response.status_code == 422  # needs a phone or email
+    response = client.post("/contact", json={"name": "Visitor", "phone": "9800001111", "subject": "Bridal",
+                                             "message": "Do you do bridal trials?"})
+    assert response.status_code == 201
+    titles = [n["title"] for n in client.get("/notifications", headers=admin).json()]
+    assert "New enquiry: Bridal" in titles
+
+
+def test_push_devices(client, monkeypatch):
+    from app import push
+    from app.notify import notify_user
+
+    user, headers = register(client, "Puja Yadav", "puja.push@example.com", "9812000017")
+    token = "ExponentPushToken[test-device-1]"
+    assert client.post("/notifications/devices", json={"token": token, "platform": "android", "offerAlerts": False},
+                       headers=headers).status_code == 204
+
+    sent: list[dict] = []
+    monkeypatch.setattr(push, "_post", lambda messages: sent.extend(messages) or [])
+    push._deliver([
+        {"user_id": user["id"], "type": "payment", "title": "Payment received", "body": "Thanks", "data": {}},
+        {"user_id": user["id"], "type": "promotion", "title": "Offer", "body": "20% off", "data": {}},
+    ])
+    assert [(m["to"], m["title"]) for m in sent] == [(token, "Payment received")]  # offer alerts are off
+
+    # Queued on the session, dropped if the change is rolled back.
+    with SessionLocal() as db:
+        notify_user(db, user["id"], "system", "Hello", "There")
+        assert len(db.info["pushes"]) == 1
+        db.rollback()
+        assert "pushes" not in db.info
+
+    assert client.post("/notifications/devices/remove", json={"token": token}, headers=headers).status_code == 204
+    sent.clear()
+    push._deliver([{"user_id": user["id"], "type": "payment", "title": "Again", "body": "", "data": {}}])
+    assert sent == []

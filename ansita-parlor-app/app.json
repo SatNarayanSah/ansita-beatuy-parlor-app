@@ -43,7 +43,15 @@
           "backgroundColor": "#FBF8F3"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#A44A67",
+          "defaultChannel": "default"
+        }
+      ]
     ]
   }
 }

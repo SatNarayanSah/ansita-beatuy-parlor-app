@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..errors import ApiError, ensure_found
-from ..models import Notification, User
+from ..models import Notification, PushDevice, User
+from ..schemas import PushDeviceInput, PushDeviceRemove
 from ..security import get_current_user
 from ..serializers import to_dict, to_list
+from ..utils import generate_id
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -31,6 +33,28 @@ def unread_count(user: User = Depends(get_current_user), db: Session = Depends(g
     stmt = select(func.count()).select_from(Notification).where(
         Notification.user_id == user.id, Notification.is_read.is_(False))
     return {"count": db.scalar(stmt) or 0}
+
+
+@router.post("/devices", status_code=204)
+def register_device(body: PushDeviceInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Called after sign-in. A phone that changes hands moves to the new user."""
+    device = db.scalar(select(PushDevice).where(PushDevice.token == body.token))
+    if device is None:
+        device = PushDevice(id=generate_id("dev"), token=body.token)
+        db.add(device)
+    device.user_id = user.id
+    device.platform = body.platform
+    device.offer_alerts = body.offer_alerts
+    db.commit()
+    return Response(status_code=204)
+
+
+@router.post("/devices/remove", status_code=204)
+def remove_device(body: PushDeviceRemove, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Called on sign-out, so the phone stops getting this user's notifications."""
+    db.execute(delete(PushDevice).where(PushDevice.token == body.token, PushDevice.user_id == user.id))
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.post("/read-all", status_code=204)

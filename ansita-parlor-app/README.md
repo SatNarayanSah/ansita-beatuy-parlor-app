@@ -17,6 +17,7 @@ All data lives on the **Python backend** in [`../backend`](../backend/README.md)
 - [Running on a phone with Expo Go](#running-on-a-phone-with-expo-go)
 - [Building an Android APK for the client (EAS)](#building-an-android-apk-for-the-client-eas)
 - [Connecting to the backend](#connecting-to-the-backend)
+- [Phone notifications](#phone-notifications)
 - [Scripts](#scripts)
 - [Folder structure](#folder-structure)
 - [How the app is put together](#how-the-app-is-put-together)
@@ -141,6 +142,33 @@ Builds made with EAS take the server address from `EXPO_PUBLIC_API_URL` in [`eas
 
 ---
 
+## Phone notifications
+
+Notifications appear in the phone's notification bar, with sound, the app-icon badge and tap-to-open (a booking opens its detail screen; customers land on their bookings).
+
+| What | Expo Go | Installed APK (EAS) |
+| --- | --- | --- |
+| Booking updates, confirmations, payments, cancellations | Only while the app is open (picked up by the one-minute sync) | **Always**, even when the app is closed (push from the server) |
+| Appointment reminders (Preferences → 1 hour / 1 day / both) | Yes | Yes (scheduled on the phone, work offline) |
+
+The app asks for permission right after sign-in. **Settings → Phone notifications** shows whether they're on and turns them on (or opens the phone's settings if they were refused). Customers can switch off offer alerts in Preferences.
+
+### One-time setup for push (Android)
+
+Push needs an EAS project and Firebase Cloud Messaging. Everything is free.
+
+1. **EAS project:** `npx eas-cli@latest login`, then `npx eas-cli@latest init` in this folder. This adds `extra.eas.projectId` to `app.json`; without it the app quietly falls back to the Expo Go behaviour above.
+2. **Firebase:** in the [Firebase console](https://console.firebase.google.com) create a project → *Add app* → Android, package name `com.ansita.parlor`. Download **google-services.json** into this folder (next to `app.json`) and add this line under `"android"` in `app.json`:
+   ```json
+   "googleServicesFile": "./google-services.json",
+   ```
+3. **Send key for Expo:** Firebase → Project settings → *Service accounts* → **Generate new private key** (a JSON file; keep it private, never commit it). Then run `npx eas-cli@latest credentials` → Android → *production* → **Google Service Account** → *Manage your Google Service Account Key for Push Notifications (FCM V1)* → upload that JSON.
+4. **Build and install:** `npx eas-cli@latest build --platform android --profile preview`, install the APK, sign in and allow notifications.
+
+The backend needs no setup: it sends through Expo's push service (`PUSH_ENABLED=true` by default). Phones that uninstall the app are removed automatically. iOS push additionally needs a paid Apple Developer account.
+
+---
+
 ## Scripts
 
 | Command | What it does |
@@ -221,7 +249,7 @@ Screen ──calls──▶ services/*Service.ts ──HTTP──▶ Python back
 ## Known limitations
 
 - **No real payments**: eSewa/Khalti/Fonepay/card are labels; admins record payments manually.
-- **No push notifications, email or SMS**: notifications are in-app (refreshed every minute). Password-reset codes are shown on screen until the server sends them (`EXPOSE_RESET_CODE`).
+- **No email or SMS**. Push notifications need the one-time setup in [Phone notifications](#phone-notifications); until then they show in the notification bar only while the app is open. Password-reset codes are shown on screen until the server sends them (`EXPOSE_RESET_CODE`).
 - **Photos** (avatars, service images) are stored as the phone's local file path, so they only show on that phone until uploads to cloud storage are added.
-- **Not implemented yet**: add to calendar, CSV export, certificate download/share, appointment reminders.
+- **Not implemented yet**: add to calendar, CSV export, certificate download/share.
 - Portrait only; Nepali covers the main labels only and needs a native-speaker review.

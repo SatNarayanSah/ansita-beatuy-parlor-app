@@ -64,6 +64,8 @@ Render's free plan sleeps after about 15 minutes without traffic, so the first r
 
 All endpoints except auth and public catalogue reads need `Authorization: Bearer <token>`. Login and register return `{ user, token }`.
 
+**Public (no token), for the website:** `GET /categories`, `GET /services`, `GET /courses`, `GET /offers` and `GET /staff`. Visitors see only what a customer would: active items and offers that are live today. Staff phone and email are blanked for visitors. Also public: `GET /settings/public` (profile, holidays, `loyalty.enabled`), `GET /reviews/featured?limit=6`, `GET /staff/{id}/reviews`, `GET /courses/{id}/batches/availability`, and `POST /contact` `{name, phone?, email?, subject?, message}`. A contact request needs a phone or an email and becomes an admin notification.
+
 | App service function | Endpoint |
 | --- | --- |
 | `authService.login` / `register` | `POST /auth/login`, `POST /auth/register` |

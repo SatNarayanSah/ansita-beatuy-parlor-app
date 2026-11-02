@@ -26,6 +26,19 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="ignore")
 
 
+# ---------- Push devices ----------
+
+
+class PushDeviceInput(CamelModel):
+    token: str = Field(min_length=10, max_length=255)
+    platform: Literal["android", "ios"] = "android"
+    offer_alerts: bool = True
+
+
+class PushDeviceRemove(CamelModel):
+    token: str = Field(min_length=10, max_length=255)
+
+
 # ---------- Auth ----------
 
 

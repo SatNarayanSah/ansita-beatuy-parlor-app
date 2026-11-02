@@ -9,7 +9,7 @@ from ..errors import ApiError, ensure_found
 from ..models import Service, ServiceCategory, User
 from ..queries import upcoming_appointments
 from ..schemas import ActiveInput, CategoryInput, CategoryUpdate, ServiceInput, ServiceUpdate
-from ..security import get_current_user, require_admin
+from ..security import get_optional_user, require_admin
 from ..serializers import apply, changes, to_dict, to_list
 from ..utils import generate_id, today_iso
 
@@ -78,12 +78,12 @@ def list_services(
     query: str = "",
     category_id: str | None = Query(None, alias="categoryId"),
     active_only: bool = Query(False, alias="activeOnly"),
-    user: User = Depends(get_current_user),
+    user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
-    """Customers only ever see active services."""
+    """Public. Visitors and customers only ever see active services."""
     stmt = select(Service)
-    if user.role == "customer" or active_only:
+    if user is None or user.role == "customer" or active_only:
         stmt = stmt.where(Service.is_active.is_(True))
     if category_id:
         stmt = stmt.where(Service.category_id == category_id)

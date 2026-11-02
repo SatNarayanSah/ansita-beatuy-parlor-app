@@ -62,6 +62,11 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | D9 | Language → नेपाली, then back. | Tab labels, titles and main buttons switch language; content stays English. | ☐ |
 | D10 | Help & contact: Call, WhatsApp, Get directions, FAQ. | Opens dialer / WhatsApp / maps (or a toast if unavailable); FAQ expands. | ☐ |
 | D11 | Notifications: open one unread, then **Mark all read**. | Tapping opens the related screen and marks it read; badge counts drop to 0. | ☐ |
+| D12 | Fresh sign-in on a phone. | The phone asks to allow notifications once; Settings → **Phone notifications** shows On (or **Turn on** if refused). | ☐ |
+| D13 | Installed APK, app closed: on another phone the admin confirms this customer's booking. | A notification appears in the notification bar with sound; tapping it opens the app on My appointments and marks it read. | ☐ |
+| D14 | Expo Go, app open: same as D13. | The notification appears in the bar within a minute. | ☐ |
+| D15 | Preferences → reminders **1 hour**; book a slot about 70 minutes from now and get it confirmed. | “See you in an hour ✨” arrives about 10 minutes later, even with the phone offline. | ☐ |
+| D16 | Sign out on the phone, then trigger another notification for that account. | Nothing arrives on the signed-out phone; scheduled reminders and the icon badge are cleared. | ☐ |
 
 ## 5. Admin – dashboard & appointments
 

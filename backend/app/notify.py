@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from .business import alert_enabled, get_business
 from .models import Notification, User
+from .push import queue_push
 from .utils import generate_id
 
 
@@ -15,9 +16,11 @@ def link(kind: str, id_: str) -> dict[str, Any]:
 
 
 def notify_user(db: Session, user_id: str, type_: str, title: str, message: str, link_: dict | None = None) -> None:
+    """Saved for the in-app list, and pushed to the user's phones once the change is committed."""
+    id_ = generate_id("ntf")
     db.add(
         Notification(
-            id=generate_id("ntf"),
+            id=id_,
             user_id=user_id,
             type=type_,
             title=title,
@@ -26,6 +29,7 @@ def notify_user(db: Session, user_id: str, type_: str, title: str, message: str,
             link=link_,
         )
     )
+    queue_push(db, user_id, type_, title, message, {"notificationId": id_, "type": type_, "link": link_})
 
 
 def notify_customer(db: Session, customer_id: str, type_: str, title: str, message: str, link_: dict | None = None) -> None:

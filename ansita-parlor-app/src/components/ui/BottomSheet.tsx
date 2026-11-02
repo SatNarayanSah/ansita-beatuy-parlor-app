@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +12,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTim
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { useTheme } from '@/theme';
 
 import { IconButton } from './IconButton';
@@ -56,6 +55,8 @@ export const BottomSheet = ({
   const { colors, radius, spacing, shadows } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
+  // A Modal isn't resized for the keyboard on Android (edge-to-edge), so the sheet lifts itself.
+  const keyboardHeight = useKeyboardHeight();
   const [mounted, setMounted] = useState(visible);
   const translateY = useSharedValue(screenHeight);
   const backdrop = useSharedValue(0);
@@ -125,7 +126,7 @@ export const BottomSheet = ({
       navigationBarTranslucent
       onRequestClose={dismissible ? onClose : undefined}
     >
-      <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.root, { paddingBottom: keyboardHeight }]}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }, backdropStyle]}>
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -141,11 +142,13 @@ export const BottomSheet = ({
             styles.sheet,
             shadows.lg,
             {
-              maxHeight: screenHeight * maxHeightRatio,
+              // Above the keyboard it may only use the space left below the status bar.
+              maxHeight: Math.min(screenHeight * maxHeightRatio, screenHeight - keyboardHeight - insets.top - spacing.lg),
               backgroundColor: colors.surface,
               borderTopLeftRadius: radius.xl,
               borderTopRightRadius: radius.xl,
-              paddingBottom: insets.bottom,
+              // The keyboard already covers the home indicator / navigation bar.
+              paddingBottom: keyboardHeight > 0 ? 0 : insets.bottom,
             },
             sheetStyle,
           ]}
@@ -184,7 +187,7 @@ export const BottomSheet = ({
             </View>
           ) : null}
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };

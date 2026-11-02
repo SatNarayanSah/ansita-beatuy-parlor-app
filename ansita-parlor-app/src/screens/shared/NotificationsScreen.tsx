@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Icon, ListScreen, SectionHeader, SkeletonListItem, Text, useToast, type IconName } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
+import { openNotificationLink } from '@/navigation/navigationRef';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { getErrorMessage, notificationService } from '@/services';
 import { selectCurrentUser, useAuthStore, useNotificationStore } from '@/store';
@@ -111,39 +112,7 @@ export const NotificationsScreen = ({ navigation }: Props) => {
 
   const open = (notification: Notification): void => {
     if (!notification.isRead) void notificationService.markAsRead(notification.id).catch(() => undefined);
-    const link = notification.link;
-    if (!link) return;
-    if (user?.role === 'admin') {
-      switch (link.kind) {
-        case 'appointment':
-          navigation.navigate('AppointmentDetail', { appointmentId: link.id });
-          return;
-        case 'enrollment':
-          navigation.navigate('EnrollmentDetail', { enrollmentId: link.id });
-          return;
-        case 'customer':
-          navigation.navigate('CustomerDetail', { customerId: link.id });
-          return;
-        case 'course':
-          navigation.navigate('CourseManage', { courseId: link.id });
-          return;
-        case 'offer':
-          return;
-      }
-    }
-    switch (link.kind) {
-      case 'appointment':
-        navigation.navigate('CustomerTabs', { screen: 'MyAppointments' });
-        return;
-      case 'offer':
-        navigation.navigate('CustomerTabs', { screen: 'Home' });
-        return;
-      // Courses are managed by the parlour; customers have no course screens.
-      case 'enrollment':
-      case 'course':
-      case 'customer':
-        return;
-    }
+    if (user) openNotificationLink(user.role, notification.link);
   };
 
   const renderItem = (row: Row) =>

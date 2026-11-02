@@ -34,6 +34,18 @@ class User(EntityMixin, Base):
     token_version: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class PushDevice(EntityMixin, Base):
+    """A phone that receives push notifications for the signed-in user."""
+
+    __tablename__ = "push_devices"
+
+    user_id: Mapped[str] = mapped_column(String(64), index=True)
+    # Expo push token, e.g. "ExponentPushToken[xxxx]". One row per phone.
+    token: Mapped[str] = mapped_column(String(255), unique=True)
+    platform: Mapped[str] = mapped_column(String(16), default="android")
+    offer_alerts: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class PasswordReset(Base):
     __tablename__ = "password_resets"
 

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 
 import { useLiveSync } from '@/hooks/useLiveSync';
+import { usePhoneNotifications } from '@/hooks/usePhoneNotifications';
 
 import { useT } from '@/i18n';
 import { AppointmentDetailScreen } from '@/screens/admin/AppointmentDetailScreen';
@@ -43,6 +44,7 @@ import { toNavigationTheme, useTheme } from '@/theme';
 
 import { AdminTabs } from './AdminTabs';
 import { CustomerTabs } from './CustomerTabs';
+import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -64,9 +66,11 @@ export const RootNavigator = () => {
   const hasSeenOnboarding = useSettingsStore((state) => state.hasSeenOnboarding);
   // Pull new bookings and notifications made on other devices.
   useLiveSync(user !== null);
+  // Push registration, reminders, app-icon badge and notification taps.
+  usePhoneNotifications(user);
 
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShadowVisible: false,

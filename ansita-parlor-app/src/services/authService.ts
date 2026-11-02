@@ -4,6 +4,7 @@ import { useCustomerStore } from '@/store/customerStore';
 import type { Customer, ImageUri, User } from '@/types';
 
 import { api } from './client';
+import { unregisterPhoneNotifications } from './phoneNotifications';
 import { loadSessionData, refreshNotificationsSoon } from './sync';
 
 export interface LoginInput {
@@ -76,6 +77,8 @@ export const authService = {
 
   /** Always succeeds locally; the token is simply forgotten. */
   logout: async (): Promise<void> => {
+    // While still signed in, so the server can drop this phone from the account.
+    await unregisterPhoneNotifications().catch(() => undefined);
     await api<null>('POST', '/auth/logout').catch(() => undefined);
     useAuthStore.getState().clearSession();
     resetCacheStores();

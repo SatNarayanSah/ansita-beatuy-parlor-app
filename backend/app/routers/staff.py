@@ -8,7 +8,7 @@ from ..models import Appointment, Course, Review, Staff, User
 from .reviews import with_names
 from ..queries import upcoming_appointments
 from ..schemas import ActiveInput, StaffInput, StaffUpdate
-from ..security import require_admin
+from ..security import get_optional_user, require_admin
 from ..serializers import apply, changes, to_dict, to_list
 from ..utils import (
     format_enum_label,
@@ -54,15 +54,20 @@ def _bookings_outside(db: Session, staff_id: str, hours: list[dict]) -> list[App
 
 
 @router.get("")
-def list_staff(query: str = "", active_only: bool = Query(False, alias="activeOnly"), db: Session = Depends(get_db)):
+def list_staff(query: str = "", active_only: bool = Query(False, alias="activeOnly"),
+               user: User | None = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Public. Visitors (not signed in) see active staff without phone or email."""
     stmt = select(Staff)
-    if active_only:
+    if active_only or user is None:
         stmt = stmt.where(Staff.is_active.is_(True))
     if query.strip():
         needle = f"%{query.strip().lower()}%"
         stmt = stmt.where(or_(func.lower(Staff.name).like(needle), Staff.phone.like(needle),
                               func.lower(Staff.email).like(needle)))
-    return to_list(list(db.scalars(stmt.order_by(Staff.name))))
+    rows = to_list(list(db.scalars(stmt.order_by(Staff.name))))
+    if user is None:
+        rows = [{**row, "phone": "", "email": ""} for row in rows]
+    return rows
 
 
 @router.get("/{id_}")

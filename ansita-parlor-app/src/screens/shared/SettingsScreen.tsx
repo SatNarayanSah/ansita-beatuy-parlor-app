@@ -1,10 +1,17 @@
-import { StyleSheet, Switch, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AppState, Linking, StyleSheet, Switch, View } from 'react-native';
 
 import { SignOutItem } from '@/components/layout/SignOutItem';
 import { Card, Divider, ListItem, Screen, SectionHeader, Text, useToast } from '@/components/ui';
 import { useApiConfig } from '@/hooks/useApiConfig';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { API_URL } from '@/services';
+import {
+  getNotificationPermission,
+  registerForPhoneNotifications,
+  requestNotificationPermission,
+  type NotificationPermission,
+} from '@/services/phoneNotifications';
 import { selectCurrentUser, useAuthStore, useSettingsStore } from '@/store';
 import { useTheme } from '@/theme';
 
@@ -19,12 +26,48 @@ export const SettingsScreen = ({ navigation }: Props) => {
   const toast = useToast();
   const user = useAuthStore(selectCurrentUser);
   const setHasSeenOnboarding = useSettingsStore((state) => state.setHasSeenOnboarding);
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
+
+  // Re-checked on return from the phone's settings, where the user may have changed it.
+  useEffect(() => {
+    const check = (): void => {
+      getNotificationPermission().then(setPermission).catch(() => undefined);
+    };
+    check();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') check();
+    });
+    return () => subscription.remove();
+  }, []);
+
+  const turnOnNotifications = async (): Promise<void> => {
+    const result = await requestNotificationPermission();
+    setPermission(result);
+    if (result === 'granted') {
+      registerForPhoneNotifications().catch(() => undefined);
+      toast.success('Notifications are on');
+    }
+  };
 
   return (
     <Screen gap="xl">
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Preferences" compact />
         <Card style={{ gap: spacing.md }}>
+          <ListItem
+            title="Phone notifications"
+            subtitle={
+              permission === 'granted'
+                ? 'On · bookings, payments and reminders in your notification bar'
+                : 'Off · tap to get booking updates on this phone'
+            }
+            leftIcon={permission === 'granted' ? 'notifications-outline' : 'notifications-off-outline'}
+            leftIconTone={permission === 'granted' ? 'success' : 'warning'}
+            rightText={permission === 'granted' ? 'Manage' : 'Turn on'}
+            compact
+            // Once on, sounds and categories are managed in the phone's own settings.
+            onPress={() => (permission === 'granted' ? void Linking.openSettings() : void turnOnNotifications())}
+          />
           <ListItem
             title="Haptic feedback"
             subtitle="Gentle vibrations on taps and confirmations"

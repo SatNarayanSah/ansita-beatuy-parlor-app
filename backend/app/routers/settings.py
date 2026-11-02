@@ -21,6 +21,15 @@ def _patch(model) -> dict:
     return {k: v for k, v in model.model_dump(by_alias=True, exclude_unset=True).items() if v is not None}
 
 
+@router.get("/public")
+def get_public_settings(db: Session = Depends(get_db)):
+    """What the public website needs: contact details, opening hours, holidays and whether loyalty is on."""
+    row = get_business(db)
+    db.commit()
+    return {"profile": row.profile, "holidays": row.holidays,
+            "loyalty": {"enabled": row.loyalty.get("enabled", False)}}
+
+
 @router.get("")
 def get_settings(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
     row = get_business(db)

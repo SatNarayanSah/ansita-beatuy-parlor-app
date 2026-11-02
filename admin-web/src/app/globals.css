@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Exact semantic tokens of the mobile app (ansita-parlor-app/src/theme/colors.ts). */
+:root {
+  --bg: #fbf8f3; /* background (ivory) */
+  --bg-deep: #f0e9e4; /* skeleton */
+  --surface: #ffffff;
+  --surface-alt: #f4ede6; /* surfaceAlt (ivoryDeep) */
+  --border: #ece3dd;
+  --border-strong: #d9ccc4;
+  --text: #2b2528;
+  --text-2: #5c5357;
+  --muted: #726a6e;
+  --primary: #a44a67;
+  --primary-dark: #84374f;
+  --primary-soft: #f8e1e8; /* rose100 */
+  --plum: #5a2d52; /* accent */
+  --plum-soft: #efe3ec;
+  --gold: #b08b3e; /* highlight */
+  --gold-soft: #f7edd8;
+  --gold-text: #84682f;
+  --on-primary: #ffffff;
+  --success: #287b55;
+  --success-soft: #e3f3ea;
+  --warning: #966319;
+  --warning-soft: #fbf0da;
+  --danger: #b93f36;
+  --danger-soft: #fbe4e1;
+  --info: #3768b5;
+  --info-soft: #e3ecf8;
+  --neutral: #6b6166;
+  --neutral-soft: #efeae7;
+  --ring: rgba(164, 74, 103, 0.3);
+  --shadow: 53 34 47; /* plum900 */
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #161114;
+  --bg-deep: #2a2226;
+  --surface: #201a1d;
+  --surface-alt: #2a2226;
+  --border: #3a3035;
+  --border-strong: #4e4248;
+  --text: #f4ecef;
+  --text-2: #c2b5bb;
+  --muted: #94888d;
+  --primary: #e58faa;
+  --primary-dark: #efbfcd;
+  --primary-soft: #3f2430;
+  --plum: #c79bc0;
+  --plum-soft: #35222f;
+  --gold: #e0bc6e;
+  --gold-soft: #3a2f1c;
+  --gold-text: #e0bc6e;
+  --on-primary: #2a1520;
+  --success: #5cc28f;
+  --success-soft: #1d3128;
+  --warning: #e3a94f;
+  --warning-soft: #3a2d18;
+  --danger: #f07a70;
+  --danger-soft: #3d1f1d;
+  --info: #7fa6e8;
+  --info-soft: #1d2a3e;
+  --neutral: #b3a7ac;
+  --neutral-soft: #2f282b;
+  --ring: rgba(229, 143, 170, 0.35);
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-deep: var(--bg-deep);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-soft: var(--primary-soft);
+  --color-plum: var(--plum);
+  --color-plum-soft: var(--plum-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-text: var(--gold-text);
+  --color-on-primary: var(--on-primary);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  /* Headings use Poppins too (the app has no second typeface). */
+  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --shadow-soft: 0 1px 2px rgb(var(--shadow) / 0.04), 0 8px 24px -12px rgb(var(--shadow) / 0.12);
+  --shadow-lift: 0 2px 4px rgb(var(--shadow) / 0.05), 0 18px 40px -16px rgb(var(--shadow) / 0.22);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float: float 14s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
+
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(40px, -30px) scale(1.08); }
+    66% { transform: translate(-30px, 25px) scale(0.95); }
+  }
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+@layer base {
+  /* Grid items default to min-width:auto, so one long line (a course title next to a price,
+     a table, a code chip) widens the whole column past its container and gets clipped.
+     Let them shrink; truncate/wrap utilities then work as intended. Utilities still win. */
+  .grid > * {
+    min-width: 0;
+  }
+  img,
+  svg,
+  video {
+    max-width: 100%;
+  }
+}
+
+/* Headings: Poppins with the app's tight tracking (display/h1 letterSpacing -0.3). */
+.font-display {
+  letter-spacing: -0.01em;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-deep) 25%, var(--border-strong) 37%, var(--bg-deep) 63%);
+  background-size: 400% 100%;
+  animation: var(--animate-shimmer);
+}
+
+.text-gradient {
+  background: linear-gradient(120deg, var(--primary) 0%, var(--plum) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

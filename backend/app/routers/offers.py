@@ -8,7 +8,7 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Offer, User
 from ..schemas import ActiveInput, OfferInput, OfferUpdate
-from ..security import get_current_user, require_admin
+from ..security import get_optional_user, require_admin
 from ..serializers import apply, changes, to_dict, to_list
 from ..utils import generate_id, is_valid_iso_date, today_iso
 
@@ -44,8 +44,9 @@ def _validate(db: Session, merged: dict, current_id: str | None = None) -> None:
 
 
 @router.get("")
-def list_offers(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if user.role == "customer":
+def list_offers(user: User | None = Depends(get_optional_user), db: Session = Depends(get_db)):
+    """Public. Visitors and customers see only offers that are live today."""
+    if user is None or user.role == "customer":
         today = today_iso()
         stmt = (select(Offer).where(Offer.is_active.is_(True), Offer.valid_from <= today, Offer.valid_to >= today)
                 .order_by(Offer.valid_to))
