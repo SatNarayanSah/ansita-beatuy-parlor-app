@@ -18,7 +18,7 @@ import {
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CategoryIcon, OfferCoupon, ServiceCard, StaffCard } from "@/components/site/cards";
+import { CategoryIcon, OfferBanner, ServiceCard, StaffCard } from "@/components/site/cards";
 import { Container, openStatus, Reveal, SectionHeading } from "@/components/site/section";
 import { AnimatedNumber, Avatar, Badge, Button, Skeleton, Stars } from "@/components/ui";
 import { label, money, time12 } from "@/lib/format";
@@ -333,7 +333,7 @@ function OffersStrip() {
   const offers = useOffers();
   const categories = useCategories();
   const categoryMap = useMemo(() => new Map((categories.data ?? []).map((c) => [c.id, c])), [categories.data]);
-  const list = (offers.data ?? []).slice(0, 2);
+  const list = (offers.data ?? []).slice(0, 3);
   if (!list.length) return null;
   return (
     <section className="py-16">
@@ -350,9 +350,12 @@ function OffersStrip() {
             </Link>
           }
         />
+        {/* The newest offer as a wide hero, the next two side by side. */}
         <div className="grid gap-5 lg:grid-cols-2">
           {list.map((offer, i) => (
-            <OfferCoupon key={offer.id} offer={offer} categories={categoryMap} index={i} />
+            <div key={offer.id} className={i === 0 ? "lg:col-span-2" : undefined}>
+              <OfferBanner offer={offer} categories={categoryMap} index={i} featured={i === 0} />
+            </div>
           ))}
         </div>
       </Container>

@@ -38,7 +38,7 @@ export const CategoryIcon = ({ category, size = 48 }: { category: ServiceCategor
 };
 
 /** Uploaded pictures only; anything else (old device paths) falls back to the icon. */
-const isWebImage = (uri: string | null | undefined): uri is string => typeof uri === 'string' && /^https?:\/\//.test(uri);
+export const isWebImage = (uri: string | null | undefined): uri is string => typeof uri === 'string' && /^https?:\/\//.test(uri);
 
 /** The service's photo when it has one, otherwise its category icon. */
 export const ServiceThumb = ({ service, category, size = 48 }: { service: Service; category: ServiceCategory | undefined; size?: number }) => {

@@ -5,7 +5,7 @@ import { api, withUploadedImage } from './client';
 
 export type ServiceInput = Pick<
   Service,
-  'name' | 'categoryId' | 'duration' | 'price' | 'description' | 'image' | 'isActive'
+  'name' | 'categoryId' | 'duration' | 'price' | 'description' | 'image' | 'benefits' | 'isActive'
 >;
 
 export type CategoryInput = Pick<ServiceCategory, 'name' | 'icon' | 'color'>;

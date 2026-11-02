@@ -1,38 +1,46 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Switch, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { StyleSheet, Switch, View } from 'react-native';
 import { z } from 'zod';
 
 import { ChipSelect } from '@/components/admin/Pickers';
 import { FormInput } from '@/components/form/FormFields';
 import { ImagePickerField } from '@/components/form/ImagePickerField';
-import { Button, Card, ConfirmDialog, ListItem, QueryState, Screen, SkeletonCard, Text, useToast } from '@/components/ui';
+import { Button, Card, ConfirmDialog, IconButton, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { useT, type Translate } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { catalogService, getErrorMessage } from '@/services';
 import { useTheme } from '@/theme';
-import { wholeNumberText } from '@/utils/formSchemas';
+import { benefitsSchema, MAX_BENEFIT_LENGTH, MAX_BENEFITS, wholeNumberText } from '@/utils/formSchemas';
 import { durationSchema, priceSchema } from '@/utils/validators';
 
 type Props = RootStackScreenProps<'ServiceForm'>;
 
-const schema = z.object({
-  name: z.string().trim().min(2, { error: 'Enter a service name' }).max(60),
-  categoryId: z.string().min(1, { error: 'Choose a category' }),
-  duration: wholeNumberText(durationSchema, 'the duration'),
-  price: wholeNumberText(priceSchema, 'the price'),
-  description: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
-  isActive: z.boolean(),
-  image: z.string().nullable(),
-});
+const makeSchema = (t: Translate) =>
+  z.object({
+    name: z.string().trim().min(2, { error: 'Enter a service name' }).max(60),
+    categoryId: z.string().min(1, { error: 'Choose a category' }),
+    duration: wholeNumberText(durationSchema, 'the duration'),
+    price: wholeNumberText(priceSchema, 'the price'),
+    description: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
+    benefits: benefitsSchema({ tooLong: t('admin.benefitTooLong'), tooMany: t('admin.benefitsMax'), duplicate: t('admin.benefitDuplicate') }),
+    isActive: z.boolean(),
+    image: z.string().nullable(),
+  });
 
-type Values = z.input<typeof schema>;
+type Schema = ReturnType<typeof makeSchema>;
+type Values = z.input<Schema>;
+
+const toBenefitFields = (benefits: readonly string[] | undefined): Values['benefits'] => (benefits ?? []).map((text) => ({ text }));
 
 export const ServiceFormScreen = ({ navigation, route }: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
+  const t = useT();
+  const schema = useMemo(() => makeSchema(t), [t]);
   const serviceId = route.params?.serviceId;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -42,16 +50,19 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
     return { categories, service };
   }, [serviceId]);
 
-  const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<typeof schema>>({
+  const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<Schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', categoryId: route.params?.categoryId ?? '', duration: '30', price: '', description: '', isActive: true, image: null },
+    defaultValues: { name: '', categoryId: route.params?.categoryId ?? '', duration: '30', price: '', description: '', benefits: [], isActive: true, image: null },
     mode: 'onTouched',
   });
+  const benefits = useFieldArray({ control, name: 'benefits' });
+  // The "at most 8" rule is reported on the list itself, not on a row.
+  const benefitsError = formState.errors.benefits?.root?.message ?? formState.errors.benefits?.message;
   const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   useEffect(() => {
     const s = query.data?.service;
-    if (s) reset({ name: s.name, categoryId: s.categoryId, duration: String(s.duration), price: String(s.price), description: s.description, isActive: s.isActive, image: s.image });
+    if (s) reset({ name: s.name, categoryId: s.categoryId, duration: String(s.duration), price: String(s.price), description: s.description, benefits: toBenefitFields(s.benefits), isActive: s.isActive, image: s.image });
   }, [query.data, reset]);
 
   const save = handleSubmit(async (values) => {
@@ -121,6 +132,61 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
               <FormInput control={control} name="price" label="Price (Rs.)" required keyboardType="number-pad" leftIcon="pricetag-outline" containerStyle={{ flex: 1 }} />
             </View>
             <FormInput control={control} name="description" label="Description" placeholder="What's included, who it's for…" multiline maxLength={300} showCount />
+            <View style={{ gap: spacing.sm }}>
+              <SectionHeader
+                title={t('admin.benefits')}
+                subtitle={t('admin.benefitsHint')}
+                compact
+              />
+              {benefits.fields.length === 0 ? (
+                <Card variant="outlined" padding="md">
+                  <Text variant="caption" tone="muted">
+                    {t('admin.noBenefits')}
+                  </Text>
+                </Card>
+              ) : null}
+              {benefits.fields.map((benefit, index) => {
+                const n = index + 1;
+                return (
+                  <View key={benefit.id} style={styles.benefitRow}>
+                    <FormInput
+                      control={control}
+                      name={`benefits.${index}.text`}
+                      label={t('admin.benefitN', { n })}
+                      placeholder={t('admin.benefitPlaceholder')}
+                      leftIcon="checkmark-circle-outline"
+                      maxLength={MAX_BENEFIT_LENGTH}
+                      containerStyle={styles.flex}
+                    />
+                    <View style={styles.benefitActions}>
+                      <IconButton
+                        icon="chevron-up"
+                        size={32}
+                        accessibilityLabel={t('admin.moveBenefitUp', { n })}
+                        disabled={index === 0}
+                        onPress={() => benefits.move(index, index - 1)}
+                      />
+                      <IconButton
+                        icon="chevron-down"
+                        size={32}
+                        accessibilityLabel={t('admin.moveBenefitDown', { n })}
+                        disabled={index === benefits.fields.length - 1}
+                        onPress={() => benefits.move(index, index + 1)}
+                      />
+                    </View>
+                    <IconButton icon="trash-outline" size={36} accessibilityLabel={t('admin.removeBenefit', { n })} onPress={() => benefits.remove(index)} style={styles.trash} />
+                  </View>
+                );
+              })}
+              {benefitsError ? (
+                <Text variant="caption" tone="danger">
+                  {benefitsError}
+                </Text>
+              ) : null}
+              {benefits.fields.length < MAX_BENEFITS ? (
+                <Button title={t('admin.addBenefit')} variant="outline" size="sm" leftIcon="add" onPress={() => benefits.append({ text: '' })} />
+              ) : null}
+            </View>
             <Card padding="sm">
               <Controller
                 control={control}
@@ -157,3 +223,10 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
     </Screen>
   );
 };
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  benefitRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
+  benefitActions: { flexDirection: 'row', paddingBottom: 6 },
+  trash: { marginBottom: 4 },
+});

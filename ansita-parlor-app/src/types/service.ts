@@ -17,5 +17,7 @@ export interface Service extends BaseEntity {
   price: number;
   description: string;
   image: ImageUri | null;
+  /** Short selling points (0-8, each up to 120 characters), trimmed and de-duplicated by the server. */
+  benefits: string[];
   isActive: boolean;
 }

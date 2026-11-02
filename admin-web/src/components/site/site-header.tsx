@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/
 import { CalendarPlus, LayoutDashboard, LogIn, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui";
@@ -177,8 +177,46 @@ function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose: () =>
   );
 }
 
+function DesktopLinks({ pathname }: { pathname: string | null }) {
+  return (
+    <nav className="ml-6 hidden items-center gap-1 lg:flex">
+      {SITE_LINKS.map((link) => {
+        const active = pathname !== null && isActive(pathname, link.href);
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={cn("relative px-3 py-2 text-sm font-medium transition-colors", active ? "text-primary-dark" : "text-ink-2 hover:text-ink")}
+          >
+            {link.label}
+            {active && (
+              <motion.span
+                layoutId="site-nav-underline"
+                className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-primary to-gold"
+                transition={{ type: "spring", stiffness: 420, damping: 34 }}
+              />
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+/*
+ * The current path is request-time data on pages with an id in the URL (e.g. /services/<id>),
+ * so only these two small pieces read it, each inside its own Suspense boundary. The rest of
+ * the header still prerenders; the fallback is the same links without the active underline.
+ */
+function ActiveDesktopLinks() {
+  return <DesktopLinks pathname={usePathname()} />;
+}
+
+function MobileMenuAtPath(props: { open: boolean; onClose: () => void }) {
+  return <MobileMenu {...props} pathname={usePathname()} />;
+}
+
 export function SiteHeader() {
-  const pathname = usePathname();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -203,27 +241,9 @@ export function SiteHeader() {
       <div className={cn("mx-auto flex max-w-7xl items-center gap-2 px-4 sm:gap-4 transition-[height] duration-300 sm:px-6", scrolled ? "h-16" : "h-20")}>
         <SiteLogo />
 
-        <nav className="ml-6 hidden items-center gap-1 lg:flex">
-          {SITE_LINKS.map((link) => {
-            const active = isActive(pathname, link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn("relative px-3 py-2 text-sm font-medium transition-colors", active ? "text-primary-dark" : "text-ink-2 hover:text-ink")}
-              >
-                {link.label}
-                {active && (
-                  <motion.span
-                    layoutId="site-nav-underline"
-                    className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-to-r from-primary to-gold"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        <Suspense fallback={<DesktopLinks pathname={null} />}>
+          <ActiveDesktopLinks />
+        </Suspense>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <ThemeButton />
@@ -244,7 +264,9 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <MobileMenu open={open} onClose={() => setOpen(false)} pathname={pathname} />
+      <Suspense fallback={null}>
+        <MobileMenuAtPath open={open} onClose={() => setOpen(false)} />
+      </Suspense>
     </motion.header>
   );
 }

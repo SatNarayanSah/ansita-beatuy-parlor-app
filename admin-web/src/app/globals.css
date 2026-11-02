@@ -113,6 +113,10 @@
     from { background-position: -200% 0; }
     to { background-position: 200% 0; }
   }
+  @keyframes shine {
+    0%, 60% { transform: translateX(0) skewX(-12deg); }
+    100% { transform: translateX(400%) skewX(-12deg); }
+  }
   @keyframes float {
     0%, 100% { transform: translate(0, 0) scale(1); }
     33% { transform: translate(40px, -30px) scale(1.08); }

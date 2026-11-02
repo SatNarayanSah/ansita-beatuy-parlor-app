@@ -31,6 +31,38 @@ export const optionalWholeNumberText = (label: string, max: number) =>
 const time = z.string().refine(isValidTime, { error: 'Choose a valid time' });
 const endsAfter = <T extends { start: string; end: string }>(value: T) => timeToMinutes(value.end) > timeToMinutes(value.start);
 
+// ---------- Service benefits ----------
+
+/** Same limits as the server (`_clean_benefits` in backend/app/schemas.py). */
+export const MAX_BENEFITS = 8;
+export const MAX_BENEFIT_LENGTH = 120;
+
+/** Collapses runs of whitespace, as the server does. */
+const cleanBenefit = (text: string): string => text.split(/\s+/).filter(Boolean).join(' ');
+
+/**
+ * Benefit rows as `{ text }` objects (react-hook-form field arrays need objects).
+ * Blank rows are dropped; the output is the cleaned `string[]` the API takes.
+ */
+export const benefitsSchema = (messages: { tooLong: string; tooMany: string; duplicate: string }) =>
+  z
+    .array(z.object({ text: z.string() }))
+    .superRefine((rows, ctx) => {
+      const seen = new Set<string>();
+      let filled = 0;
+      rows.forEach((row, index) => {
+        const text = cleanBenefit(row.text);
+        if (!text) return;
+        filled += 1;
+        if (text.length > MAX_BENEFIT_LENGTH) ctx.addIssue({ code: 'custom', message: messages.tooLong, path: [index, 'text'] });
+        const key = text.toLowerCase();
+        if (seen.has(key)) ctx.addIssue({ code: 'custom', message: messages.duplicate, path: [index, 'text'] });
+        seen.add(key);
+      });
+      if (filled > MAX_BENEFITS) ctx.addIssue({ code: 'custom', message: messages.tooMany });
+    })
+    .transform((rows) => rows.map((row) => cleanBenefit(row.text)).filter(Boolean));
+
 // ---------- Category ----------
 
 export const categorySchema = z.object({

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Clock, Pencil, Plus, Scissors, Settings2, Trash2 } from "lucide-react";
+import { Check, Clock, Pencil, Plus, Scissors, Settings2, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Badge, Button, Card, ConfirmDialog, Dropdown, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Skeleton, Switch, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -176,8 +176,10 @@ function ServiceModal({
   });
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
   const [uploading, setUploading] = useState(false);
+  const [benefits, setBenefits] = useState(() => (service?.benefits ?? []).map((text) => ({ key: crypto.randomUUID(), text })));
   const body = {
     ...form,
+    benefits: benefits.map((b) => b.text.trim()).filter(Boolean),
     duration: Number(form.duration),
     price: Number(form.price),
     image: form.image.trim() || null,
@@ -221,6 +223,7 @@ function ServiceModal({
         <Field label="Description" className="sm:col-span-2">
           <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} />
         </Field>
+        <BenefitsEditor items={benefits} onChange={setBenefits} className="sm:col-span-2" />
         <ImageUpload
           label="Service image (optional)"
           value={form.image}
@@ -237,6 +240,81 @@ function ServiceModal({
         </div>
       </div>
     </Modal>
+  );
+}
+
+const MAX_BENEFITS = 8;
+
+/** Short points shown on the service's page (website and app). */
+function BenefitsEditor({
+  items,
+  onChange,
+  className,
+}: {
+  items: { key: string; text: string }[];
+  onChange: (items: { key: string; text: string }[]) => void;
+  className?: string;
+}) {
+  const update = (key: string, text: string) => onChange(items.map((b) => (b.key === key ? { ...b, text } : b)));
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium tracking-wide text-ink-2">
+          Benefits <span className="text-muted">· shown on the service page</span>
+        </span>
+        <span className="text-[11px] text-muted tabular-nums">
+          {items.length}/{MAX_BENEFITS}
+        </span>
+      </div>
+      <AnimatePresence initial={false}>
+        {items.map((b, i) => (
+          <motion.div
+            key={b.key}
+            layout
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-success-soft text-success">
+              <Check className="h-3.5 w-3.5" />
+            </span>
+            <Input
+              value={b.text}
+              maxLength={120}
+              onChange={(e) => update(b.key, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (items.length < MAX_BENEFITS) onChange([...items.slice(0, i + 1), { key: crypto.randomUUID(), text: "" }, ...items.slice(i + 1)]);
+                }
+              }}
+              placeholder="e.g. Repairs damaged, dry hair"
+              aria-label={`Benefit ${i + 1}`}
+            />
+            <button
+              type="button"
+              onClick={() => onChange(items.filter((x) => x.key !== b.key))}
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-muted transition-colors hover:bg-danger-soft hover:text-danger"
+              aria-label={`Remove benefit ${i + 1}`}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      {items.length < MAX_BENEFITS && (
+        <Button
+          size="sm"
+          variant="secondary"
+          className="w-fit"
+          icon={<Plus className="h-3.5 w-3.5" />}
+          onClick={() => onChange([...items, { key: crypto.randomUUID(), text: "" }])}
+        >
+          Add benefit
+        </Button>
+      )}
+    </div>
   );
 }
 

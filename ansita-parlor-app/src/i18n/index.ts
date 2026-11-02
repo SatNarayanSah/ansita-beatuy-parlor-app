@@ -67,6 +67,72 @@ const en = {
 
   'notifications.title': 'Notifications',
   'notifications.markAllRead': 'Mark all read',
+
+  'services.about': 'About this service',
+  'services.benefits': 'Benefits',
+  'services.offers': 'Offers you can use',
+  'services.bookThisService': 'Book this service',
+  'services.unavailable': 'Currently unavailable',
+  'services.whoCanDo': 'Who can do this',
+  'services.noReviews': 'No reviews yet',
+  'services.noReviewsHint': 'Be the first to try it and share your experience.',
+  'services.reviewCount': '{count} reviews',
+  'services.ownerReplied': 'Ansita replied',
+  'services.verifiedCustomer': 'Verified customer',
+  'offers.title': 'Offers for you',
+  'offers.percentOff': '{value}% OFF',
+  'offers.flatOff': '{amount} OFF',
+  'offers.upTo': 'Up to {amount}',
+  'offers.minSpend': 'Min. spend {amount}',
+  'offers.code': 'Code',
+  'offers.auto': 'Applied automatically',
+  'offers.endsToday': 'Ends today',
+  'offers.endsTomorrow': 'Ends tomorrow',
+  'offers.endsInDays': 'Ends in {count} days',
+  'offers.validTill': 'Valid till {date}',
+  'offers.terms': 'Terms',
+  'offers.allServices': 'On all services',
+  'offers.quoteCode': 'Quote this code at the counter when you pay.',
+  'offers.autoHint': 'The discount is applied at the counter when you pay.',
+  'offers.bookNow': 'Book now',
+  'home.subtitle': 'Ready for a little pampering?',
+  'home.countdown.now': 'Happening now',
+  'home.countdown.days': 'in {days} days {hours} h',
+  'home.countdown.day': 'in 1 day {hours} h',
+  'home.countdown.hours': 'in {hours} h {minutes} min',
+  'home.countdown.minutes': 'in {minutes} min',
+  'home.withStaff': 'with {name}',
+  'home.viewAppointment': 'View appointment',
+  'home.noUpcoming': 'No upcoming visits',
+  'home.noUpcomingHint': 'Treat yourself. Your next booking will show here.',
+  'home.firstVisit': 'Book your first visit',
+  'home.firstVisitHint': 'Pick a service, your stylist and a time that suits you. It takes a minute.',
+  'home.exploreServices': 'Explore services',
+  'home.upcomingVisits': 'Upcoming visits',
+  'home.tapToManage': 'Tap to manage',
+  'home.pointsWorth': 'Worth {amount}',
+  'home.amountDue': 'Amount due',
+  'home.dueAppointments': 'Appointments',
+  'home.dueCourses': 'Course fees',
+  'home.awaitingConfirmation': '{amount} waiting for confirmation',
+  'home.courses': 'Your courses',
+  'home.attendance': 'Attendance',
+  'home.feesPaid': 'Fees paid',
+  'home.feeProgress': '{paid} of {total}',
+  'home.noClassesYet': 'No classes marked yet',
+  'home.course': 'Course',
+  'admin.benefits': 'Benefits',
+  'admin.benefitsHint': 'Short points shown on the service page. Up to 8.',
+  'admin.addBenefit': 'Add benefit',
+  'admin.benefitN': 'Benefit {n}',
+  'admin.removeBenefit': 'Remove benefit {n}',
+  'admin.moveBenefitUp': 'Move benefit {n} up',
+  'admin.moveBenefitDown': 'Move benefit {n} down',
+  'admin.benefitTooLong': 'Keep each benefit under 120 characters',
+  'admin.benefitsMax': 'Add at most 8 benefits',
+  'admin.benefitDuplicate': 'This benefit is already listed',
+  'admin.benefitPlaceholder': 'e.g. Leaves hair soft and shiny',
+  'admin.noBenefits': 'No benefits yet. A few short points help customers decide.',
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -131,14 +197,89 @@ const ne: Record<TranslationKey, string> = {
 
   'notifications.title': 'सूचनाहरू',
   'notifications.markAllRead': 'सबै पढियो',
+
+  'services.about': 'यस सेवाको बारेमा',
+  'services.benefits': 'फाइदाहरू',
+  'services.offers': 'तपाईंले प्रयोग गर्न सक्ने अफरहरू',
+  'services.bookThisService': 'यो सेवा बुक गर्नुहोस्',
+  'services.unavailable': 'हाल उपलब्ध छैन',
+  'services.whoCanDo': 'यो सेवा कसले गर्छन्',
+  'services.noReviews': 'अहिलेसम्म कुनै समीक्षा छैन',
+  'services.noReviewsHint': 'पहिलो पटक प्रयोग गरेर आफ्नो अनुभव बाँड्नुहोस्।',
+  'services.reviewCount': '{count} समीक्षा',
+  'services.ownerReplied': 'Ansita ले जवाफ दिनुभयो',
+  'services.verifiedCustomer': 'प्रमाणित ग्राहक',
+  'offers.title': 'तपाईंका लागि अफरहरू',
+  'offers.percentOff': '{value}% छुट',
+  'offers.flatOff': '{amount} छुट',
+  'offers.upTo': 'बढीमा {amount}',
+  'offers.minSpend': 'न्यूनतम खर्च {amount}',
+  'offers.code': 'कोड',
+  'offers.auto': 'स्वतः लागू हुन्छ',
+  'offers.endsToday': 'आज सकिन्छ',
+  'offers.endsTomorrow': 'भोलि सकिन्छ',
+  'offers.endsInDays': '{count} दिनमा सकिन्छ',
+  'offers.validTill': '{date} सम्म मान्य',
+  'offers.terms': 'सर्तहरू',
+  'offers.allServices': 'सबै सेवामा',
+  'offers.quoteCode': 'भुक्तानी गर्दा काउन्टरमा यो कोड भन्नुहोस्।',
+  'offers.autoHint': 'भुक्तानी गर्दा काउन्टरमै छुट लागू हुन्छ।',
+  'offers.bookNow': 'अहिले बुक गर्नुहोस्',
+  'home.subtitle': 'अलिकति हेरचाहका लागि तयार हुनुहुन्छ?',
+  'home.countdown.now': 'अहिले चलिरहेको',
+  'home.countdown.days': '{days} दिन {hours} घण्टामा',
+  'home.countdown.day': '१ दिन {hours} घण्टामा',
+  'home.countdown.hours': '{hours} घण्टा {minutes} मिनेटमा',
+  'home.countdown.minutes': '{minutes} मिनेटमा',
+  'home.withStaff': '{name} सँग',
+  'home.viewAppointment': 'अपोइन्टमेन्ट हेर्नुहोस्',
+  'home.noUpcoming': 'कुनै आउँदो भेट छैन',
+  'home.noUpcomingHint': 'आफूलाई खुसी पार्नुहोस्। तपाईंको अर्को बुकिङ यहाँ देखिनेछ।',
+  'home.firstVisit': 'आफ्नो पहिलो भेट बुक गर्नुहोस्',
+  'home.firstVisitHint': 'सेवा, स्टाइलिस्ट र मिल्ने समय छान्नुहोस्। एक मिनेट मात्र लाग्छ।',
+  'home.exploreServices': 'सेवाहरू हेर्नुहोस्',
+  'home.upcomingVisits': 'आउँदा भेटहरू',
+  'home.tapToManage': 'व्यवस्थापन गर्न थिच्नुहोस्',
+  'home.pointsWorth': '{amount} बराबर',
+  'home.amountDue': 'बाँकी रकम',
+  'home.dueAppointments': 'अपोइन्टमेन्टहरू',
+  'home.dueCourses': 'कोर्स शुल्क',
+  'home.awaitingConfirmation': '{amount} पुष्टिको पर्खाइमा',
+  'home.courses': 'तपाईंका कोर्सहरू',
+  'home.attendance': 'उपस्थिति',
+  'home.feesPaid': 'तिरिएको शुल्क',
+  'home.feeProgress': '{total} मध्ये {paid}',
+  'home.noClassesYet': 'अहिलेसम्म कुनै कक्षा अंकित छैन',
+  'home.course': 'कोर्स',
+  'admin.benefits': 'फाइदाहरू',
+  'admin.benefitsHint': 'सेवा पृष्ठमा देखिने छोटा बुँदाहरू। बढीमा ८ वटा।',
+  'admin.addBenefit': 'फाइदा थप्नुहोस्',
+  'admin.benefitN': 'फाइदा {n}',
+  'admin.removeBenefit': 'फाइदा {n} हटाउनुहोस्',
+  'admin.moveBenefitUp': 'फाइदा {n} माथि सार्नुहोस्',
+  'admin.moveBenefitDown': 'फाइदा {n} तल सार्नुहोस्',
+  'admin.benefitTooLong': 'प्रत्येक फाइदा १२० अक्षरभित्र राख्नुहोस्',
+  'admin.benefitsMax': 'बढीमा ८ वटा फाइदा थप्नुहोस्',
+  'admin.benefitDuplicate': 'यो फाइदा पहिले नै सूचीमा छ',
+  'admin.benefitPlaceholder': 'जस्तै: कपाल नरम र चम्किलो बनाउँछ',
+  'admin.noBenefits': 'अहिलेसम्म कुनै फाइदा छैन। केही छोटा बुँदाले ग्राहकलाई निर्णय गर्न मद्दत गर्छ।',
 };
 
 const DICTIONARIES: Record<Language, Record<TranslationKey, string>> = { en, ne };
 
-export const translate = (language: Language, key: TranslationKey): string => DICTIONARIES[language][key];
+/** Values for `{name}` placeholders in a string. */
+export type TranslationParams = Record<string, string | number>;
 
-/** `const t = useT(); t('tab.home')`. Re-renders when the language changes. */
-export const useT = (): ((key: TranslationKey) => string) => {
+const interpolate = (text: string, params?: TranslationParams): string =>
+  params ? text.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match)) : text;
+
+export const translate = (language: Language, key: TranslationKey, params?: TranslationParams): string =>
+  interpolate(DICTIONARIES[language][key], params);
+
+export type Translate = (key: TranslationKey, params?: TranslationParams) => string;
+
+/** `const t = useT(); t('tab.home')`, `t('home.withStaff', { name })`. Re-renders when the language changes. */
+export const useT = (): Translate => {
   const language = useSettingsStore((state) => state.language);
-  return useCallback((key: TranslationKey) => translate(language, key), [language]);
+  return useCallback((key: TranslationKey, params?: TranslationParams) => translate(language, key, params), [language]);
 };

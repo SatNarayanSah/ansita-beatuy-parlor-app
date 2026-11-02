@@ -3,7 +3,7 @@
 import { Tag } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
-import { OfferCoupon } from "@/components/site/cards";
+import { OfferBanner } from "@/components/site/cards";
 import { Container, PageHero } from "@/components/site/section";
 import { Button, EmptyState, ErrorState, Skeleton } from "@/components/ui";
 import { useCategories, useOffers } from "@/lib/queries";
@@ -23,7 +23,7 @@ export default function OffersPage() {
             Treat yourself, <span className="text-gradient">for less</span>
           </>
         }
-        subtitle="Tap a code to copy it, then mention it when you book or at the desk."
+        subtitle="Tap a code to copy it, then use it when you book or show it at the desk."
       />
       <Container className="py-12">
         {offers.isError ? (
@@ -31,7 +31,7 @@ export default function OffersPage() {
         ) : offers.isLoading ? (
           <div className="grid gap-5 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-44" />
+              <Skeleton key={i} className={i === 0 ? "h-80 lg:col-span-2" : "h-72"} />
             ))}
           </div>
         ) : !offers.data?.length ? (
@@ -48,7 +48,9 @@ export default function OffersPage() {
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
             {offers.data.map((offer, i) => (
-              <OfferCoupon key={offer.id} offer={offer} categories={categoryMap} index={i} />
+              <div key={offer.id} className={i === 0 ? "lg:col-span-2" : undefined}>
+                <OfferBanner offer={offer} categories={categoryMap} index={i} featured={i === 0} />
+              </div>
             ))}
           </div>
         )}

@@ -17,5 +17,7 @@ export interface Service extends BaseEntity {
   price: number;
   description: string;
   image: ImageUri | null;
+  /** Short points for the service's page, e.g. "Repairs damaged hair". */
+  benefits: string[];
   isActive: boolean;
 }
