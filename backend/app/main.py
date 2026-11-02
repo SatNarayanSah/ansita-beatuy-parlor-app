@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from .config import settings
 from .db import init_db
 from .errors import ApiError
+from .image_urls import BaseUrlMiddleware
 from .routers import (
     appointments,
     auth,
@@ -44,6 +45,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(BaseUrlMiddleware)
 
 
 # Every error has the same body as the app's ApiError: {"code": ..., "message": ...}.

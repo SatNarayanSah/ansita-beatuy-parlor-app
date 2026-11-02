@@ -10,11 +10,11 @@ own profile photo.
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
-from ..config import settings
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Upload, User
 from ..security import get_current_user
+from ..image_urls import to_public
 from ..utils import generate_id
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -53,9 +53,8 @@ async def upload_image(request: Request, db: Session = Depends(get_db), user: Us
     upload = Upload(id=generate_id("img"), content_type=content_type, size=len(data), data=bytes(data), uploaded_by=user.id)
     db.add(upload)
     db.commit()
-    path = request.app.url_path_for("get_upload", upload_id=upload.id)
-    base = settings.public_url.rstrip("/") or str(request.base_url).rstrip("/")
-    url = base + path
+    # Full link for an immediate preview; it's saved without the host (see image_urls.py).
+    url = to_public(request.app.url_path_for("get_upload", upload_id=upload.id))
     return {"id": upload.id, "url": url, "contentType": content_type, "size": upload.size}
 
 

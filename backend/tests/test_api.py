@@ -415,3 +415,30 @@ def test_photo_fields_need_uploaded_links(client, admin):
     uploaded = client.post("/uploads", content=b"\xff\xd8\xff\xe0" + b"\x00" * 32, headers={**admin, "Content-Type": "image/jpeg"}).json()["url"]
     assert client.patch("/services/svc_pedicure", json={"image": uploaded}, headers=admin).json()["image"] == uploaded
     assert client.patch("/services/svc_pedicure", json={"image": None}, headers=admin).json()["image"] is None
+
+
+def test_upload_links_follow_the_callers_host(client, admin):
+    """A photo uploaded from one computer must load on every phone: no host is stored."""
+    png = b"\x89PNG\r\n\x1a\n" + b"\x01" * 32
+    uploaded = client.post("/uploads", content=png, headers={**admin, "Content-Type": "image/png"}).json()
+    staff_id = client.get("/staff", headers=admin).json()[0]["id"]
+    # Saved through the website running on the office computer.
+    office_link = f"http://localhost:8000/uploads/{uploaded['id']}"
+    assert client.patch(f"/staff/{staff_id}", json={"avatar": office_link}, headers=admin).status_code == 200
+
+    from app.db import engine
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        stored = conn.execute(text("SELECT avatar FROM staff WHERE id = :id"), {"id": staff_id}).scalar_one()
+    assert stored == f"/uploads/{uploaded['id']}"
+
+    # A phone on the Wi-Fi reaches the API at the computer's LAN address, and gets a link it can open.
+    phone = client.get("/staff", headers={"host": "192.168.1.20:8000"}).json()
+    avatar = next(s["avatar"] for s in phone if s["id"] == staff_id)
+    assert avatar == f"http://192.168.1.20:8000/uploads/{uploaded['id']}"
+    assert client.get(avatar.replace("http://192.168.1.20:8000", "")).content == png
+
+    # Links to other sites are kept as they are.
+    external = "https://images.example.com/stylist.jpg"
+    client.patch(f"/staff/{staff_id}", json={"avatar": external}, headers=admin)
+    assert client.get(f"/staff/{staff_id}", headers=admin).json()["avatar"] == external

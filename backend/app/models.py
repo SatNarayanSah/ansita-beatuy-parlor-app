@@ -10,6 +10,7 @@ from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, LargeBinary, S
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
+from .image_urls import ImageUrl
 from .utils import now_iso
 
 
@@ -26,7 +27,7 @@ class User(EntityMixin, Base):
     name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(254), unique=True, index=True)
     phone: Mapped[str] = mapped_column(String(32), default="")
-    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     customer_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     staff_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(128))
@@ -67,7 +68,7 @@ class Customer(EntityMixin, Base):
     notes: Mapped[str] = mapped_column(Text, default="")
     loyalty_points: Mapped[int] = mapped_column(Integer, default=0)
     joined_at: Mapped[str] = mapped_column(String(32), default=now_iso)
-    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 
@@ -88,7 +89,7 @@ class Service(EntityMixin, Base):
     duration: Mapped[int] = mapped_column(Integer)
     price: Mapped[int] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(Text, default="")
-    image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
@@ -101,7 +102,7 @@ class Staff(EntityMixin, Base):
     email: Mapped[str] = mapped_column(String(254), default="")
     specialties: Mapped[list[str]] = mapped_column(JSON, default=list)
     working_hours: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
-    avatar: Mapped[str | None] = mapped_column(Text, nullable=True)
+    avatar: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     rating: Mapped[float] = mapped_column(Float, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -143,7 +144,7 @@ class Course(EntityMixin, Base):
     instructor: Mapped[str] = mapped_column(String(64))
     batches: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     seats: Mapped[int] = mapped_column(Integer)
-    image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     certificate: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -199,7 +200,7 @@ class Offer(EntityMixin, Base):
     valid_from: Mapped[str] = mapped_column(String(10))
     valid_to: Mapped[str] = mapped_column(String(10))
     terms: Mapped[list[str]] = mapped_column(JSON, default=list)
-    image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 

@@ -31,6 +31,20 @@ def init_db() -> None:
 
     Base.metadata.create_all(bind=engine)
     _add_appointment_payments()
+    _strip_upload_hosts()
+
+
+def _strip_upload_hosts() -> None:
+    """Older uploads were saved as full links (e.g. http://localhost:8000/uploads/img_x),
+    which only work on the computer that made them. Keep just `/uploads/img_x`."""
+    from .image_urls import to_stored
+
+    columns = {"users": "avatar", "customers": "avatar", "staff": "avatar", "services": "image", "courses": "image", "offers": "image"}
+    with engine.begin() as conn:
+        for table, column in columns.items():
+            rows = conn.execute(text(f"SELECT id, {column} FROM {table} WHERE {column} LIKE '%://%/uploads/%'")).all()
+            for id_, value in rows:
+                conn.execute(text(f"UPDATE {table} SET {column} = :value WHERE id = :id"), {"value": to_stored(value), "id": id_})
     _add_appointment_points()
 
 
