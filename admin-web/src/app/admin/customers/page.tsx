@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { CalendarDays, Cake, Crown, Mail, MapPin, Minus, Pencil, Phone, Plus, Trash2, UserPlus, Users } from "lucide-react";
+import { CalendarDays, Cake, Crown, Mail, MapPin, Pencil, Phone, Trash2, UserPlus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   AnimatedNumber,
@@ -13,7 +13,6 @@ import {
   Drawer,
   EmptyState,
   ErrorState,
-  Input,
   PageHeader,
   SearchInput,
   Skeleton,
@@ -63,13 +62,8 @@ function CustomerDrawer({ customer, onClose, onEdit }: { customer: Customer | nu
   const stats = useCustomerStats(customer?.id ?? null);
   const history = useAppointments({ customerId: customer?.id }, !!customer);
   const lookups = useLookups();
-  const [delta, setDelta] = useState("10");
   const [deleting, setDeleting] = useState(false);
 
-  const points = useAction((d: number) => api.post<Customer>(`/customers/${customer?.id}/points`, { delta: d }), {
-    invalidate: ["customers"],
-    success: (_, d) => (d > 0 ? `Added ${d} points` : `Removed ${-d} points`),
-  });
   const remove = useAction(() => api.del(`/customers/${customer?.id}`), {
     invalidate: ["customers", "appointments"],
     success: "Customer deleted",
@@ -80,7 +74,6 @@ function CustomerDrawer({ customer, onClose, onEdit }: { customer: Customer | nu
   });
 
   const c = customer;
-  const amount = Math.max(1, Math.round(Number(delta) || 0));
   const address = c ? [c.address?.line1, c.address?.line2, c.address?.city, c.address?.province].filter(Boolean).join(", ") : "";
 
   return (
@@ -145,15 +138,7 @@ function CustomerDrawer({ customer, onClose, onEdit }: { customer: Customer | nu
               <p className="mt-1 font-display text-4xl font-bold">
                 <AnimatedNumber value={c.loyaltyPoints} />
               </p>
-              <div className="relative mt-3 flex items-center gap-2">
-                <Button size="sm" variant="secondary" className="bg-white/20 text-white hover:bg-white/30" onClick={() => points.mutate(-amount)} loading={points.isPending && (points.variables ?? 0) < 0} aria-label="Remove points">
-                  <Minus className="h-3.5 w-3.5" />
-                </Button>
-                <Input type="number" min={1} value={delta} onChange={(e) => setDelta(e.target.value)} className="h-8 w-20 border-white/30 bg-white/15 text-center text-white placeholder:text-white/60" />
-                <Button size="sm" variant="secondary" className="bg-white/20 text-white hover:bg-white/30" onClick={() => points.mutate(amount)} loading={points.isPending && (points.variables ?? 0) > 0} aria-label="Add points">
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              <p className="relative mt-1 text-xs text-white/75">Earned automatically on completed visits.</p>
             </section>
 
             {c.notes && (

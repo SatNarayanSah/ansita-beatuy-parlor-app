@@ -221,10 +221,6 @@ class CustomerUpdate(CamelModel):
     tags: list[CustomerTag] | None = None
 
 
-class PointsInput(CamelModel):
-    delta: int
-
-
 # ---------- Courses ----------
 
 

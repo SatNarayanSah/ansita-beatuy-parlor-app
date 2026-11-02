@@ -92,7 +92,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
 | F1 | Customers: search by name and by phone digits; filter VIP; sort by Top spend. | Correct results; virtualised list scrolls smoothly. | ☐ |
-| F2 | Customer profile: Call / WhatsApp / Book; toggle tags; edit notes; adjust points by `-99999`. | Deep links open; tags and notes save; points never go below 0. | ☐ |
+| F2 | Customer profile: Call / WhatsApp / Book; toggle tags; edit notes; look at loyalty points. | Deep links open; tags and notes save; points show with no way to add or remove them. | ☐ |
 | F3 | Delete a customer who has an upcoming booking. | Refused: “Cancel this customer's upcoming appointments first.” | ☐ |
 | F4 | Add a customer with an invalid email / postal code. | Inline errors; valid data creates and opens the profile. | ☐ |
 | F5 | Services: switch a service off. | It disappears from the customer catalogue and booking flow immediately. | ☐ |

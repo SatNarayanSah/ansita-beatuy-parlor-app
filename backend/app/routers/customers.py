@@ -6,7 +6,7 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Appointment, Customer, Enrollment, User
 from ..queries import ACTIVE_STATUSES, upcoming_appointments
-from ..schemas import CustomerInput, CustomerUpdate, PointsInput
+from ..schemas import CustomerInput, CustomerUpdate
 from ..security import assert_customer_access, get_current_user, require_admin
 from ..serializers import apply, changes, to_dict
 from ..utils import generate_id, now_iso, normalize_phone, today_iso
@@ -112,15 +112,6 @@ def delete_customer(id_: str, _: User = Depends(require_admin), db: Session = De
     db.delete(customer)
     db.commit()
     return Response(status_code=204)
-
-
-@router.post("/{id_}/points")
-def adjust_loyalty_points(id_: str, body: PointsInput, _: User = Depends(require_admin),
-                          db: Session = Depends(get_db)):
-    customer = ensure_found(db.get(Customer, id_, with_for_update=True), "Customer")
-    customer.loyalty_points = max(0, customer.loyalty_points + body.delta)
-    db.commit()
-    return to_dict(customer)
 
 
 @router.get("/{id_}/stats")

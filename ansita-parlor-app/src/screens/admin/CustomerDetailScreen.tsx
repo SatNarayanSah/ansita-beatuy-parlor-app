@@ -3,7 +3,6 @@ import { Linking, StyleSheet, View } from 'react-native';
 
 import { AdminAppointmentRow } from '@/components/admin/AdminAppointmentRow';
 import { MultiChipSelect } from '@/components/admin/Pickers';
-import { PointsAdjustSheet } from '@/components/admin/PointsAdjustSheet';
 import { EnrollmentCard } from '@/components/customer/EnrollmentCard';
 import {
   Avatar,
@@ -44,7 +43,6 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
   const services = useServiceMap();
   const staff = useStaffMap();
   const courses = useCourseMap();
-  const [pointsOpen, setPointsOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -113,8 +111,7 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
                   value={formatNumber(customer.loyaltyPoints)}
                   icon="diamond-outline"
                   tone="accent"
-                  caption="Tap to adjust"
-                  onPress={() => setPointsOpen(true)}
+                  caption="Earned on visits"
                   style={styles.cell}
                 />
                 <StatCard label="Upcoming" value={stats.upcomingCount} icon="calendar-outline" tone="info" caption={`${stats.activeEnrollments} active course`} style={styles.cell} />
@@ -200,7 +197,6 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
                 <Button title="Delete customer" variant="ghost" onPress={() => setDeleteOpen(true)} style={styles.centerSelf} />
               </View>
 
-              <PointsAdjustSheet customer={customer} visible={pointsOpen} onClose={() => setPointsOpen(false)} />
 
               <ConfirmDialog
                 visible={deleteOpen}

@@ -20,7 +20,7 @@ The site talks to the FastAPI backend in [`../backend`](../backend), and the bac
 | --- | --- |
 | Dashboard | KPIs that count up, a 14-day revenue chart, this month's status mix, today's timeline, one-click confirm/decline for app booking requests, top services, latest reviews |
 | Appointments | Filterable list plus a per-stylist **day board**; a 4-step booking wizard with live staff and slot availability; status changes, payments, rescheduling, delete |
-| Customers | Search, tag filters, create/edit, a profile drawer with visit stats, history and loyalty-point adjustments |
+| Customers | Search, tag filters, create/edit, a profile drawer with visit stats, history and loyalty points (read-only; earned on completed visits) |
 | Services | Categories and services, price and duration, active toggle |
 | Staff | Profiles, specialties, weekly working-hours editor, daily schedule, reviews |
 | Courses | Courses, syllabus builder, batches with live seat availability |

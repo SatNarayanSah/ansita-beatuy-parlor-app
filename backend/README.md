@@ -85,7 +85,7 @@ All endpoints except auth and public catalogue reads need `Authorization: Bearer
 | `catalogService` categories | `GET/POST /categories`, `PATCH/DELETE /categories/{id}` |
 | `catalogService` services | `GET /services?query&categoryId&activeOnly`, `GET/PATCH/DELETE /services/{id}`, `POST /services`, `POST /services/{id}/active` `{isActive}` |
 | `staffService` | `GET /staff?query&activeOnly`, `GET/PATCH/DELETE /staff/{id}`, `POST /staff`, `POST /staff/{id}/active`, `GET /staff/{id}/schedule?date`, `GET /staff/{id}/reviews` |
-| `customerService` | `GET /customers?query&tag`, `GET/PATCH/DELETE /customers/{id}`, `POST /customers`, `POST /customers/{id}/points` `{delta}`, `GET /customers/{id}/stats` |
+| `customerService` | `GET /customers?query&tag`, `GET/PATCH/DELETE /customers/{id}`, `POST /customers`, `GET /customers/{id}/stats` |
 | `courseService` | `GET /courses?query&activeOnly`, `GET/PATCH/DELETE /courses/{id}`, `POST /courses`, `POST /courses/{id}/active`, `GET /courses/{id}/batches/availability`, `POST /courses/{id}/batches`, `PATCH/DELETE /courses/{id}/batches/{batchId}` |
 | `enrollmentService` | `GET /enrollments?courseId&batchId&studentId&status`, `GET /enrollments/{id}`, `POST /enrollments`, `POST /enrollments/{id}/status`, `POST /enrollments/{id}/payments`, `POST /enrollments/{id}/attendance` `{date, status}`, `POST /enrollments/attendance` `{date, entries}`, `POST /enrollments/{id}/certificate` |
 | `reviewService` | `GET /reviews?staffId&customerId`, `GET /reviews/by-appointment/{appointmentId}` (may be `null`), `POST /reviews`, `POST /reviews/{id}/reply`, `DELETE /reviews/{id}` |

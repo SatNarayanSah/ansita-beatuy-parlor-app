@@ -133,15 +133,5 @@ export const paymentSchema = (due: number) =>
     method: z.enum(['cash', 'esewa', 'khalti', 'fonepay', 'card']),
   });
 
-export const pointsAdjustSchema = z.object({
-  delta: z
-    .string()
-    .trim()
-    .regex(/^-?\d+$/, { error: 'Enter whole points, e.g. 100 or -200' })
-    .transform(Number)
-    .refine((value) => value !== 0, { error: 'Enter a non-zero amount' })
-    .refine((value) => Math.abs(value) <= 100000, { error: 'That is too many points' }),
-});
-
 export const quickCustomerSchema = z.object({ name: nameSchema, phone: phoneSchema });
 

@@ -55,8 +55,5 @@ export const customerService = {
     useCustomerStore.getState().removeCustomer(id);
   },
 
-  adjustLoyaltyPoints: async (id: ID, delta: number): Promise<Customer> =>
-    cacheCustomer(await api<Customer>('POST', `/customers/${id}/points`, { body: { delta: Math.trunc(delta) } })),
-
   getCustomerStats: (id: ID): Promise<CustomerStats> => api<CustomerStats>('GET', `/customers/${id}/stats`),
 };
