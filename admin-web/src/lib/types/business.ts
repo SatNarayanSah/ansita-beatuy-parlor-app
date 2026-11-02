@@ -42,4 +42,25 @@ export interface BusinessSettings {
   holidays: Holiday[];
   loyalty: LoyaltyRules;
   alerts: AdminAlerts;
+  payments: PaymentSettings;
+}
+
+/** One account customers can pay into (eSewa ID, Khalti number, bank account…). */
+export interface PaymentAccount {
+  enabled: boolean;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  /** Uploaded QR code image, or null. */
+  qr: string | null;
+  instructions: string;
+}
+
+export interface PaymentSettings {
+  /** Whether customers may send "I've paid" requests at all. */
+  requests: boolean;
+  esewa: PaymentAccount;
+  khalti: PaymentAccount;
+  fonepay: PaymentAccount;
+  bank: PaymentAccount;
 }

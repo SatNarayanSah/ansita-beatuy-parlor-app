@@ -7,10 +7,12 @@ import { firstName, serviceNames } from '@/hooks/useCatalog';
 import { useT } from '@/i18n';
 import { selectAmountDue } from '@/store';
 import { useTheme } from '@/theme';
-import type { Appointment, ID, Review, Service, Staff } from '@/types';
+import type { Appointment, ID, PaymentRequest, Review, Service, Staff } from '@/types';
 import { formatTimeRange, parseISODate } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 import { sameDataProps } from '@/utils/memo';
+
+import { PaymentRequestStatus } from './PaymentRequestStatus';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -22,10 +24,25 @@ interface AppointmentCardProps {
   onCancel?: () => void;
   onRebook?: () => void;
   onReview?: () => void;
+  /** The customer's "I've paid" requests for this booking (pending / recently rejected are shown). */
+  paymentRequests?: readonly PaymentRequest[];
+  /** "I've paid": shown when there's a balance the customer can pay online. */
+  onPaid?: () => void;
 }
 
 /** Booking summary with a date block, status and the actions that apply to its state. */
-const AppointmentCardBase = ({ appointment, services, staff, review, onReschedule, onCancel, onRebook, onReview }: AppointmentCardProps) => {
+const AppointmentCardBase = ({
+  appointment,
+  services,
+  staff,
+  review,
+  onReschedule,
+  onCancel,
+  onRebook,
+  onReview,
+  paymentRequests,
+  onPaid,
+}: AppointmentCardProps) => {
   const { colors, radius, spacing } = useTheme();
   const t = useT();
   const date = parseISODate(appointment.date);
@@ -33,6 +50,7 @@ const AppointmentCardBase = ({ appointment, services, staff, review, onReschedul
   const due = selectAmountDue(appointment);
 
   const actions = [
+    onPaid ? <Button key="p" title={t('appointments.paid')} size="sm" variant="secondary" leftIcon="checkmark-circle-outline" onPress={onPaid} /> : null,
     onReschedule ? <Button key="r" title={t('appointments.reschedule')} size="sm" variant="secondary" leftIcon="time-outline" onPress={onReschedule} /> : null,
     onCancel ? <Button key="c" title={t('appointments.cancel')} size="sm" variant="ghost" onPress={onCancel} /> : null,
     onReview ? <Button key="v" title={t('appointments.review')} size="sm" variant="secondary" leftIcon="star-outline" onPress={onReview} /> : null,
@@ -101,6 +119,8 @@ const AppointmentCardBase = ({ appointment, services, staff, review, onReschedul
           Reason: {appointment.cancellationReason}
         </Text>
       ) : null}
+
+      {paymentRequests && paymentRequests.length > 0 ? <PaymentRequestStatus requests={paymentRequests} /> : null}
 
       {actions.length > 0 ? <View style={[styles.actions, { gap: spacing.sm }]}>{actions}</View> : null}
     </Card>

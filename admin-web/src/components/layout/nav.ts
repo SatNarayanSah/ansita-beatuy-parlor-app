@@ -15,6 +15,7 @@ import {
   UserRound,
   Users,
   ClipboardList,
+  Wallet,
 } from "lucide-react";
 
 export interface NavItem {
@@ -29,6 +30,7 @@ export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/admin/appointments", label: "Appointments", icon: CalendarClock },
+      { href: "/admin/payments", label: "Payments", icon: Wallet },
       { href: "/admin/notifications", label: "Notifications", icon: Bell },
     ],
   },

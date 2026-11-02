@@ -7,9 +7,11 @@ import { RevenueTrendChart, StatusDonutChart, TopServicesChart } from '@/compone
 import { GreetingHeader } from '@/components/layout/GreetingHeader';
 import {
   Card,
+  CountBadge,
   EmptyState,
   Icon,
   IconButton,
+  ListItem,
   QueryState,
   Screen,
   SectionHeader,
@@ -22,8 +24,16 @@ import {
 import { useCustomerMap, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { AdminTabScreenProps } from '@/navigation/types';
-import { appointmentService, customerService, getErrorMessage } from '@/services';
-import { selectCurrentUser, selectUnreadCount, useAppointmentStore, useAuthStore, useCustomerStore, useNotificationStore } from '@/store';
+import { appointmentService, customerService, getErrorMessage, paymentRequestService } from '@/services';
+import {
+  selectCurrentUser,
+  selectUnreadCount,
+  useAppointmentStore,
+  useAuthStore,
+  useCustomerStore,
+  useNotificationStore,
+  usePaymentRequestStore,
+} from '@/store';
 import { getToneColors, useTheme, type Tone } from '@/theme';
 import { collectedBetween, inRange, revenueByDay, statusCounts, topServicesByBookings } from '@/utils/analytics';
 import { addDaysISO, formatDisplayDate, formatRelativeDay, todayISO } from '@/utils/date';
@@ -62,12 +72,19 @@ export const DashboardScreen = ({ navigation }: Props) => {
   const services = useServiceMap();
   const staff = useStaffMap();
   const customers = useCustomerMap();
+  // Customers' "I've paid" requests waiting for verification; kept fresh by the live sync.
+  const paymentsToVerify = usePaymentRequestStore((state) => state.pendingCount);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const today = todayISO();
 
   const query = useServiceQuery(
     async () => {
-      const [appointments, customerList] = await Promise.all([appointmentService.listAppointments(), customerService.listCustomers()]);
+      const [appointments, customerList] = await Promise.all([
+        appointmentService.listAppointments(),
+        customerService.listCustomers(),
+        // Updates the "Payments to verify" count; optional, so it never blocks the dashboard.
+        paymentRequestService.getPendingCount().catch(() => undefined),
+      ]);
       return { appointments, customers: customerList };
     },
     [],
@@ -138,6 +155,19 @@ export const DashboardScreen = ({ navigation }: Props) => {
         {() =>
           view ? (
             <View style={{ gap: spacing.xl }}>
+              {paymentsToVerify > 0 ? (
+                <Card padding="sm">
+                  <ListItem
+                    title="Payments to verify"
+                    subtitle={`${paymentsToVerify} customer${paymentsToVerify === 1 ? ' says they have' : 's say they have'} paid online`}
+                    leftIcon="wallet-outline"
+                    leftIconTone="warning"
+                    right={<CountBadge count={paymentsToVerify} />}
+                    showChevron
+                    onPress={() => navigation.navigate('PaymentRequests')}
+                  />
+                </Card>
+              ) : null}
               <View style={[styles.grid, { gap: spacing.md }]}>
                 <StatCard
                   label="Today's bookings"

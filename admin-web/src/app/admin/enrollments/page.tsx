@@ -1,8 +1,10 @@
 "use client";
 
+import { OpenFromUrl } from "@/components/layout/open-from-url";
 import { AnimatePresence, motion } from "motion/react";
 import { Award, CalendarCheck, ClipboardList, Plus, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
+import { PaymentRequestsFor } from "@/components/payments/payment-requests";
 import { Avatar, Badge, Button, Card, Checkbox, DataTable, Drawer, Dropdown, EmptyState, ErrorState, Field, Input, Modal, PageHeader, PaymentDialog, PaymentProgress, Skeleton, StatCard, StatusBadge, Tabs } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ENROLLMENT_STATUSES, formatDate, label, money, PAYMENT_METHODS, todayISO } from "@/lib/format";
@@ -360,6 +362,7 @@ function EnrollmentDetail({ enrollment, onClose }: { enrollment: Enrollment; onC
                   <li key={p.id} className="flex justify-between py-2">
                     <span className="text-ink-2">
                       {formatDate(p.paidOn)} · {label(p.method)}
+                          {p.reference ? ` · ${p.reference}` : ""}
                     </span>
                     <span className="font-semibold text-ink tabular-nums">{money(p.amount)}</span>
                   </li>
@@ -367,6 +370,8 @@ function EnrollmentDetail({ enrollment, onClose }: { enrollment: Enrollment; onC
               </ul>
             )}
           </Card>
+
+          <PaymentRequestsFor targetType="enrollment" targetId={enrollment.id} />
 
           <div>
             <div className="mb-2 flex items-center justify-between">
@@ -554,6 +559,7 @@ export default function EnrollmentsPage() {
       {creating && <NewEnrollment onClose={() => setCreating(false)} />}
       {attendance && <BatchAttendance onClose={() => setAttendance(false)} />}
       {viewing && <EnrollmentDetail key={viewing.id} enrollment={viewing} onClose={() => setViewingId(null)} />}
+      <OpenFromUrl onOpen={setViewingId} />
     </div>
   );
 }

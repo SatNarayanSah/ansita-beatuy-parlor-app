@@ -1,21 +1,29 @@
 import { StyleSheet, View } from 'react-native';
 
-import { Badge, Card, ProgressBar, StatusPill, Text } from '@/components/ui';
+import { Badge, Button, Card, ProgressBar, StatusPill, Text } from '@/components/ui';
+import { useT } from '@/i18n';
 import { selectAttendancePercent, selectFeeDue } from '@/store/courseStore';
 import { useTheme } from '@/theme';
-import type { Course, Enrollment } from '@/types';
+import type { Course, Enrollment, PaymentRequest } from '@/types';
 import { formatShortDate, todayISO } from '@/utils/date';
 import { formatCurrency, formatEnumLabel } from '@/utils/format';
+
+import { PaymentRequestStatus } from './PaymentRequestStatus';
 
 interface EnrollmentCardProps {
   enrollment: Enrollment;
   course: Course | undefined;
   onPress?: () => void;
+  /** Customer view: their "I've paid" requests for this fee (pending / recently rejected are shown). */
+  paymentRequests?: readonly PaymentRequest[];
+  /** "I've paid": shown when there's a fee balance the customer can pay online. */
+  onPaid?: () => void;
 }
 
 /** A student's enrollment with fee and attendance progress. */
-export const EnrollmentCard = ({ enrollment, course, onPress }: EnrollmentCardProps) => {
+export const EnrollmentCard = ({ enrollment, course, onPress, paymentRequests, onPaid }: EnrollmentCardProps) => {
   const { spacing } = useTheme();
+  const t = useT();
   const batch = course?.batches.find((item) => item.id === enrollment.batchId);
   const due = selectFeeDue(enrollment);
   const attendance = selectAttendancePercent(enrollment);
@@ -62,7 +70,9 @@ export const EnrollmentCard = ({ enrollment, course, onPress }: EnrollmentCardPr
       {enrollment.status === 'pending' || notStarted ? (
         <Text variant="caption" tone="secondary">
           {enrollment.status === 'pending'
-            ? 'Seat reserved. Pay at the front desk to confirm.'
+            ? onPaid
+              ? 'Seat reserved. Pay at the front desk, or pay online and tap “I’ve paid”, to confirm.'
+              : 'Seat reserved. Pay at the front desk to confirm.'
             : `Classes start ${batch ? formatShortDate(batch.startDate) : 'soon'}${batch ? ` · ${batch.days.map(formatEnumLabel).join(', ')}` : ''}`}
         </Text>
       ) : (
@@ -82,6 +92,11 @@ export const EnrollmentCard = ({ enrollment, course, onPress }: EnrollmentCardPr
         </View>
       )}
 
+      {paymentRequests && paymentRequests.length > 0 ? <PaymentRequestStatus requests={paymentRequests} /> : null}
+      {onPaid ? (
+        <Button title={t('appointments.paid')} size="sm" variant="secondary" leftIcon="checkmark-circle-outline" onPress={onPaid} style={styles.end} />
+      ) : null}
+
       {enrollment.certificateIssued ? <Badge label="Certificate issued" tone="success" icon="ribbon" /> : null}
       {enrollment.status === 'completed' && !enrollment.certificateIssued ? (
         <Badge label="Certificate being prepared" tone="info" icon="hourglass-outline" />
@@ -94,4 +109,5 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   flex: { flex: 1, gap: 2 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  end: { alignSelf: 'flex-end' },
 });

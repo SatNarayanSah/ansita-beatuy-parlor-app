@@ -10,6 +10,9 @@ export interface AppointmentPayment {
   amount: number;
   paidOn: ISODate;
   method: PaymentMethod;
+  /** Transaction ID, when it came from a customer's approved "I've paid" request. */
+  reference?: string;
+  requestId?: ID;
 }
 
 /** A bookable start time and whether it is free. */

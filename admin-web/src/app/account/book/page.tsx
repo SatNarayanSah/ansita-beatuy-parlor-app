@@ -367,7 +367,7 @@ export default function BookPage() {
                     <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} placeholder="e.g. I have sensitive skin" />
                   </Field>
                   <Field label="How would you like to pay?" hint="You pay at the parlour after your visit.">
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {PAYMENT_METHODS.map((m) => (
                         <button
                           key={m}

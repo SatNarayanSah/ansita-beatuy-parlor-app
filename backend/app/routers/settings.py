@@ -4,13 +4,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..business import get_business, snapshot
+from ..business import ONLINE_METHODS, get_business, snapshot
 from ..db import get_db
 from ..errors import ApiError
 from ..models import Appointment, User
 from ..queries import ACTIVE_STATUSES
-from ..schemas import AlertsUpdate, BusinessProfileUpdate, HolidayInput, LoyaltyUpdate
+from ..schemas import AlertsUpdate, BusinessProfileUpdate, HolidayInput, LoyaltyUpdate, PaymentSettingsUpdate
 from ..security import get_current_user, require_admin
+from ..image_urls import to_stored
 from ..utils import is_valid_iso_date, is_valid_time, normalize_phone, time_to_minutes, today_iso
 
 router = APIRouter(prefix="/settings", tags=["settings"])
@@ -116,5 +117,31 @@ def update_loyalty(body: LoyaltyUpdate, _: User = Depends(require_admin), db: Se
 def update_alerts(body: AlertsUpdate, _: User = Depends(require_admin), db: Session = Depends(get_db)):
     row = get_business(db, lock=True)
     row.alerts = {**row.alerts, **_patch(body)}
+    db.commit()
+    return snapshot(row)
+
+
+@router.patch("/payments")
+def update_payments(body: PaymentSettingsUpdate, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Online accounts customers pay into, and whether they may send "I've paid" requests."""
+    row = get_business(db, lock=True)
+    stored = dict(row.payment_accounts or {})
+    if body.requests is not None:
+        stored["requests"] = body.requests
+    for method in ONLINE_METHODS:
+        patch = getattr(body, method)
+        if patch is None:
+            continue
+        values = {k: (v.strip() if isinstance(v, str) else v) for k, v in patch.model_dump(by_alias=True, exclude_unset=True).items()}
+        if "qr" in values:
+            qr = to_stored(values["qr"] or None)
+            if qr and not qr.startswith("/uploads/"):
+                raise ApiError("VALIDATION", "Upload the QR code image instead of pasting a link.")
+            values["qr"] = qr
+        account = {**(stored.get(method) or {}), **values}
+        if account.get("enabled") and not (account.get("accountNumber") or account.get("qr")):
+            raise ApiError("VALIDATION", "Add the account number/ID or a QR code before turning this method on.")
+        stored[method] = account
+    row.payment_accounts = stored
     db.commit()
     return snapshot(row)

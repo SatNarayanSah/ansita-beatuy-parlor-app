@@ -11,5 +11,6 @@ export * from './customerService';
 export * from './enrollmentService';
 export * from './notificationService';
 export * from './offerService';
+export * from './paymentRequestService';
 export * from './reviewService';
 export * from './staffService';

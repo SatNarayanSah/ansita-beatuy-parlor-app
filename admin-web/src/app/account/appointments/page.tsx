@@ -1,5 +1,6 @@
 "use client";
 
+import { OpenFromUrl } from "@/components/layout/open-from-url";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarClock, CalendarPlus, Clock, MessageSquareQuote, RotateCcw, Star, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +22,7 @@ import {
   Tabs,
   Textarea,
 } from "@/components/ui";
+import { PayOnline } from "@/components/payments/payment-requests";
 import { api } from "@/lib/api";
 import { formatDate, label, minutesLabel, money, relativeDay, time12 } from "@/lib/format";
 import { useAction, useAppointments, useReviewFor } from "@/lib/queries";
@@ -205,6 +207,7 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
                     <li key={p.id} className="flex justify-between text-xs text-ink-2">
                       <span>
                         {formatDate(p.paidOn)} · {label(p.method)}
+                          {p.reference ? ` · ${p.reference}` : ""}
                       </span>
                       <span className="font-medium">{money(p.amount)}</span>
                     </li>
@@ -212,8 +215,16 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
                 </ul>
               )}
               {a.preferredPaymentMethod && a.paymentStatus !== "paid" && (
-                <p className="mt-2 text-xs text-muted">You plan to pay by {label(a.preferredPaymentMethod)} at the parlour.</p>
+                <p className="mt-2 text-xs text-muted">You plan to pay by {label(a.preferredPaymentMethod)}.</p>
               )}
+              <PayOnline
+                target={{
+                  type: "appointment",
+                  id: a.id,
+                  due: a.totalPrice - a.amountPaid - (a.pointsDiscount ?? 0),
+                  payable: a.status !== "cancelled" && a.status !== "no_show",
+                }}
+              />
             </section>
 
             {a.notes && (
@@ -364,6 +375,7 @@ export default function MyAppointmentsPage() {
       )}
 
       <DetailDrawer appointment={selected} names={names} onClose={() => setSelectedId(null)} />
+      <OpenFromUrl onOpen={setSelectedId} />
     </div>
   );
 }

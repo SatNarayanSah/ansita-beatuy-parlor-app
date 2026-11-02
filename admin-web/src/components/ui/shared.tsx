@@ -250,7 +250,7 @@ export function PaymentDialog({
           ))}
         </div>
         <Field label="Method">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2">
             {PAYMENT_METHODS.map((m) => (
               <button
                 key={m}

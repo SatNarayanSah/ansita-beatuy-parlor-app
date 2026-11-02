@@ -7,6 +7,7 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Appointment, Customer, Staff, User
 from ..notify import link, notify_admins, notify_customer
+from ..payments import add_appointment_payment
 from ..queries import (
     ACTIVE_STATUSES,
     parse_id_list,
@@ -407,20 +408,7 @@ def update_status(id_: str, body: StatusInput, user: User = Depends(get_current_
 def record_payment(id_: str, body: PaymentInput, _: User = Depends(require_admin), db: Session = Depends(get_db)):
     """Adds a payment; the payment status is derived from the running total."""
     appointment = ensure_found(db.get(Appointment, id_, with_for_update=True), "Appointment")
-    if appointment.status in ("cancelled", "no_show"):
-        raise ApiError("VALIDATION", "Payments cannot be recorded for this appointment.")
-    due = appointment.total_price - _settled(appointment)
-    if body.amount <= 0:
-        raise ApiError("VALIDATION", "Enter a valid amount.")
-    if body.amount > due:
-        raise ApiError("VALIDATION", f"Amount exceeds the balance due ({format_currency(due)}).")
-    appointment.amount_paid += body.amount
-    appointment.payments = [
-        *(appointment.payments or []),
-        {"id": generate_id("pay"), "amount": body.amount, "paidOn": today_iso(), "method": body.method},
-    ]
-    appointment.payment_method = body.method
-    _refresh_payment_status(appointment)
+    add_appointment_payment(appointment, body.amount, body.method)
     notify_customer(db, appointment.customer_id, "payment", "Payment received",
                     f"Thank you! {format_currency(body.amount)} received for {_describe(db, appointment)}.",
                     link("appointment", id_))

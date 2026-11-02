@@ -214,6 +214,9 @@ class BusinessSettingsRow(Base):
     holidays: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     loyalty: Mapped[dict[str, Any]] = mapped_column(JSON)
     alerts: Mapped[dict[str, Any]] = mapped_column(JSON)
+    # Where customers can pay online (eSewa, Khalti, Fonepay, bank) and whether they may
+    # send "I've paid" requests. Empty until an admin fills it in; see business.payment_settings.
+    payment_accounts: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
 class Upload(EntityMixin, Base):
@@ -229,3 +232,29 @@ class Upload(EntityMixin, Base):
     size: Mapped[int] = mapped_column(Integer)
     data: Mapped[bytes] = mapped_column(LargeBinary)
     uploaded_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class PaymentRequest(EntityMixin, Base):
+    """A customer's "I've paid" message for an appointment or a course fee.
+
+    It changes no balance by itself: an admin checks the transaction and approves it (which
+    records the payment, dated `paid_on`) or rejects it with a reason.
+    """
+
+    __tablename__ = "payment_requests"
+
+    target_type: Mapped[str] = mapped_column(String(16))  # appointment | enrollment
+    target_id: Mapped[str] = mapped_column(String(64), index=True)
+    customer_id: Mapped[str] = mapped_column(String(64), index=True)
+    amount: Mapped[int] = mapped_column(Integer)
+    method: Mapped[str] = mapped_column(String(16))
+    reference: Mapped[str] = mapped_column(String(64))
+    paid_on: Mapped[str] = mapped_column(String(10))
+    note: Mapped[str] = mapped_column(Text, default="")
+    proof: Mapped[str | None] = mapped_column(ImageUrl, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), index=True, default="pending")  # pending | approved | rejected | cancelled
+    approved_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    review_note: Mapped[str] = mapped_column(Text, default="")
+    reviewed_by: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    reviewed_at: Mapped[str | None] = mapped_column(String(32), nullable=True)

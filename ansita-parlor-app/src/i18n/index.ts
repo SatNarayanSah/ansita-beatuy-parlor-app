@@ -52,6 +52,7 @@ const en = {
   'appointments.cancel': 'Cancel',
   'appointments.rebook': 'Rebook',
   'appointments.review': 'Rate & review',
+  'appointments.paid': 'I’ve paid',
 
   'profile.title': 'Profile',
   'profile.edit': 'Edit profile',
@@ -61,6 +62,7 @@ const en = {
   'profile.language': 'Language',
   'profile.appearance': 'Appearance',
   'profile.help': 'Help & contact',
+  'profile.courses': 'My courses',
   'profile.signOut': 'Sign out',
 
   'notifications.title': 'Notifications',
@@ -114,6 +116,7 @@ const ne: Record<TranslationKey, string> = {
   'appointments.cancel': 'रद्द गर्नुहोस्',
   'appointments.rebook': 'फेरि बुक',
   'appointments.review': 'मूल्याङ्कन गर्नुहोस्',
+  'appointments.paid': 'मैले तिरें',
 
   'profile.title': 'प्रोफाइल',
   'profile.edit': 'प्रोफाइल सम्पादन',
@@ -123,6 +126,7 @@ const ne: Record<TranslationKey, string> = {
   'profile.language': 'भाषा',
   'profile.appearance': 'रूप',
   'profile.help': 'सहयोग र सम्पर्क',
+  'profile.courses': 'मेरा कोर्सहरू',
   'profile.signOut': 'साइन आउट',
 
   'notifications.title': 'सूचनाहरू',

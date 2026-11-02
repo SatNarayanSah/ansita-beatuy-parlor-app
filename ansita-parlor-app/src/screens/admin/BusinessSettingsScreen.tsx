@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, Switch, View } from 'react-native';
 import type { z } from 'zod';
 
+import { OnlinePaymentSettings } from '@/components/admin/OnlinePaymentSettings';
 import { TimeStepper } from '@/components/admin/Pickers';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Button, Card, DatePickerField, Divider, IconButton, ListItem, Screen, SectionHeader, Text, useToast } from '@/components/ui';
@@ -28,7 +29,7 @@ const ALERTS: readonly { key: keyof AdminAlerts; title: string; subtitle: string
 
 const EXAMPLE_BILL = 2500;
 
-/** Parlour profile, opening hours, holidays, loyalty rules and admin alerts. Changes apply app-wide. */
+/** Parlour profile, opening hours, holidays, loyalty rules, online payments and admin alerts. Changes apply app-wide. */
 const loyaltyDefaults = (loyalty: LoyaltyRules) => ({
   rupeesPerPoint: String(loyalty.rupeesPerPoint),
   pointValue: String(loyalty.pointValue),
@@ -38,7 +39,8 @@ const loyaltyDefaults = (loyalty: LoyaltyRules) => ({
 export const BusinessSettingsScreen = (_props: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
-  const { profile, holidays, loyalty, alerts } = useBusinessStore();
+  const { profile, holidays, loyalty, alerts, payments } = useBusinessStore();
+  const [paymentsDirty, setPaymentsDirty] = useState(false);
 
   const profileForm = useForm<z.input<typeof businessProfileSchema>, unknown, z.output<typeof businessProfileSchema>>({
     resolver: zodResolver(businessProfileSchema),
@@ -62,7 +64,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
   useEffect(() => resetProfile(profile), [profile, resetProfile]);
   useEffect(() => resetLoyalty(loyaltyDefaults(loyalty)), [loyalty, resetLoyalty]);
 
-  const dirty = profileForm.formState.isDirty || loyaltyForm.formState.isDirty;
+  const dirty = profileForm.formState.isDirty || loyaltyForm.formState.isDirty || paymentsDirty;
   const { dialog } = useUnsavedChangesGuard(dirty && !profileForm.formState.isSubmitting && !loyaltyForm.formState.isSubmitting);
 
   const [openTime, closeTime] = useWatch({ control: profileForm.control, name: ['openTime', 'closeTime'] });
@@ -232,6 +234,8 @@ export const BusinessSettingsScreen = (_props: Props) => {
           />
         </Card>
       </View>
+
+      <OnlinePaymentSettings payments={payments} onDirtyChange={setPaymentsDirty} />
 
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Admin notifications" subtitle="Which events create a notification for admins" compact />

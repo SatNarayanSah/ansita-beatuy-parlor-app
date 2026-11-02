@@ -143,7 +143,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
                 <DatePickerField label="Date of birth" value={field.value} onChange={field.onChange} maxDate={daysFromToday(-365 * 5)} showYearControls clearable />
               )}
             />
-            <FormInput control={control} name="line1" label="Address" leftIcon="home-outline" placeholder="e.g. Bhanu Chowk, Janakpur-8" />
+            <FormInput control={control} name="line1" label="Address" leftIcon="home-outline" placeholder="e.g. Ramanand Chowk, Janakpur-8" />
             <FormInput control={control} name="city" label="City" leftIcon="business-outline" />
             <FormInput control={control} name="postalCode" label="Postal code" keyboardType="number-pad" maxLength={5} />
             <FormInput control={control} name="notes" label="Notes & preferences" placeholder="Allergies, favourite shades, preferred stylist…" multiline maxLength={300} showCount />

@@ -1,5 +1,6 @@
 "use client";
 
+import { OpenFromUrl } from "@/components/layout/open-from-url";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Columns3 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -298,6 +299,7 @@ export default function AppointmentsPage() {
       </AnimatePresence>
 
       <AppointmentDrawer appointment={selected} onClose={() => setSelectedId(null)} />
+      <OpenFromUrl onOpen={setSelectedId} />
       <BookingWizard open={booking} onClose={() => setBooking(false)} />
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentRequestsFor } from "@/components/payments/payment-requests";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarClock, CheckCircle2, CircleSlash, Crown, Trash2, Undo2, Wallet, XCircle, Check } from "lucide-react";
 import { useState } from "react";
@@ -388,6 +389,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                       <li key={p.id} className="flex justify-between text-xs">
                         <span className="text-ink-2">
                           {formatDate(p.paidOn)} · {label(p.method)}
+                          {p.reference ? ` · ${p.reference}` : ""}
                         </span>
                         <span className="font-semibold text-success">+{money(p.amount)}</span>
                       </li>
@@ -396,6 +398,8 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                 )}
               </div>
             </section>
+
+            <PaymentRequestsFor targetType="appointment" targetId={a.id} />
 
             {(a.notes || a.cancellationReason) && (
               <section className="flex flex-col gap-3">

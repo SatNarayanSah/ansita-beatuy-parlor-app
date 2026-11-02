@@ -134,8 +134,51 @@ export const paymentSchema = (due: number) =>
       z.number().min(1, { error: 'Enter an amount above zero' }).max(due, { error: `Cannot exceed the balance due (Rs. ${due.toLocaleString('en-IN')})` }),
       'the amount',
     ),
-    method: z.enum(['cash', 'esewa', 'khalti', 'fonepay', 'card']),
+    method: z.enum(['cash', 'esewa', 'khalti', 'fonepay', 'card', 'bank']),
   });
+
+/** Customer's "I've paid": `max` is what's due less their pending requests on that bill. */
+export const paymentRequestSchema = (max: number, earliest: string, latest: string) =>
+  z.object({
+    method: z.enum(['esewa', 'khalti', 'fonepay', 'bank']),
+    amount: wholeNumberText(
+      z.number().min(1, { error: 'Enter the amount you paid' }).max(max, { error: `That’s more than the Rs. ${max.toLocaleString('en-IN')} left to pay` }),
+      'the amount you paid',
+    ),
+    reference: z
+      .string()
+      .trim()
+      .min(4, { error: 'Enter the transaction ID from your payment app or bank (at least 4 characters)' })
+      .max(64, { error: 'Keep it under 64 characters' }),
+    paidOn: z
+      .string()
+      .min(1, { error: 'Choose the date you paid' })
+      .refine((value) => value <= latest, { error: 'The payment date can’t be in the future' })
+      .refine((value) => value >= earliest, { error: 'Payments older than 60 days have to be sorted out at the parlour' }),
+    /** A screenshot picked on this phone (uploaded when sending), or none. */
+    proof: z.string().nullable(),
+    note: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
+  });
+
+/** Admin approving a request: what actually arrived, at most the balance due now. */
+export const approvePaymentSchema = (due: number) =>
+  z.object({
+    amount: wholeNumberText(
+      z.number().min(1, { error: 'Enter an amount above zero' }).max(due, { error: `Only Rs. ${due.toLocaleString('en-IN')} is due now` }),
+      'the amount received',
+    ),
+    note: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
+  });
+
+/** The parlour's account for one online method. Turning it on needs a number/ID or a QR code (checked on save). */
+export const paymentAccountSchema = z.object({
+  accountName: z.string().trim().max(120, { error: 'Keep it under 120 characters' }),
+  accountNumber: z.string().trim().max(64, { error: 'Keep it under 64 characters' }),
+  bankName: z.string().trim().max(120, { error: 'Keep it under 120 characters' }),
+  instructions: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
+  /** Saved URL, a QR image just picked on the phone, or none. */
+  qr: z.string().nullable(),
+});
 
 /** Points to use on a bill: at least 1, at most `max` (what the customer has, capped at the balance due). */
 export const redeemPointsSchema = (max: number) =>

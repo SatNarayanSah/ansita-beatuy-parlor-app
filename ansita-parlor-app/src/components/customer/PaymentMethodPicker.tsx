@@ -10,6 +10,7 @@ export const PAYMENT_METHOD_META: Record<PaymentMethod, { label: string; icon: I
   khalti: { label: 'Khalti', icon: 'phone-portrait-outline' },
   fonepay: { label: 'Fonepay', icon: 'qr-code-outline' },
   card: { label: 'Card', icon: 'card-outline' },
+  bank: { label: 'Bank transfer', icon: 'business-outline' },
 };
 
 /** Methods offered to customers. Labels only: no payment is taken in the app. */

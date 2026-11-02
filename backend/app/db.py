@@ -32,6 +32,15 @@ def init_db() -> None:
     Base.metadata.create_all(bind=engine)
     _add_appointment_payments()
     _strip_upload_hosts()
+    _add_payment_accounts()
+
+
+def _add_payment_accounts() -> None:
+    """Adds `business_settings.payment_accounts` to databases created before it existed."""
+    if "payment_accounts" in {column["name"] for column in inspect(engine).get_columns("business_settings")}:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE business_settings ADD COLUMN payment_accounts JSON"))
 
 
 def _strip_upload_hosts() -> None:

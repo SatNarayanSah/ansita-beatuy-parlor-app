@@ -14,6 +14,9 @@ export interface FeePayment {
   amount: number;
   paidOn: ISODate;
   method: PaymentMethod;
+  /** Transaction ID, when it came from a customer's approved "I've paid" request. */
+  reference?: string;
+  requestId?: ID;
 }
 
 export interface Enrollment extends BaseEntity {

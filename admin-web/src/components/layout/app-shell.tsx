@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Avatar } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
-import { useSettings, useUnreadCount } from "@/lib/queries";
+import { usePendingPaymentCount, useSettings, useUnreadCount } from "@/lib/queries";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -47,6 +47,8 @@ function Brand({
 function NavLinks({ sections, onNavigate }: { sections: Sections; onNavigate?: () => void }) {
   const pathname = usePathname();
   const unread = useUnreadCount();
+  const hasPayments = sections.some((s) => s.items.some((i) => i.href === "/admin/payments"));
+  const pendingPayments = usePendingPaymentCount(hasPayments);
   return (
     <nav className="flex flex-col gap-6">
       {sections.map((section, sectionIndex) => (
@@ -58,7 +60,11 @@ function NavLinks({ sections, onNavigate }: { sections: Sections; onNavigate?: (
               const isRoot = item.href === "/" || item.href.split("/").length === 2;
               const active = pathname === item.href || (!isRoot && pathname.startsWith(item.href + "/"));
               const Icon = item.icon;
-              const badge = item.href.endsWith("/notifications") ? unread.data?.count ?? 0 : 0;
+              const badge = item.href.endsWith("/notifications")
+                ? unread.data?.count ?? 0
+                : item.href === "/admin/payments"
+                  ? pendingPayments.data?.count ?? 0
+                  : 0;
               return (
                 <motion.li
                   key={item.href}

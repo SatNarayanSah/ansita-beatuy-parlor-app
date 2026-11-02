@@ -5,7 +5,9 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-PaymentMethod = Literal["cash", "esewa", "khalti", "fonepay", "card"]
+PaymentMethod = Literal["cash", "esewa", "khalti", "fonepay", "card", "bank"]
+# Methods a customer can pay by themselves and then ask the parlour to verify.
+OnlineMethod = Literal["esewa", "khalti", "fonepay", "bank"]
 Weekday = Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 Gender = Literal["female", "male", "other"]
 AppointmentStatus = Literal["pending", "confirmed", "completed", "cancelled", "no_show"]
@@ -405,3 +407,47 @@ class AlertsUpdate(CamelModel):
     cancellations: bool | None = None
     payments: bool | None = None
     enrollments: bool | None = None
+
+
+# ---------- Payment requests ("I've paid") ----------
+
+
+class PaymentAccountInput(CamelModel):
+    enabled: bool | None = None
+    account_name: str | None = Field(default=None, max_length=120)
+    account_number: str | None = Field(default=None, max_length=64)
+    bank_name: str | None = Field(default=None, max_length=120)
+    qr: str | None = Field(default=None, max_length=500)
+    instructions: str | None = Field(default=None, max_length=300)
+
+
+class PaymentSettingsUpdate(CamelModel):
+    """`requests`: whether customers may send "I've paid" requests at all."""
+
+    requests: bool | None = None
+    esewa: PaymentAccountInput | None = None
+    khalti: PaymentAccountInput | None = None
+    fonepay: PaymentAccountInput | None = None
+    bank: PaymentAccountInput | None = None
+
+
+class PaymentRequestInput(CamelModel):
+    target_type: Literal["appointment", "enrollment"]
+    target_id: str = Field(min_length=1, max_length=64)
+    amount: int
+    method: OnlineMethod
+    reference: str = Field(min_length=4, max_length=64)
+    paid_on: str
+    note: str = Field(default="", max_length=300)
+    proof: str | None = Field(default=None, max_length=500)
+
+
+class PaymentApproveInput(CamelModel):
+    """`amount`: what actually arrived, if it differs from what the customer reported."""
+
+    amount: int | None = None
+    note: str = Field(default="", max_length=300)
+
+
+class PaymentRejectInput(CamelModel):
+    reason: str = Field(min_length=3, max_length=300)

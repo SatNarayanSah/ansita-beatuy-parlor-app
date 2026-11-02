@@ -20,6 +20,7 @@ import { CustomerFormScreen } from '@/screens/admin/CustomerFormScreen';
 import { EnrollmentDetailScreen } from '@/screens/admin/EnrollmentDetailScreen';
 import { EnrollStudentScreen } from '@/screens/admin/EnrollStudentScreen';
 import { ManageServicesScreen } from '@/screens/admin/ManageServicesScreen';
+import { PaymentRequestsScreen } from '@/screens/admin/PaymentRequestsScreen';
 import { ReportsScreen } from '@/screens/admin/ReportsScreen';
 import { ServiceFormScreen } from '@/screens/admin/ServiceFormScreen';
 import { StaffDetailScreen } from '@/screens/admin/StaffDetailScreen';
@@ -34,8 +35,10 @@ import { BookingSuccessScreen } from '@/screens/customer/BookingSuccessScreen';
 import { EditProfileScreen } from '@/screens/customer/EditProfileScreen';
 import { HelpContactScreen } from '@/screens/customer/HelpContactScreen';
 import { LoyaltyHistoryScreen } from '@/screens/customer/LoyaltyHistoryScreen';
+import { MyCoursesScreen } from '@/screens/customer/MyCoursesScreen';
 import { PreferencesScreen } from '@/screens/customer/PreferencesScreen';
 import { RescheduleScreen } from '@/screens/customer/RescheduleScreen';
+import { SendPaymentScreen } from '@/screens/customer/SendPaymentScreen';
 import { ServiceDetailScreen } from '@/screens/customer/ServiceDetailScreen';
 import { NotificationsScreen } from '@/screens/shared/NotificationsScreen';
 import { SettingsScreen } from '@/screens/shared/SettingsScreen';
@@ -120,6 +123,7 @@ export const RootNavigator = () => {
                 <Stack.Screen name="EnrollStudent" component={EnrollStudentScreen} options={{ title: 'Enroll student' }} />
                 <Stack.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reports' }} />
                 <Stack.Screen name="BusinessSettings" component={BusinessSettingsScreen} options={{ title: 'Business settings' }} />
+                <Stack.Screen name="PaymentRequests" component={PaymentRequestsScreen} options={{ title: 'Online payments' }} />
               </>
             ) : (
               <>
@@ -136,6 +140,8 @@ export const RootNavigator = () => {
                 <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ title: t('profile.preferences') }} />
                 <Stack.Screen name="LoyaltyHistory" component={LoyaltyHistoryScreen} options={{ title: t('profile.loyalty') }} />
                 <Stack.Screen name="HelpContact" component={HelpContactScreen} options={{ title: t('profile.help') }} />
+                <Stack.Screen name="MyCourses" component={MyCoursesScreen} options={{ title: t('profile.courses') }} />
+                <Stack.Screen name="SendPayment" component={SendPaymentScreen} options={{ title: t('appointments.paid') }} />
               </>
             )}
             <Stack.Screen name="Notifications" component={NotificationsScreen} />

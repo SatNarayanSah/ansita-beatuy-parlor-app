@@ -1,5 +1,6 @@
 "use client";
 
+import { openHref } from "@/components/layout/open-from-url";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Bell,
@@ -44,7 +45,9 @@ const LINK_ROUTE: Record<string, string> = {
   offer: "/offers",
 };
 
-const INVALIDATE = ["notifications"];
+const OPENS_RECORD = new Set(["appointment"]);
+
+const INVALIDATE = ["notifications", "payment-requests"];
 
 export default function AccountNotificationsPage() {
   const notifications = useNotifications();
@@ -76,7 +79,8 @@ export default function AccountNotificationsPage() {
 
   function open(n: Notification) {
     if (!n.isRead) markRead.mutate(n.id);
-    if (n.link && LINK_ROUTE[n.link.kind]) router.push(LINK_ROUTE[n.link.kind]);
+    // Appointments and enrollments open the record itself; other kinds open their page.
+    if (n.link && LINK_ROUTE[n.link.kind]) router.push(OPENS_RECORD.has(n.link.kind) ? openHref(LINK_ROUTE[n.link.kind], n.link.id) : LINK_ROUTE[n.link.kind]);
   }
 
   return (

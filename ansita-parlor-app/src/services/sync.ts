@@ -6,6 +6,7 @@ import { useCourseStore } from '@/store/courseStore';
 import { useCustomerStore } from '@/store/customerStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useOfferStore } from '@/store/offerStore';
+import { usePaymentRequestStore } from '@/store/paymentRequestStore';
 import { useReviewStore } from '@/store/reviewStore';
 import { useServiceStore } from '@/store/serviceStore';
 import { useStaffStore } from '@/store/staffStore';
@@ -63,6 +64,14 @@ const loadMissingServices = async (appointments: readonly Appointment[]): Promis
     .mergeServices(found.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : [])));
 };
 
+/** Admin: "Payments to verify" on the dashboard. Optional, so a failure never blocks the rest. */
+const loadPendingPaymentCount = (user: User): Promise<void> =>
+  user.role === 'admin'
+    ? api<{ count: number }>('GET', '/payment-requests/pending-count')
+        .then(({ count }) => usePaymentRequestStore.getState().setPendingCount(count))
+        .catch(() => undefined)
+    : Promise.resolve();
+
 const loadAppointments = async (user: User): Promise<void> => {
   const list = await api<Appointment[]>('GET', '/appointments');
   useAppointmentStore.getState().setAppointments(list);
@@ -88,7 +97,7 @@ export const loadSessionData = async (user: User): Promise<void> => {
       : user.customerId
         ? [api<Customer>('GET', `/customers/${user.customerId}`).then((customer) => useCustomerStore.getState().setCustomers([customer]))]
         : [];
-  await settle([...common, ...byRole, loadAppointments(user)]);
+  await settle([...common, ...byRole, loadAppointments(user), loadPendingPaymentCount(user)]);
 };
 
 /** The fast-changing data: bookings, notifications, settings and the account itself. */
@@ -98,6 +107,7 @@ export const refreshLiveData = async (): Promise<void> => {
   await settle([
     refreshNotifications(),
     loadAppointments(user),
+    loadPendingPaymentCount(user),
     api<BusinessSettings>('GET', '/settings').then((settings) => useBusinessStore.getState().setSettings(settings)),
     api<User>('GET', '/auth/me').then((me) => {
       if (me && useAuthStore.getState().user?.id === me.id) useAuthStore.getState().setUser(me);

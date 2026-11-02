@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { Award, CalendarDays, Clock, GraduationCap } from "lucide-react";
 import Link from "next/link";
+import { PayOnline } from "@/components/payments/payment-requests";
 import { Badge, Button, Card, EmptyState, ErrorState, PageHeader, PaymentProgress, Skeleton, StatusBadge } from "@/components/ui";
 import { formatDate, label, money, time12 } from "@/lib/format";
 import { useEnrollments } from "@/lib/queries";
@@ -135,6 +136,7 @@ export default function MyCoursesPage() {
                     Fees <span className="normal-case">{due > 0 ? `${money(due)} due` : "Paid in full"}</span>
                   </p>
                   <PaymentProgress paid={e.feePaid} total={e.feeTotal} />
+                  <PayOnline target={{ type: "enrollment", id: e.id, due, payable: e.status !== "dropped" }} />
                 </div>
 
                 {course?.certificate && (

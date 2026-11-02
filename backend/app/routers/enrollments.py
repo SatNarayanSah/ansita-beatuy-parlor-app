@@ -6,6 +6,7 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Customer, Enrollment, User
 from ..notify import link, notify_admins, notify_customer
+from ..payments import add_enrollment_payment
 from ..schemas import AttendanceInput, BatchAttendanceInput, EnrollInput, EnrollmentStatusInput, PaymentInput
 from ..security import assert_customer_access, get_current_user, require_admin
 from ..serializers import to_dict, to_list
@@ -161,20 +162,7 @@ def update_status(id_: str, body: EnrollmentStatusInput, _: User = Depends(requi
 @router.post("/{id_}/payments")
 def record_fee_payment(id_: str, body: PaymentInput, _: User = Depends(require_admin), db: Session = Depends(get_db)):
     enrollment = _enrollment(db, id_, lock=True)
-    if enrollment.status == "dropped":
-        raise ApiError("VALIDATION", "This enrollment was dropped.")
-    due = enrollment.fee_total - enrollment.fee_paid
-    if body.amount <= 0:
-        raise ApiError("VALIDATION", "Enter a valid amount.")
-    if body.amount > due:
-        raise ApiError("VALIDATION", f"Amount exceeds the balance due ({format_currency(due)}).")
-    enrollment.fee_paid += body.amount
-    enrollment.payments = [
-        *enrollment.payments,
-        {"id": generate_id("pay"), "amount": body.amount, "paidOn": today_iso(), "method": body.method},
-    ]
-    if enrollment.status == "pending":
-        enrollment.status = "active"
+    add_enrollment_payment(enrollment, body.amount, body.method)
     notify_customer(db, enrollment.student_id, "payment", "Fee received",
                     f"Thank you! {format_currency(body.amount)} received towards your course fee.",
                     link("enrollment", id_))

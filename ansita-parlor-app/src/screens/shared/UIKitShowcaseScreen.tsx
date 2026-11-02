@@ -283,7 +283,7 @@ const InputsSection = () => {
         error={email.includes('.') ? null : 'Enter a valid email address'}
       />
       <Input label="Password" leftIcon="lock-closed-outline" value={password} onChangeText={setPassword} secureTextEntry helperText="At least 8 characters" />
-      <Input label="Branch" leftIcon="business-outline" value="Janakpur — Bhanu Chowk" disabled />
+      <Input label="Branch" leftIcon="business-outline" value="Janakpur — Ramanand Chowk" disabled />
       <Input
         label="Notes"
         placeholder="Allergies, preferences…"

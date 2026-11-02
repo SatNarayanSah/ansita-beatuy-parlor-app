@@ -22,6 +22,7 @@ import {
   selectCurrentUser,
   selectUnreadCount,
   useAuthStore,
+  useCourseStore,
   useCustomerStore,
   useNotificationStore,
   useSettingsStore,
@@ -46,6 +47,8 @@ export const ProfileScreen = ({ navigation }: Props) => {
   const unread = useNotificationStore((state) => (user ? selectUnreadCount(state.notifications, user.id) : 0));
   const language = useSettingsStore((state) => state.language);
   const setLanguage = useSettingsStore((state) => state.setLanguage);
+  // Customers only receive their own enrollments; the entry shows once they've joined a course.
+  const hasCourses = useCourseStore((state) => state.enrollments.length > 0);
   const [photoOpen, setPhotoOpen] = useState(false);
 
   if (!user) return null;
@@ -74,6 +77,19 @@ export const ProfileScreen = ({ navigation }: Props) => {
         <Divider inset={56} />
         <ListItem title={t('profile.loyalty')} leftIcon="diamond-outline" leftIconTone="accent" showChevron onPress={() => navigation.navigate('LoyaltyHistory')} />
         <Divider inset={56} />
+        {hasCourses ? (
+          <>
+            <ListItem
+              title={t('profile.courses')}
+              subtitle="Fees, attendance, certificates"
+              leftIcon="school-outline"
+              leftIconTone="success"
+              showChevron
+              onPress={() => navigation.navigate('MyCourses')}
+            />
+            <Divider inset={56} />
+          </>
+        ) : null}
         <ListItem
           title={t('profile.preferences')}
           subtitle="Favourite stylist, reminders, payment"

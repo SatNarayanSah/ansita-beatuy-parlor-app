@@ -1,16 +1,19 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { BellRing, Building2, CalendarOff, Gift, KeyRound, Plus, Save, Trash2, UserCog } from "lucide-react";
+import { BellRing, Building2, CalendarOff, Gift, KeyRound, Landmark, Plus, Save, Trash2, UserCog, Wallet } from "lucide-react";
 import { useState } from "react";
-import { Avatar, Button, Card, EmptyState, ErrorState, Field, Input, PageHeader, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
+import { OpenFromUrl } from "@/components/layout/open-from-url";
+import { AccountDetails } from "@/components/payments/payment-requests";
+import { Avatar, Button, Card, EmptyState, ErrorState, Field, ImageUpload, Input, PageHeader, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
 import { api, tokenStore } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { formatDate, money, relativeDay, todayISO } from "@/lib/format";
+import { formatDate, label, money, ONLINE_METHODS, relativeDay, todayISO } from "@/lib/format";
 import { useAction, useSettings } from "@/lib/queries";
-import type { AdminAlerts, BusinessProfile, BusinessSettings, LoyaltyRules, User } from "@/lib/types";
+import type { AdminAlerts, BusinessProfile, BusinessSettings, LoyaltyRules, OnlineMethod, PaymentAccount, PaymentSettings, User } from "@/lib/types";
 
-type Section = "profile" | "holidays" | "loyalty" | "alerts" | "account";
+type Section = "profile" | "holidays" | "loyalty" | "payments" | "alerts" | "account";
+const SECTIONS: Section[] = ["profile", "holidays", "loyalty", "payments", "alerts", "account"];
 
 function Panel({ icon, title, description, children, footer }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode; footer?: React.ReactNode }) {
   return (
@@ -236,12 +239,115 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
   );
 }
 
+// ---------- Online payments ----------
+
+const METHOD_HINT: Record<OnlineMethod, string> = {
+  esewa: "Your eSewa ID (mobile number) and QR from the eSewa merchant app.",
+  khalti: "Your Khalti ID (mobile number) and QR.",
+  fonepay: "Fonepay merchant QR; customers scan it from any bank app.",
+  bank: "Bank account for direct transfers (Connect IPS, mobile banking).",
+};
+
+function PaymentsSection({ payments }: { payments: PaymentSettings }) {
+  const [requests, setRequests] = useState(payments.requests);
+  const [accounts, setAccounts] = useState<Record<OnlineMethod, PaymentAccount>>(() => ({
+    esewa: payments.esewa,
+    khalti: payments.khalti,
+    fonepay: payments.fonepay,
+    bank: payments.bank,
+  }));
+  const [method, setMethod] = useState<OnlineMethod>("esewa");
+  const [uploading, setUploading] = useState(false);
+  const set = (patch: Partial<PaymentAccount>) => setAccounts((all) => ({ ...all, [method]: { ...all[method], ...patch } }));
+  const account = accounts[method];
+  const save = useAction(
+    () => api.patch("/settings/payments", { requests, ...Object.fromEntries(ONLINE_METHODS.map((m) => [m, { ...accounts[m], qr: accounts[m].qr || null }])) }),
+    { invalidate: ["settings"], success: "Payment accounts saved" },
+  );
+  const missing = ONLINE_METHODS.filter((m) => accounts[m].enabled && !accounts[m].accountNumber.trim() && !accounts[m].qr);
+
+  return (
+    <Panel
+      icon={<Wallet className="h-5 w-5" />}
+      title="Online payments"
+      description="Where customers can pay you directly. After paying they send the transaction ID, and you approve it in Payments."
+      footer={
+        <Button icon={<Save className="h-4 w-4" />} loading={save.isPending} disabled={uploading || missing.length > 0} onClick={() => save.mutate()}>
+          Save accounts
+        </Button>
+      }
+    >
+      <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-line p-4">
+        <div>
+          <p className="text-sm font-semibold text-ink">&ldquo;I&apos;ve paid&rdquo; requests</p>
+          <p className="text-xs text-muted">{requests ? "Customers can tell you they've paid online." : "Off: customers pay at the counter only."}</p>
+        </div>
+        <Switch checked={requests} onChange={setRequests} label="Allow payment requests" />
+      </div>
+
+      <motion.div animate={{ opacity: requests ? 1 : 0.5 }}>
+        <Tabs
+          value={method}
+          onChange={setMethod}
+          className="mb-5"
+          options={ONLINE_METHODS.map((m) => ({ value: m, label: `${label(m)}${accounts[m].enabled ? " ✓" : ""}` }))}
+        />
+        <AnimatePresence mode="wait">
+          <motion.div key={method} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+            <div className="mb-4 flex items-center justify-between gap-4 rounded-xl bg-surface-alt/60 p-3">
+              <p className="flex items-center gap-2 text-xs text-ink-2">
+                <Landmark className="h-4 w-4 shrink-0 text-primary" /> {METHOD_HINT[method]}
+              </p>
+              <Switch checked={account.enabled} onChange={(enabled) => set({ enabled })} label={`Accept ${label(method)}`} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {method === "bank" && (
+                <Field label="Bank name" className="sm:col-span-2">
+                  <Input value={account.bankName} onChange={(e) => set({ bankName: e.target.value })} placeholder="e.g. Nabil Bank, Janakpur branch" maxLength={120} />
+                </Field>
+              )}
+              <Field label="Account name">
+                <Input value={account.accountName} onChange={(e) => set({ accountName: e.target.value })} placeholder="Ansita Beauty Parlour" maxLength={120} />
+              </Field>
+              <Field
+                label={method === "bank" ? "Account number" : `${label(method)} ID / number`}
+                error={account.enabled && !account.accountNumber.trim() && !account.qr ? "Add a number or a QR code" : undefined}
+              >
+                <Input value={account.accountNumber} onChange={(e) => set({ accountNumber: e.target.value })} className="font-mono" maxLength={64} />
+              </Field>
+              <Field label="Instructions for customers (optional)" className="sm:col-span-2">
+                <Input value={account.instructions} onChange={(e) => set({ instructions: e.target.value })} placeholder="e.g. Write your name in the remarks" maxLength={300} />
+              </Field>
+              <ImageUpload
+                label="QR code (optional)"
+                shape="square"
+                hint="Customers can scan it to pay."
+                value={account.qr}
+                onChange={(qr) => set({ qr: qr || null })}
+                onUploadingChange={setUploading}
+              />
+              <div>
+                <p className="mb-1.5 text-xs font-medium tracking-wide text-ink-2">What customers see</p>
+                {account.enabled ? (
+                  <AccountDetails method={method} account={account} />
+                ) : (
+                  <p className="rounded-2xl border border-dashed border-line p-4 text-center text-xs text-muted">Turn {label(method)} on to offer it.</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </Panel>
+  );
+}
+
 // ---------- Alerts ----------
 
 const ALERT_ROWS: { key: keyof AdminAlerts; title: string; description: string }[] = [
   { key: "newBookings", title: "New bookings", description: "When a customer requests an appointment in the app." },
   { key: "cancellations", title: "Cancellations", description: "When a customer cancels a booking." },
-  { key: "payments", title: "Payments", description: "When a payment is recorded." },
+  { key: "payments", title: "Payments", description: "When a customer says they've paid online and it needs checking." },
   { key: "enrollments", title: "Enrollments", description: "When a student joins a course." },
 ];
 
@@ -364,7 +470,8 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Business" title="Settings" subtitle="Parlour profile, holidays, loyalty, alerts and your account." />
+      <PageHeader eyebrow="Business" title="Settings" subtitle="Parlour profile, holidays, loyalty, online payments, alerts and your account." />
+      <OpenFromUrl param="tab" onOpen={(tab) => SECTIONS.includes(tab as Section) && setSection(tab as Section)} />
       <Tabs
         value={section}
         onChange={setSection}
@@ -373,6 +480,7 @@ export default function SettingsPage() {
           { value: "profile", label: "Profile" },
           { value: "holidays", label: "Holidays", count: data?.holidays.filter((h) => h.date >= todayISO()).length },
           { value: "loyalty", label: "Loyalty" },
+          { value: "payments", label: "Payments" },
           { value: "alerts", label: "Alerts" },
           { value: "account", label: "Account" },
         ]}
@@ -387,6 +495,7 @@ export default function SettingsPage() {
             {section === "profile" && <ProfileSection key={JSON.stringify(data.profile)} profile={data.profile} />}
             {section === "holidays" && <HolidaysSection holidays={data.holidays} />}
             {section === "loyalty" && <LoyaltySection key={JSON.stringify(data.loyalty)} loyalty={data.loyalty} />}
+            {section === "payments" && <PaymentsSection key={JSON.stringify(data.payments)} payments={data.payments} />}
             {section === "alerts" && <AlertsSection alerts={data.alerts} />}
             {section === "account" && <AccountSection />}
           </motion.div>

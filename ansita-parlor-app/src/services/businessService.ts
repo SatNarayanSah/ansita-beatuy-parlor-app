@@ -1,7 +1,7 @@
-import { useBusinessStore } from '@/store/businessStore';
-import type { AdminAlerts, BusinessProfile, BusinessSettings, Holiday, LoyaltyRules } from '@/types';
+import { ONLINE_PAYMENT_METHODS, useBusinessStore } from '@/store/businessStore';
+import type { AdminAlerts, BusinessProfile, BusinessSettings, Holiday, LoyaltyRules, PaymentSettingsUpdate } from '@/types';
 
-import { api } from './client';
+import { api, withUploadedImage } from './client';
 
 const cacheSettings = (settings: BusinessSettings): BusinessSettings => {
   useBusinessStore.getState().setSettings(settings);
@@ -27,4 +27,18 @@ export const businessService = {
 
   updateAlerts: async (input: Partial<AdminAlerts>): Promise<BusinessSettings> =>
     cacheSettings(await api<BusinessSettings>('PATCH', '/settings/alerts', { body: input })),
+
+  /**
+   * Online accounts customers pay into, and whether they may send "I've paid" requests.
+   * A method can only be turned on once it has an account number/ID or a QR code.
+   * A QR code picked on this phone is uploaded first.
+   */
+  updatePayments: async (input: PaymentSettingsUpdate): Promise<BusinessSettings> => {
+    const body: PaymentSettingsUpdate = { ...input };
+    for (const method of ONLINE_PAYMENT_METHODS) {
+      const account = body[method];
+      if (account) body[method] = await withUploadedImage(account, 'qr');
+    }
+    return cacheSettings(await api<BusinessSettings>('PATCH', '/settings/payments', { body }));
+  },
 };

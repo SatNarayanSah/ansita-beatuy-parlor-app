@@ -10,3 +10,4 @@ export * from './notification';
 export * from './review';
 export * from './offer';
 export * from './business';
+export * from './paymentRequest';

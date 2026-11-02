@@ -2,7 +2,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps, NavigatorScreenParams } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import type { ID, ISODate, TimeString } from '@/types';
+import type { ID, ISODate, PaymentRequestTarget, TimeString } from '@/types';
 
 /** Root stack. Guest and signed-in screens are mutually exclusive groups. */
 export type RootStackParamList = {
@@ -29,6 +29,10 @@ export type RootStackParamList = {
   Preferences: undefined;
   LoyaltyHistory: undefined;
   HelpContact: undefined;
+  /** The customer's course enrollments (fees, attendance, "I've paid"). */
+  MyCourses: undefined;
+  /** "I've paid": tell the parlour about a payment made to its eSewa/Khalti/Fonepay/bank account. */
+  SendPayment: { targetType: PaymentRequestTarget; targetId: ID };
   // Admin
   AppointmentDetail: { appointmentId: ID };
   /** New booking (optionally prefilled) or, with `appointmentId`, edit/reschedule. */
@@ -49,6 +53,8 @@ export type RootStackParamList = {
   EnrollStudent: { courseId?: ID; customerId?: ID } | undefined;
   Reports: undefined;
   BusinessSettings: undefined;
+  /** Customers' "I've paid" requests; pending ones first. */
+  PaymentRequests: undefined;
 };
 
 export type AppointmentsTab = 'upcoming' | 'past' | 'cancelled';

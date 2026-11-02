@@ -442,3 +442,123 @@ def test_upload_links_follow_the_callers_host(client, admin):
     external = "https://images.example.com/stylist.jpg"
     client.patch(f"/staff/{staff_id}", json={"avatar": external}, headers=admin)
     assert client.get(f"/staff/{staff_id}", headers=admin).json()["avatar"] == external
+
+
+def test_payment_requests(client, admin):
+    """Customer: "I've paid" by eSewa → admins notified → approve records it; reject needs a reason."""
+    user, customer = register(client, "Kiran Sah", "kiran.pay@example.com", "9812000031")
+    _, stranger = register(client, "Other Person", "other.pay@example.com", "9812000032")
+    customer_id = user["customerId"]
+    day = (now_local().date() + timedelta(days=3)).isoformat()
+    today = now_local().date().isoformat()
+    with SessionLocal() as db:
+        appointment = Appointment(
+            id=generate_id("apt"), customer_id=customer_id, service_ids=["svc_pedicure"], staff_id="stf_rojina",
+            date=day, start_time="12:00", end_time="12:50", status="confirmed", notes="",
+            total_price=2000, amount_paid=0, payment_status="unpaid", payments=[],
+        )
+        db.add(appointment)
+        db.commit()
+        apt_id = appointment.id
+    claim = {"targetType": "appointment", "targetId": apt_id, "amount": 1500, "method": "esewa",
+             "reference": "  0abc 123x ", "paidOn": today}
+
+    # With no account set up, every online method is offered; once one is, only those.
+    assert set(client.get("/settings", headers=customer).json()["payments"]) >= {"esewa", "khalti", "fonepay", "bank"}
+    off = client.patch("/settings/payments", json={"esewa": {"enabled": True}}, headers=admin)
+    assert off.json()["code"] == "VALIDATION"  # needs an ID or QR first
+    on = client.patch("/settings/payments", json={"esewa": {"enabled": True, "accountName": "Ansita", "accountNumber": "9841500100"}}, headers=admin)
+    assert on.status_code == 200 and on.json()["payments"]["esewa"]["accountNumber"] == "9841500100"
+    assert client.get("/settings", headers=customer).json()["payments"]["esewa"]["enabled"] is True
+    assert client.post("/payment-requests", json={**claim, "method": "khalti"}, headers=customer).json()["code"] == "VALIDATION"
+
+    # Only the owner, only online methods, only up to what's due, not in the future.
+    assert client.post("/payment-requests", json=claim, headers=stranger).status_code == 403
+    assert client.post("/payment-requests", json={**claim, "method": "cash"}, headers=customer).status_code == 422
+    assert client.post("/payment-requests", json={**claim, "amount": 2500}, headers=customer).json()["code"] == "VALIDATION"
+    future = (now_local().date() + timedelta(days=1)).isoformat()
+    assert client.post("/payment-requests", json={**claim, "paidOn": future}, headers=customer).json()["code"] == "VALIDATION"
+    assert client.post("/payment-requests", json=claim, headers=admin).status_code == 403
+
+    before = client.get("/notifications/unread-count", headers=admin).json()["count"]
+    created = client.post("/payment-requests", json=claim, headers=customer)
+    assert created.status_code == 201, created.text
+    request = created.json()
+    assert request["status"] == "pending" and request["reference"] == "0ABC 123X" and request["balanceDue"] == 2000
+    assert client.get("/notifications/unread-count", headers=admin).json()["count"] == before + 1
+    # The bill is unchanged until verified.
+    assert client.get(f"/appointments/{apt_id}", headers=customer).json()["amountPaid"] == 0
+    # Same transaction twice, or more than is left after pending ones, is refused.
+    assert client.post("/payment-requests", json={**claim, "amount": 100}, headers=customer).json()["code"] == "CONFLICT"
+    over = client.post("/payment-requests", json={**claim, "amount": 600, "reference": "SECOND-1"}, headers=customer)
+    assert over.json()["code"] == "VALIDATION"
+    assert client.get("/payment-requests/pending-count", headers=admin).json()["count"] >= 1
+    assert client.get("/payment-requests/pending-count", headers=customer).status_code == 403
+    assert [r["id"] for r in client.get("/payment-requests", headers=stranger).json()] == []
+
+    # Approve a different amount than reported (only 1200 arrived).
+    approved = client.post(f"/payment-requests/{request['id']}/approve", json={"amount": 1200}, headers=admin)
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["status"] == "approved" and approved.json()["approvedAmount"] == 1200
+    bill = client.get(f"/appointments/{apt_id}", headers=customer).json()
+    assert bill["amountPaid"] == 1200 and bill["paymentStatus"] == "partial"
+    assert bill["payments"][-1]["reference"] == "0ABC 123X" and bill["payments"][-1]["paidOn"] == today
+    assert client.post(f"/payment-requests/{request['id']}/approve", json={}, headers=admin).json()["code"] == "CONFLICT"
+    titles = [n["title"] for n in client.get("/notifications", headers=customer).json()]
+    assert "Payment confirmed" in titles
+
+    # Second request: rejected with a reason; a third is withdrawn by the customer.
+    second = client.post("/payment-requests", json={**claim, "amount": 800, "reference": "SECOND-1"}, headers=customer).json()
+    assert client.post(f"/payment-requests/{second['id']}/reject", json={"reason": ""}, headers=admin).status_code == 422
+    rejected = client.post(f"/payment-requests/{second['id']}/reject", json={"reason": "No such transaction in eSewa"}, headers=admin)
+    assert rejected.json()["status"] == "rejected"
+    assert client.get(f"/appointments/{apt_id}", headers=admin).json()["amountPaid"] == 1200
+    third = client.post("/payment-requests", json={**claim, "amount": 800, "reference": "THIRD-1"}, headers=customer).json()
+    assert client.post(f"/payment-requests/{third['id']}/cancel", headers=stranger).status_code == 403
+    assert client.post(f"/payment-requests/{third['id']}/cancel", headers=customer).json()["status"] == "cancelled"
+
+    # Cash recorded at the counter meanwhile: approving more than is now due is refused.
+    fourth = client.post("/payment-requests", json={**claim, "amount": 800, "reference": "FOURTH-1"}, headers=customer).json()
+    client.post(f"/appointments/{apt_id}/payments", json={"amount": 500, "method": "cash"}, headers=admin)
+    assert client.post(f"/payment-requests/{fourth['id']}/approve", json={}, headers=admin).json()["code"] == "VALIDATION"
+    assert client.post(f"/payment-requests/{fourth['id']}/approve", json={"amount": 300}, headers=admin).status_code == 200
+    assert client.get(f"/appointments/{apt_id}", headers=admin).json()["paymentStatus"] == "paid"
+
+    # Customers can upload a screenshot; links that aren't uploads are refused as proof.
+    png = b"\x89PNG\r\n\x1a\n" + b"\x02" * 16
+    assert client.post("/uploads", content=png, headers={**customer, "Content-Type": "image/png"}).status_code == 201
+    assert client.patch("/settings/payments", json={"khalti": {"qr": "https://evil.example/qr.png"}}, headers=admin).json()["code"] == "VALIDATION"
+
+
+
+def test_payment_request_before_any_account_is_set_up(client, admin):
+    """Customers who paid a number the parlour gave them can still say so."""
+    from app.business import get_business
+
+    with SessionLocal() as db:
+        row = get_business(db)
+        saved = row.payment_accounts
+        row.payment_accounts = None
+        db.commit()
+    try:
+        user, customer = register(client, "Gita Yadav", "gita.pay@example.com", "9812000077")
+        with SessionLocal() as db:
+            appointment = Appointment(
+                id=generate_id("apt"), customer_id=user["customerId"], service_ids=["svc_pedicure"], staff_id="stf_rojina",
+                date=now_local().date().isoformat(), start_time="09:00", end_time="09:50", status="confirmed", notes="",
+                total_price=700, amount_paid=200, payment_status="partial", payments=[],
+            )
+            db.add(appointment)
+            db.commit()
+        claim = {"targetType": "appointment", "targetId": appointment.id, "amount": 500, "method": "khalti",
+                 "reference": "KH12345", "paidOn": now_local().date().isoformat()}
+        sent = client.post("/payment-requests", json=claim, headers=customer)
+        assert sent.status_code in (200, 201), sent.text
+        # Switching requests off still stops them.
+        client.patch("/settings/payments", json={"requests": False}, headers=admin)
+        again = client.post("/payment-requests", json={**claim, "amount": 100, "reference": "KH999"}, headers=customer)
+        assert again.status_code == 422 or again.json().get("code") == "VALIDATION"
+    finally:
+        with SessionLocal() as db:
+            get_business(db).payment_accounts = saved
+            db.commit()

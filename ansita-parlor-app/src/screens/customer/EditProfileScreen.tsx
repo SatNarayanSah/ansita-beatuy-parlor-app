@@ -132,7 +132,7 @@ export const EditProfileScreen = ({ navigation }: Props) => {
                 />
               )}
             />
-            <FormInput control={control} name="addressLine" label="Address" leftIcon="home-outline" placeholder="e.g. Bhanu Chowk, Janakpur-8" />
+            <FormInput control={control} name="addressLine" label="Address" leftIcon="home-outline" placeholder="e.g. Ramanand Chowk, Janakpur-8" />
             <FormInput control={control} name="city" label="City" leftIcon="business-outline" placeholder="Janakpur" />
             <Button title={t('common.save')} size="lg" loading={saving} disabled={!formState.isDirty} onPress={() => void save()} fullWidth />
           </View>

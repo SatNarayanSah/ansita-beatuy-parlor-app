@@ -13,7 +13,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         "phone": "+97741520123",
         "whatsapp": "+9779841500100",
         "email": "hello@ansita.com",
-        "address": "Bhanu Chowk, Janakpur-8, Dhanusha 45600",
+        "address": "Ramanand Chowk, Janakpur-8, Dhanusha 45600",
         "openTime": "10:00",
         "closeTime": "19:00",
     },
@@ -21,6 +21,38 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "loyalty": {"enabled": True, "rupeesPerPoint": 100, "pointValue": 1, "minRedeemPoints": 500},
     "alerts": {"newBookings": True, "cancellations": True, "payments": True, "enrollments": True},
 }
+
+
+ONLINE_METHODS = ("esewa", "khalti", "fonepay", "bank")
+
+_EMPTY_ACCOUNT = {"enabled": False, "accountName": "", "accountNumber": "", "bankName": "", "qr": None, "instructions": ""}
+
+
+def payment_settings(row: "BusinessSettingsRow") -> dict[str, Any]:
+    """Online payment accounts with every key present. QR images get a full link for this request."""
+    from .image_urls import to_public
+
+    stored = row.payment_accounts or {}
+    accounts = {}
+    for method in ONLINE_METHODS:
+        account = {**_EMPTY_ACCOUNT, **(stored.get(method) or {})}
+        account["qr"] = to_public(account.get("qr"))
+        accounts[method] = account
+    return {"requests": bool(stored.get("requests", True)), **accounts}
+
+
+def online_methods(row: "BusinessSettingsRow") -> list[str]:
+    """Methods customers can send "I've paid" for. Until the parlour sets up any account,
+    all of them are allowed, so customers who paid a number they already know can say so."""
+    settings = payment_settings(row)
+    if not settings["requests"]:
+        return []
+    enabled = [method for method in ONLINE_METHODS if settings[method]["enabled"]]
+    return enabled or list(ONLINE_METHODS)
+
+
+def accepts_online(row: "BusinessSettingsRow", method: str) -> bool:
+    return method in online_methods(row)
 
 
 def get_business(db: Session, *, lock: bool = False) -> BusinessSettingsRow:
@@ -42,7 +74,8 @@ def _copy(value: Any) -> Any:
 
 def snapshot(row: BusinessSettingsRow) -> dict[str, Any]:
     loyalty = {"minRedeemPoints": DEFAULT_SETTINGS["loyalty"]["minRedeemPoints"], **row.loyalty}
-    return {"profile": row.profile, "holidays": row.holidays, "loyalty": loyalty, "alerts": row.alerts}
+    return {"profile": row.profile, "holidays": row.holidays, "loyalty": loyalty, "alerts": row.alerts,
+            "payments": payment_settings(row)}
 
 
 def holiday_on(row: BusinessSettingsRow, date: str) -> dict[str, Any] | None:

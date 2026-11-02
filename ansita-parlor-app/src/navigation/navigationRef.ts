@@ -36,8 +36,11 @@ export const openNotificationLink = (role: UserRole, link: NotificationLink | nu
     case 'offer':
       navigate('CustomerTabs', { screen: 'Home' });
       return;
-    // Courses are managed by the parlour; customers have no course screens.
+    // e.g. a course fee payment confirmed or not.
     case 'enrollment':
+      navigate('MyCourses');
+      return;
+    // Courses are managed by the parlour; customers only see their own enrollments.
     case 'course':
     case 'customer':
       return;

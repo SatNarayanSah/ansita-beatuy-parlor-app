@@ -13,6 +13,7 @@ export * from './FAB';
 export * from './FieldWrapper';
 export * from './Icon';
 export * from './IconButton';
+export * from './ImageViewer';
 export * from './Input';
 export * from './ListItem';
 export * from './ListScreen';

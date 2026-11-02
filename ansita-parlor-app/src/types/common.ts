@@ -17,8 +17,11 @@ export type Gender = 'female' | 'male' | 'other';
 
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
-/** Common in Nepal: cash, the eSewa / Khalti wallets, Fonepay QR and cards. */
-export type PaymentMethod = 'cash' | 'esewa' | 'khalti' | 'fonepay' | 'card';
+/** Common in Nepal: cash, the eSewa / Khalti wallets, Fonepay QR, cards and bank transfer. */
+export type PaymentMethod = 'cash' | 'esewa' | 'khalti' | 'fonepay' | 'card' | 'bank';
+
+/** Methods a customer can pay by themselves (outside the app) and then ask the parlour to verify. */
+export type OnlinePaymentMethod = 'esewa' | 'khalti' | 'fonepay' | 'bank';
 
 /** Fields every persisted entity carries. */
 export interface BaseEntity {

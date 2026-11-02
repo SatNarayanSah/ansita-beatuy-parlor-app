@@ -9,10 +9,22 @@ import { serviceNames, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useT } from '@/i18n';
 import type { AppointmentsTab, CustomerTabScreenProps } from '@/navigation/types';
-import { appointmentService, reviewService } from '@/services';
-import { selectCurrentUser, selectUpcomingAppointments, useAppointmentStore, useAuthStore, useReviewStore } from '@/store';
+import { appointmentService, paymentRequestService, reviewService } from '@/services';
+import {
+  selectAmountDue,
+  selectCurrentUser,
+  selectOnlineMethods,
+  selectPendingTotal,
+  selectUpcomingAppointments,
+  useAppointmentStore,
+  useAuthStore,
+  useBusinessStore,
+  useNotificationStore,
+  usePaymentRequestStore,
+  useReviewStore,
+} from '@/store';
 import { useTheme } from '@/theme';
-import type { Appointment } from '@/types';
+import type { Appointment, ID, PaymentRequest } from '@/types';
 import { formatRelativeDay, formatTime12, todayISO } from '@/utils/date';
 
 type Props = CustomerTabScreenProps<'MyAppointments'>;
@@ -35,16 +47,23 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
 
   useAdoptParam(route.params?.tab, setTab);
 
+  const canPayOnline = useBusinessStore((state) => selectOnlineMethods(state.payments).length > 0);
+
   const query = useServiceQuery(
     async () => {
-      const [appointments, reviews] = await Promise.all([
+      const [appointments, reviews, requests] = await Promise.all([
         appointmentService.listAppointments(),
         reviewService.listReviews({ customerId: user?.customerId ?? null }),
+        // Optional extra: the bookings still show if this fails.
+        paymentRequestService.listRequests({ targetType: 'appointment' }).catch((): PaymentRequest[] => []),
       ]);
-      return { appointments, reviews: new Map(reviews.map((review) => [review.appointmentId, review])) };
+      const byAppointment = new Map<ID, PaymentRequest[]>();
+      for (const request of requests) byAppointment.set(request.targetId, [...(byAppointment.get(request.targetId) ?? []), request]);
+      return { appointments, reviews: new Map(reviews.map((review) => [review.appointmentId, review])), requests: byAppointment };
     },
     [user?.customerId],
-    { refetchOn: [useAppointmentStore, useReviewStore] },
+    // New notifications include a request being confirmed or not.
+    { refetchOn: [useAppointmentStore, useReviewStore, usePaymentRequestStore, useNotificationStore] },
   );
 
   const lists = useMemo(() => {
@@ -83,6 +102,9 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
         renderItem={(appointment) => {
           const isUpcoming = tab === 'upcoming';
           const review = query.data?.reviews.get(appointment.id) ?? null;
+          const requests = query.data?.requests.get(appointment.id);
+          const payable = appointment.status !== 'cancelled' && appointment.status !== 'no_show';
+          const room = selectAmountDue(appointment) - selectPendingTotal(requests ?? [], appointment.id);
           return (
             <AppointmentCard
               appointment={appointment}
@@ -93,6 +115,12 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
               onCancel={isUpcoming ? () => setCancelling(appointment) : undefined}
               onReview={appointment.status === 'completed' && !review ? () => setReviewing(appointment) : undefined}
               onRebook={isUpcoming ? undefined : rebook(appointment)}
+              paymentRequests={requests}
+              onPaid={
+                canPayOnline && payable && room > 0
+                  ? () => navigation.navigate('SendPayment', { targetType: 'appointment', targetId: appointment.id })
+                  : undefined
+              }
             />
           );
         }}

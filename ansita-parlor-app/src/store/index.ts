@@ -5,6 +5,7 @@ import { useCourseStore } from './courseStore';
 import { useCustomerStore } from './customerStore';
 import { useNotificationStore } from './notificationStore';
 import { useOfferStore } from './offerStore';
+import { usePaymentRequestStore } from './paymentRequestStore';
 import { useReviewStore } from './reviewStore';
 import { useServiceStore } from './serviceStore';
 import { useSettingsStore } from './settingsStore';
@@ -17,6 +18,7 @@ export * from './courseStore';
 export * from './customerStore';
 export * from './notificationStore';
 export * from './offerStore';
+export * from './paymentRequestStore';
 export * from './reviewStore';
 export * from './serviceStore';
 export * from './settingsStore';
@@ -33,6 +35,7 @@ export const cacheStores = [
   useReviewStore,
   useOfferStore,
   useBusinessStore,
+  usePaymentRequestStore,
 ] as const;
 
 export const resetCacheStores = (): void => {

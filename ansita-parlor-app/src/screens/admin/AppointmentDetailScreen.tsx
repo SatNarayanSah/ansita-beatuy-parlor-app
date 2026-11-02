@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
+import { PendingPaymentRequests } from '@/components/admin/PaymentRequestReview';
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
 import { maxRedeemablePoints, RedeemPointsSheet } from '@/components/admin/RedeemPointsSheet';
 import { ADMIN_CANCEL_REASONS, CancelAppointmentSheet } from '@/components/customer/AppointmentSheets';
@@ -273,6 +274,12 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                   />
                 ) : null}
               </Card>
+
+              <PendingPaymentRequests
+                targetType="appointment"
+                targetId={appointmentId}
+                due={appointment.status === 'cancelled' || appointment.status === 'no_show' ? 0 : due}
+              />
 
               {appointment.notes || appointment.cancellationReason ? (
                 <Card variant="filled" style={{ gap: spacing.xs }}>

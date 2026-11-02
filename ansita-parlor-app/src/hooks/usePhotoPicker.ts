@@ -10,6 +10,8 @@ const MAX_SIDE = 1600;
 export interface PhotoPickerOptions {
   /** Crop shape offered in the picker; square suits profile photos, 4:3 service and course pictures. */
   aspect?: [number, number];
+  /** False keeps the whole picture (e.g. a payment screenshot) instead of offering a crop. */
+  crop?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ const toUploadableJpeg = async (asset: ImagePicker.ImagePickerAsset): Promise<st
 };
 
 /** Photo from the library or camera. Resolves to a local JPEG URI, or null if cancelled/denied. */
-export const usePhotoPicker = ({ aspect = [1, 1] }: PhotoPickerOptions = {}) => {
+export const usePhotoPicker = ({ aspect = [1, 1], crop = true }: PhotoPickerOptions = {}) => {
   const toast = useToast();
   const [aspectX, aspectY] = aspect;
 
@@ -45,9 +47,9 @@ export const usePhotoPicker = ({ aspect = [1, 1] }: PhotoPickerOptions = {}) => 
   );
 
   const pickFromLibrary = useCallback(async (): Promise<string | null> => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [aspectX, aspectY], quality: 1 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: crop, aspect: [aspectX, aspectY], quality: 1 });
     return finish(result);
-  }, [aspectX, aspectY, finish]);
+  }, [aspectX, aspectY, crop, finish]);
 
   const takePhoto = useCallback(async (): Promise<string | null> => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -55,9 +57,9 @@ export const usePhotoPicker = ({ aspect = [1, 1] }: PhotoPickerOptions = {}) => 
       toast.error('Camera access is off. Enable it in your phone settings.');
       return null;
     }
-    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [aspectX, aspectY], quality: 1 });
+    const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: crop, aspect: [aspectX, aspectY], quality: 1 });
     return finish(result);
-  }, [aspectX, aspectY, finish, toast]);
+  }, [aspectX, aspectY, crop, finish, toast]);
 
   return { pickFromLibrary, takePhoto };
 };

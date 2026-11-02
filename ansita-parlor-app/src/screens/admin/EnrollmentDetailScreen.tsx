@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { CertificatePreview } from '@/components/admin/CertificatePreview';
+import { PendingPaymentRequests } from '@/components/admin/PaymentRequestReview';
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import {
@@ -156,6 +157,8 @@ export const EnrollmentDetailScreen = ({ navigation, route }: Props) => {
                   />
                 ) : null}
               </Card>
+
+              <PendingPaymentRequests targetType="enrollment" targetId={enrollmentId} due={enrollment.status === 'dropped' ? 0 : due} />
 
               <Card style={{ gap: spacing.sm }}>
                 <SectionHeader title="Attendance" subtitle={`${enrollment.attendance.length} classes recorded`} compact />

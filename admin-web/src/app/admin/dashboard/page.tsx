@@ -18,7 +18,7 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/api";
 import { addDaysISO, compactMoney, formatDate, label, money, time12, todayISO } from "@/lib/format";
-import { useAction, useAppointments, useEnrollments, useLookups, useReviews } from "@/lib/queries";
+import { useAction, useAppointments, useEnrollments, useLookups, usePaymentRequests, useReviews } from "@/lib/queries";
 import type { AppointmentStatus } from "@/lib/types";
 
 // The app's status colours (colors.ts → status.*.fg), as CSS variables so dark mode follows.
@@ -64,6 +64,8 @@ function Section({ title, action, children, className, delay = 0 }: { title: str
 export default function DashboardPage() {
   const today = todayISO();
   const appointments = useAppointments();
+  const paymentRequests = usePaymentRequests({ status: "pending" });
+  const toVerify = paymentRequests.data ?? [];
   const enrollments = useEnrollments();
   const reviews = useReviews();
   const lookups = useLookups();
@@ -128,6 +130,28 @@ export default function DashboardPage() {
           </Link>
         }
       />
+
+      {toVerify.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+          <Link
+            href="/admin/payments"
+            className="group flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning-soft/60 p-4 transition-colors hover:border-warning"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-soft text-warning">
+              <Wallet className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-ink">
+                {toVerify.length} online payment{toVerify.length === 1 ? "" : "s"} to verify
+              </span>
+              <span className="block truncate text-xs text-ink-2">
+                {money(toVerify.reduce((sum, r) => sum + r.amount, 0))} reported · latest from {toVerify[0].customerName}
+              </span>
+            </span>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-ink-2 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+        </motion.div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">

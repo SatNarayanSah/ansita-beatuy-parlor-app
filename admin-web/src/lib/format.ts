@@ -1,5 +1,5 @@
 import { differenceInCalendarDays, format, formatDistanceToNowStrict, parseISO } from "date-fns";
-import type { AppointmentStatus, EnrollmentStatus, PaymentMethod, Weekday } from "./types";
+import type { AppointmentStatus, EnrollmentStatus, OnlineMethod, PaymentMethod, Weekday } from "./types";
 
 /** "Rs. 1,500" — same as the app. */
 export function money(value: number | null | undefined): string {
@@ -75,6 +75,7 @@ export function label(value: string | null | undefined): string {
   if (!value) return "—";
   if (value === "esewa") return "eSewa";
   if (value === "no_show") return "No-show";
+  if (value === "bank") return "Bank transfer";
   return value
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -91,7 +92,8 @@ export function initials(name: string): string {
 }
 
 export const WEEKDAYS: Weekday[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-export const PAYMENT_METHODS: PaymentMethod[] = ["cash", "esewa", "khalti", "fonepay", "card"];
+export const PAYMENT_METHODS: PaymentMethod[] = ["cash", "esewa", "khalti", "fonepay", "card", "bank"];
+export const ONLINE_METHODS: OnlineMethod[] = ["esewa", "khalti", "fonepay", "bank"];
 export const APPOINTMENT_STATUSES: AppointmentStatus[] = ["pending", "confirmed", "completed", "cancelled", "no_show"];
 export const ENROLLMENT_STATUSES: EnrollmentStatus[] = ["pending", "active", "completed", "dropped"];
 
@@ -120,4 +122,6 @@ export const STATUS_TONE: Record<string, Tone> = {
   refunded: "gray",
   upcoming: "blue",
   ongoing: "green",
+  approved: "green",
+  rejected: "red",
 };

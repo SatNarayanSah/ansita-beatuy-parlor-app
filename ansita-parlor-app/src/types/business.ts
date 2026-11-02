@@ -1,4 +1,4 @@
-import type { ISODate, TimeString } from './common';
+import type { ImageUri, ISODate, OnlinePaymentMethod, TimeString } from './common';
 
 export interface BusinessProfile {
   name: string;
@@ -37,9 +37,29 @@ export interface AdminAlerts {
   enrollments: boolean;
 }
 
+/** The parlour's account for one online method, shown to customers who want to pay by it. */
+export interface PaymentAccount {
+  enabled: boolean;
+  accountName: string;
+  /** Wallet ID / mobile number, or the bank account number. */
+  accountNumber: string;
+  /** Bank transfers only. */
+  bankName: string;
+  /** Full link to the uploaded QR code image. */
+  qr: ImageUri | null;
+  instructions: string;
+}
+
+/** Online accounts customers pay into, and whether they may send "I've paid" requests at all. */
+export type PaymentSettings = { requests: boolean } & Record<OnlinePaymentMethod, PaymentAccount>;
+
+/** PATCH /settings/payments: any subset; `qr` must be an uploaded image URL or null. */
+export type PaymentSettingsUpdate = { requests?: boolean } & Partial<Record<OnlinePaymentMethod, Partial<PaymentAccount>>>;
+
 export interface BusinessSettings {
   profile: BusinessProfile;
   holidays: Holiday[];
   loyalty: LoyaltyRules;
   alerts: AdminAlerts;
+  payments: PaymentSettings;
 }

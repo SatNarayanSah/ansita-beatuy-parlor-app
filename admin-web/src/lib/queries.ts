@@ -12,6 +12,7 @@ import type {
   Enrollment,
   Notification,
   Offer,
+  PaymentRequest,
   Review,
   Service,
   ServiceCategory,
@@ -38,6 +39,8 @@ export const keys = {
   publicSettings: ["settings", "public"] as const,
   featuredReviews: ["reviews", "featured"] as const,
   reviewFor: (appointmentId: string) => ["reviews", "appointment", appointmentId] as const,
+  paymentRequests: (filters: Record<string, unknown> = {}) => ["payment-requests", filters] as const,
+  pendingPayments: ["payment-requests", "pending-count"] as const,
 };
 
 // ---------- Reads ----------
@@ -127,6 +130,34 @@ export const useUnreadCount = () =>
 
 export const useSettings = () =>
   useQuery({ queryKey: keys.settings, queryFn: () => api.get<BusinessSettings>("/settings") });
+
+// ---------- "I've paid" requests ----------
+
+export interface PaymentRequestFilters {
+  status?: string;
+  targetType?: "appointment" | "enrollment";
+  targetId?: string;
+}
+
+/** Customers get only their own; pending ones come first. */
+export const usePaymentRequests = (filters: PaymentRequestFilters = {}, enabled = true) =>
+  useQuery({
+    queryKey: keys.paymentRequests({ ...filters }),
+    queryFn: () => api.get<PaymentRequest[]>("/payment-requests", { ...filters }),
+    enabled,
+  });
+
+/** Admin badge: requests waiting for verification. */
+export const usePendingPaymentCount = (enabled = true) =>
+  useQuery({
+    queryKey: keys.pendingPayments,
+    queryFn: () => api.get<{ count: number }>("/payment-requests/pending-count"),
+    refetchInterval: 30_000,
+    enabled,
+  });
+
+/** Everything a payment request touches, for `useAction({ invalidate })`. */
+export const PAYMENT_KEYS = ["payment-requests", "appointments", "enrollments", "notifications", "customers"];
 
 // ---------- Public website (no sign-in needed) ----------
 

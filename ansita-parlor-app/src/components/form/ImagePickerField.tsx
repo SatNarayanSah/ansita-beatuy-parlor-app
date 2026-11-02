@@ -16,8 +16,11 @@ interface ImagePickerFieldProps {
   /** A saved URL, a photo just picked on this phone (local URI), or null. */
   value: string | null;
   onChange: (value: string | null) => void;
-  /** `avatar`: round, square crop (people). `cover`: wide 4:3 picture (services, courses). */
-  variant?: 'avatar' | 'cover';
+  /**
+   * `avatar`: round, square crop (people). `cover`: wide 4:3 picture (services, courses).
+   * `square`: square crop shown whole (QR codes). `document`: no crop, shown whole (screenshots).
+   */
+  variant?: 'avatar' | 'cover' | 'square' | 'document';
   /** Name for the initials shown while an avatar has no photo. */
   name?: string;
   helperText?: string;
@@ -30,7 +33,12 @@ interface ImagePickerFieldProps {
 export const ImagePickerField = ({ label, value, onChange, variant = 'cover', name = '', helperText }: ImagePickerFieldProps) => {
   const { colors, radius, spacing } = useTheme();
   const [open, setOpen] = useState(false);
-  const { pickFromLibrary, takePhoto } = usePhotoPicker({ aspect: variant === 'avatar' ? [1, 1] : [4, 3] });
+  const { pickFromLibrary, takePhoto } = usePhotoPicker({
+    aspect: variant === 'avatar' || variant === 'square' ? [1, 1] : [4, 3],
+    crop: variant !== 'document',
+  });
+  // QR codes and screenshots must be readable in full, so they're never cut off in the preview.
+  const wholeImage = variant === 'square' || variant === 'document';
 
   const choose = async (getUri: () => Promise<string | null>): Promise<void> => {
     setOpen(false);
@@ -60,10 +68,14 @@ export const ImagePickerField = ({ label, value, onChange, variant = 'cover', na
           accessibilityRole="button"
           accessibilityLabel={action}
           onPress={() => setOpen(true)}
-          style={[styles.cover, { borderRadius: radius.lg, borderColor: colors.border, backgroundColor: colors.surfaceAlt }]}
+          style={[
+            styles.cover,
+            variant === 'square' && styles.square,
+            { borderRadius: radius.lg, borderColor: colors.border, backgroundColor: colors.surfaceAlt },
+          ]}
         >
           {value ? (
-            <Image source={{ uri: value }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+            <Image source={{ uri: value }} style={StyleSheet.absoluteFill} contentFit={wholeImage ? 'contain' : 'cover'} transition={150} />
           ) : (
             <View style={[styles.empty, { gap: spacing.xs }]}>
               <Icon name="image-outline" size={28} color={colors.textMuted} />
@@ -112,6 +124,7 @@ export const ImagePickerField = ({ label, value, onChange, variant = 'cover', na
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   cover: { aspectRatio: 4 / 3, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  square: { aspectRatio: 1, width: '100%', maxWidth: 240, alignSelf: 'center' },
   empty: { alignItems: 'center' },
   badge: { position: 'absolute', right: 10, bottom: 10, flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

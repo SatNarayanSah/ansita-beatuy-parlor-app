@@ -58,8 +58,8 @@ export function ImageUpload({
   /** Lets the form disable its Save button while an upload is still running. */
   onUploadingChange?: (uploading: boolean) => void;
   hint?: string;
-  /** wide: 16:9 banner (services, offers, courses). round: profile photo (staff). */
-  shape?: "wide" | "round";
+  /** wide: 16:9 banner (services, offers, courses). round: profile photo (staff). square: QR codes (never cropped). */
+  shape?: "wide" | "round" | "square";
   className?: string;
 }) {
   const inputId = useId();
@@ -144,13 +144,16 @@ export function ImageUpload({
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.97 }}
-              className={cn("relative shrink-0 overflow-hidden bg-bg-deep", round ? "h-20 w-20 rounded-full" : "aspect-[16/9] w-full")}
+              className={cn(
+                "relative shrink-0 overflow-hidden bg-bg-deep",
+                round ? "h-20 w-20 rounded-full" : shape === "square" ? "mx-auto my-3 aspect-square w-44 rounded-xl bg-white" : "aspect-[16/9] w-full",
+              )}
             >
               {broken === shown ? (
                 <div className="flex h-full w-full items-center justify-center p-2 text-center text-[11px] text-muted">Image not found</div>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- uploaded files live on the API host
-                <img src={shown} alt="" className="h-full w-full object-cover" onError={() => setBroken(shown)} />
+                <img src={shown} alt="" className={cn("h-full w-full", shape === "square" ? "object-contain p-1.5" : "object-cover")} onError={() => setBroken(shown)} />
               )}
               <AnimatePresence>
                 {uploading && (
@@ -179,7 +182,7 @@ export function ImageUpload({
               exit={{ opacity: 0 }}
               className={cn(
                 "group flex w-full cursor-pointer flex-col items-center justify-center gap-2 text-center",
-                round ? "h-20 w-20 shrink-0 rounded-full bg-surface" : "aspect-[16/9] max-h-56 px-4",
+                round ? "h-20 w-20 shrink-0 rounded-full bg-surface" : shape === "square" ? "aspect-square max-h-44 px-4" : "aspect-[16/9] max-h-56 px-4",
               )}
               aria-label={`Upload ${label.toLowerCase()}`}
             >

@@ -1,13 +1,16 @@
 """Image uploads: pictures from the admin website and profile photos from the app.
 
-`POST /uploads` takes the raw image bytes as the request body (Content-Type image/jpeg, png,
+`POST /uploads` (any signed-in user; customers at most 20 a day) takes the raw image bytes as the request body (Content-Type image/jpeg, png,
 webp or gif) and returns the absolute URL to store in a record's `image` or `avatar` field.
 The type is checked from the file's first bytes, not just the header; SVG is refused because
 it can carry scripts. Admins can upload any picture; other signed-in users upload their
 own profile photo.
 """
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, Request, Response
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -20,6 +23,7 @@ from ..utils import generate_id
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 MAX_BYTES = 5 * 1024 * 1024
+CUSTOMER_DAILY_LIMIT = 20
 
 
 def _sniff(data: bytes) -> str | None:
@@ -36,6 +40,12 @@ def _sniff(data: bytes) -> str | None:
 
 @router.post("", status_code=201)
 async def upload_image(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if user.role != "admin":
+        # Customers upload profile photos and payment screenshots; cap it so nobody fills the database.
+        since = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        recent = db.scalar(select(func.count()).select_from(Upload).where(Upload.uploaded_by == user.id, Upload.created_at >= since)) or 0
+        if recent >= CUSTOMER_DAILY_LIMIT:
+            raise ApiError("CONFLICT", "You've uploaded a lot of images today. Please try again tomorrow.")
     declared = request.headers.get("content-length")
     if declared and declared.isdigit() and int(declared) > MAX_BYTES:
         raise ApiError("VALIDATION", "Images can be at most 5 MB.")
