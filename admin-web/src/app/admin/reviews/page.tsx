@@ -3,21 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { MessageSquareReply, Star, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  AnimatedNumber,
-  Avatar,
-  Button,
-  Card,
-  ConfirmDialog,
-  EmptyState,
-  ErrorState,
-  PageHeader,
-  Select,
-  Skeleton,
-  Stars,
-  Tabs,
-  Textarea,
-} from "@/components/ui";
+import { AnimatedNumber, Avatar, Button, Card, ConfirmDialog, Dropdown, EmptyState, ErrorState, PageHeader, Skeleton, Stars, Tabs, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { useAction, useLookups, useReviews } from "@/lib/queries";
@@ -169,14 +155,7 @@ export default function ReviewsPage() {
               onChange={setRating}
               options={[{ value: "all", label: "All" }, ...[5, 4, 3, 2, 1].map((n) => ({ value: String(n), label: `${n}★` }))]}
             />
-            <Select value={staffId} onChange={(e) => setStaffId(e.target.value)} className="sm:w-56">
-              <option value="">All staff</option>
-              {[...lookups.staff.values()].map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} {s.rating ? `(${s.rating.toFixed(1)}★)` : ""}
-                </option>
-              ))}
-            </Select>
+            <Dropdown value={staffId} onChange={setStaffId} aria-label="Filter by staff" className="sm:w-56" options={[{ value: "", label: "All staff" }, ...[...lookups.staff.values()].map((s) => ({ value: s.id, label: s.name, description: s.rating ? `${s.rating.toFixed(1)}★ rating` : undefined }))]} />
           </div>
 
           {filtered.length === 0 ? (

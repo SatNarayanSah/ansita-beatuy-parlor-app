@@ -3,28 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Award, CalendarCheck, ClipboardList, Plus, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  Checkbox,
-  DataTable,
-  Drawer,
-  EmptyState,
-  ErrorState,
-  Field,
-  Input,
-  Modal,
-  PageHeader,
-  PaymentDialog,
-  PaymentProgress,
-  Select,
-  Skeleton,
-  StatCard,
-  StatusBadge,
-  Tabs,
-} from "@/components/ui";
+import { Avatar, Badge, Button, Card, Checkbox, DataTable, Drawer, Dropdown, EmptyState, ErrorState, Field, Input, Modal, PageHeader, PaymentDialog, PaymentProgress, Skeleton, StatCard, StatusBadge, Tabs } from "@/components/ui";
 import { api } from "@/lib/api";
 import { ENROLLMENT_STATUSES, formatDate, label, money, PAYMENT_METHODS, todayISO } from "@/lib/format";
 import { useAction, useBatchAvailability, useCourses, useCustomers, useEnrollments, useLookups } from "@/lib/queries";
@@ -111,33 +90,19 @@ function NewEnrollment({ onClose }: { onClose: () => void }) {
     >
       <div className="flex flex-col gap-4">
         <Field label="Student">
-          <Select value={studentId} onChange={(e) => setStudentId(e.target.value)}>
-            <option value="">Choose a customer…</option>
-            {(customers.data ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} · {c.phone}
-              </option>
-            ))}
-          </Select>
+          <Dropdown value={studentId} onChange={setStudentId} placeholder="Choose a customer…" searchable options={(customers.data ?? []).map((c) => ({ value: c.id, label: c.name, description: c.phone }))} />
         </Field>
         <Field label="Course">
-          <Select
+          <Dropdown
             value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
+            onChange={(v) => {
+              setCourseId(v);
               setBatchId("");
               setAmount("");
             }}
-          >
-            <option value="">Choose a course…</option>
-            {(courses.data ?? [])
-              .filter((c) => c.isActive)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title} · {money(c.fee)}
-                </option>
-              ))}
-          </Select>
+            placeholder="Choose a course…"
+            options={(courses.data ?? []).filter((c) => c.isActive).map((c) => ({ value: c.id, label: c.title, description: money(c.fee) }))}
+          />
         </Field>
         <AnimatePresence>
           {courseId && (
@@ -184,13 +149,7 @@ function NewEnrollment({ onClose }: { onClose: () => void }) {
                       <Input type="number" min={1} max={course.fee} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={String(course.fee)} />
                     </Field>
                     <Field label="Method">
-                      <Select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-                        {PAYMENT_METHODS.map((m) => (
-                          <option key={m} value={m}>
-                            {label(m)}
-                          </option>
-                        ))}
-                      </Select>
+                      <Dropdown value={method} onChange={setMethod} options={PAYMENT_METHODS.map((v) => ({ value: v, label: label(v) }))} />
                     </Field>
                   </div>
                   <p className="mt-2 text-xs text-muted">Any payment makes the enrollment active; without one it stays pending.</p>
@@ -247,38 +206,28 @@ function BatchAttendance({ onClose }: { onClose: () => void }) {
     >
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Course">
-          <Select
+          <Dropdown
             value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
+            onChange={(v) => {
+              setCourseId(v);
               setBatchId("");
               setMarks({});
             }}
-          >
-            <option value="">Choose…</option>
-            {(courses.data ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </Select>
+            placeholder="Choose…"
+            options={(courses.data ?? []).map((c) => ({ value: c.id, label: c.title }))}
+          />
         </Field>
         <Field label="Batch">
-          <Select
+          <Dropdown
             value={batchId}
             disabled={!course}
-            onChange={(e) => {
-              setBatchId(e.target.value);
+            onChange={(v) => {
+              setBatchId(v);
               setMarks({});
             }}
-          >
-            <option value="">Choose…</option>
-            {(course?.batches ?? []).map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </Select>
+            placeholder="Choose…"
+            options={(course?.batches ?? []).map((b) => ({ value: b.id, label: b.name }))}
+          />
         </Field>
         <Field label="Class date">
           <Input type="date" max={todayISO()} value={date} onChange={(e) => setDate(e.target.value || todayISO())} />
@@ -528,29 +477,17 @@ export default function EnrollmentsPage() {
             ]}
           />
           <div className="flex gap-2">
-            <Select
+            <Dropdown
               value={courseId}
-              onChange={(e) => {
-                setCourseId(e.target.value);
+              onChange={(v) => {
+                setCourseId(v);
                 setBatchId("");
               }}
+              aria-label="Filter by course"
               className="w-48"
-            >
-              <option value="">All courses</option>
-              {[...lookups.course.values()].map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </Select>
-            <Select value={batchId} onChange={(e) => setBatchId(e.target.value)} disabled={!course} className="w-40">
-              <option value="">All batches</option>
-              {(course?.batches ?? []).map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </Select>
+              options={[{ value: "", label: "All courses" }, ...[...lookups.course.values()].map((c) => ({ value: c.id, label: c.title }))]}
+            />
+            <Dropdown value={batchId} onChange={setBatchId} disabled={!course} aria-label="Filter by batch" className="w-40" options={[{ value: "", label: "All batches" }, ...(course?.batches ?? []).map((b) => ({ value: b.id, label: b.name }))]} />
           </div>
         </div>
         {enrollments.error ? (

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Clock, Pencil, Plus, Scissors, Settings2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Select, Skeleton, Switch, Textarea } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, Dropdown, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Skeleton, Switch, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { minutesLabel, money } from "@/lib/format";
 import { useAction, useCategories, useServices } from "@/lib/queries";
@@ -210,13 +210,7 @@ function ServiceModal({
           <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Bridal makeup" autoFocus />
         </Field>
         <Field label="Category" className="sm:col-span-2">
-          <Select value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <Dropdown value={form.categoryId} onChange={(v) => set("categoryId", v)} placeholder="Choose a category" options={categories.map((c) => ({ value: c.id, label: c.name, icon: <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} /> }))} />
         </Field>
         <Field label="Duration (minutes)" hint={Number(form.duration) > 0 ? minutesLabel(Number(form.duration)) : undefined}>
           <Input type="number" min={5} step={5} value={form.duration} onChange={(e) => set("duration", e.target.value)} />

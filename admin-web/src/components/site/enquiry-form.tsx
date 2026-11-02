@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Send } from "lucide-react";
 import { useState } from "react";
-import { Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { Button, Dropdown, Field, Input, Textarea } from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { sendEnquiry } from "@/lib/queries";
@@ -48,7 +48,7 @@ export function EnquiryForm({ defaultSubject = "General enquiry", subjects = SUB
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const allSubjects = subjects.includes(form.subject) ? subjects : [form.subject, ...subjects];
@@ -109,13 +109,7 @@ export function EnquiryForm({ defaultSubject = "General enquiry", subjects = SUB
               <Input required minLength={2} value={form.name} onChange={set("name")} placeholder="Sita Sharma" autoComplete="name" />
             </Field>
             <Field label="Subject">
-              <Select value={form.subject} onChange={set("subject")}>
-                {allSubjects.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Select>
+              <Dropdown value={form.subject} onChange={(v) => setForm((f) => ({ ...f, subject: v }))} options={allSubjects.map((s) => ({ value: s, label: s }))} />
             </Field>
             <Field label="Phone">
               <Input type="tel" value={form.phone} onChange={set("phone")} placeholder="98XXXXXXXX" autoComplete="tel" />

@@ -1,4 +1,4 @@
-export { ApiError, getErrorMessage, isApiError, type ApiErrorCode } from './client';
+export { ApiError, getErrorMessage, isApiError, isLocalImageUri, uploadImage, type ApiErrorCode } from './client';
 export { API_URL, getApiConfig, subscribeApiConfig, type ApiConfig } from './config';
 export { loadSessionData, refreshLiveData, watchSession } from './sync';
 

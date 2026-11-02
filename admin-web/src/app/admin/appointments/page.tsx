@@ -3,22 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Columns3 } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Avatar,
-  Button,
-  Card,
-  DataTable,
-  EmptyState,
-  ErrorState,
-  Input,
-  PageHeader,
-  PaymentProgress,
-  SearchInput,
-  Select,
-  Skeleton,
-  StatusBadge,
-  Tabs,
-} from "@/components/ui";
+import { Avatar, Button, Card, DataTable, Dropdown, EmptyState, ErrorState, Input, PageHeader, PaymentProgress, SearchInput, Skeleton, StatusBadge, Tabs } from "@/components/ui";
 import { addDaysISO, APPOINTMENT_STATUSES, formatDate, label, money, relativeDay, time12, timeToMinutes, todayISO } from "@/lib/format";
 import { useAppointments, useLookups, useSettings } from "@/lib/queries";
 import type { Appointment } from "@/lib/types";
@@ -209,14 +194,7 @@ function ListView({ onOpen }: { onOpen: (id: string) => void }) {
         />
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <SearchInput value={query} onChange={setQuery} placeholder="Search customer" />
-          <Select value={staffId} onChange={(e) => setStaffId(e.target.value)}>
-            <option value="">All staff</option>
-            {[...lookups.staff.values()].map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </Select>
+          <Dropdown value={staffId} onChange={setStaffId} aria-label="Filter by staff" options={[{ value: "", label: "All staff" }, ...[...lookups.staff.values()].map((s) => ({ value: s.id, label: s.name }))]} />
           <div className="grid grid-cols-2 gap-2 sm:contents">
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="From date" />
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="To date" />

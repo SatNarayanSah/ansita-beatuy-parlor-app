@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Crown, KeyRound, LogOut, MapPin, Save, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Avatar, Button, Card, ErrorState, Field, Input, PageHeader, Select, Skeleton } from "@/components/ui";
+import { Avatar, Button, Card, Dropdown, ErrorState, Field, Input, PageHeader, Skeleton } from "@/components/ui";
 import { api, tokenStore } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
@@ -90,11 +90,7 @@ function PersonalForm({ customer }: { customer: Customer }) {
       className="grid gap-4 sm:grid-cols-2"
     >
       <Field label="Gender">
-        <Select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as Gender })}>
-          <option value="female">Female</option>
-          <option value="male">Male</option>
-          <option value="other">Other</option>
-        </Select>
+        <Dropdown value={form.gender} onChange={(v) => setForm({ ...form, gender: v as Gender })} options={[{ value: "female", label: "Female" }, { value: "male", label: "Male" }, { value: "other", label: "Other" }]} />
       </Field>
       <Field label="Date of birth" hint="We'll send you a birthday treat.">
         <Input type="date" value={form.dob} onChange={set("dob")} />

@@ -126,3 +126,42 @@ export const ensureFound = <T>(value: T | undefined | null, entityName: string):
   }
   return value;
 };
+
+/**
+ * Uploads a photo picked on this phone (a local file:// URI) and returns its public URL,
+ * which is what gets saved on the record so the website and other phones can show it too.
+ * Sent as raw bytes; fetch can't send a local file in React Native, so this uses XMLHttpRequest.
+ */
+export const uploadImage = async (localUri: string): Promise<string> => {
+  let file: Blob;
+  try {
+    file = await (await fetch(localUri)).blob();
+  } catch {
+    throw new ApiError('VALIDATION', 'Couldn’t read that photo. Please choose another one.');
+  }
+  const token = useAuthStore.getState().token;
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_URL}/uploads`);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('Content-Type', file.type || 'image/jpeg');
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.timeout = REQUEST_TIMEOUT_MS * 3;
+    xhr.onerror = xhr.ontimeout = () => {
+      setOffline(true);
+      reject(new ApiError('NETWORK'));
+    };
+    xhr.onload = () => {
+      setOffline(false);
+      const data = parseBody(xhr.responseText) as { url?: string; message?: string } | null;
+      if (xhr.status >= 200 && xhr.status < 300 && typeof data?.url === 'string') return resolve(data.url);
+      if (xhr.status >= 500) return reject(new ApiError('NETWORK', 'The server had a problem. Please try again in a moment.'));
+      const message = typeof data?.message === 'string' && data.message.length > 0 ? data.message : undefined;
+      reject(new ApiError(STATUS_TO_CODE[xhr.status] ?? 'VALIDATION', message ?? (xhr.status === 413 ? 'That photo is too large.' : undefined)));
+    };
+    xhr.send(file);
+  });
+};
+
+/** Device-only file paths, from before photos were uploaded; nobody else can open them. */
+export const isLocalImageUri = (uri: string | null | undefined): uri is string => Boolean(uri) && !/^https?:\/\//.test(uri ?? '');

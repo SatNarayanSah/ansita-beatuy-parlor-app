@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 PaymentMethod = Literal["cash", "esewa", "khalti", "fonepay", "card"]
@@ -58,7 +58,15 @@ class ProfileInput(CamelModel):
     name: str | None = Field(default=None, min_length=2, max_length=120)
     email: str | None = Field(default=None, min_length=3, max_length=254)
     phone: str | None = None
-    avatar: str | None = None
+    avatar: str | None = Field(default=None, max_length=2048)
+
+    @field_validator("avatar")
+    @classmethod
+    def _avatar_is_web_url(cls, value: str | None) -> str | None:
+        # A path on the phone (file://...) can't be opened by the website or other devices.
+        if value is not None and not value.startswith(("http://", "https://")):
+            raise ValueError("Upload the photo first (POST /uploads) and save its URL.")
+        return value
 
 
 class ChangePasswordInput(CamelModel):

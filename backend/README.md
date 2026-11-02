@@ -66,7 +66,7 @@ All endpoints except auth and public catalogue reads need `Authorization: Bearer
 
 **Public (no token), for the website:** `GET /categories`, `GET /services`, `GET /courses`, `GET /offers` and `GET /staff`. Visitors see only what a customer would: active items and offers that are live today. Staff phone and email are blanked for visitors. Also public: `GET /settings/public` (profile, holidays, `loyalty.enabled`), `GET /reviews/featured?limit=6`, `GET /staff/{id}/reviews`, `GET /courses/{id}/batches/availability`, and `POST /contact` `{name, phone?, email?, subject?, message}`. A contact request needs a phone or an email and becomes an admin notification.
 
-**Image uploads:** `POST /uploads` (admin only) takes the raw image bytes as the body, with `Content-Type: image/jpeg|png|webp|gif`, up to 5 MB. The type is checked from the file's own bytes; SVG is refused. It returns `{id, url, contentType, size}`; save `url` in the record's `image` or `avatar`. `GET /uploads/{id}` (public) serves the image with a one-year cache. Images are stored in the database, because Render's disk is wiped on every deploy. Links are built from `PUBLIC_URL` when set, otherwise from the request (Render's forwarded https headers are trusted).
+**Image uploads:** `POST /uploads` (any signed-in user: admins for pictures, customers for their profile photo) takes the raw image bytes as the body, with `Content-Type: image/jpeg|png|webp|gif`, up to 5 MB. The type is checked from the file's own bytes; SVG is refused. It returns `{id, url, contentType, size}`; save `url` in the record's `image` or `avatar`. `GET /uploads/{id}` (public) serves the image with a one-year cache. Images are stored in the database, because Render's disk is wiped on every deploy. Links are built from `PUBLIC_URL` when set, otherwise from the request (Render's forwarded https headers are trusted).
 
 | App service function | Endpoint |
 | --- | --- |
@@ -98,7 +98,6 @@ Not on the server: the demo-only helpers `loginAsDemo`, `switchDemoRole`, `getDe
 ## Not done yet
 
 - **Connecting the app.** Follow the app README's *Backend Migration Guide*: replace `simulateRequest` with a `fetch` wrapper that uses `EXPO_PUBLIC_API_URL` and stores the token in `expo-secure-store`, then swap each service body for the matching call above.
-- **Images from the phone app.** The website uploads through `POST /uploads`. The app still sends local file URIs for profile photos, which won't show on other devices until it uploads through the same endpoint.
 - **Email/SMS** for password-reset codes. Until then `EXPOSE_RESET_CODE=true` returns the code in the response, as the demo does. Set it to `false` once sending works.
 - **Push notifications** (Expo push tokens) and real eSewa/Khalti payment verification.
 - **Database migrations.** Tables are created automatically on start. Add Alembic before changing columns on a live database.

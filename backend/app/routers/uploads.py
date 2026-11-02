@@ -1,9 +1,10 @@
-"""Image uploads from the admin website.
+"""Image uploads: pictures from the admin website and profile photos from the app.
 
 `POST /uploads` takes the raw image bytes as the request body (Content-Type image/jpeg, png,
 webp or gif) and returns the absolute URL to store in a record's `image` or `avatar` field.
 The type is checked from the file's first bytes, not just the header; SVG is refused because
-it can carry scripts.
+it can carry scripts. Admins can upload any picture; other signed-in users upload their
+own profile photo.
 """
 
 from fastapi import APIRouter, Depends, Request, Response
@@ -13,7 +14,7 @@ from ..config import settings
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Upload, User
-from ..security import require_admin
+from ..security import get_current_user
 from ..utils import generate_id
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
@@ -34,7 +35,7 @@ def _sniff(data: bytes) -> str | None:
 
 
 @router.post("", status_code=201)
-async def upload_image(request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+async def upload_image(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     declared = request.headers.get("content-length")
     if declared and declared.isdigit() and int(declared) > MAX_BYTES:
         raise ApiError("VALIDATION", "Images can be at most 5 MB.")
@@ -49,7 +50,7 @@ async def upload_image(request: Request, db: Session = Depends(get_db), admin: U
     if content_type is None:
         raise ApiError("VALIDATION", "Upload a JPG, PNG, WebP or GIF image.")
 
-    upload = Upload(id=generate_id("img"), content_type=content_type, size=len(data), data=bytes(data), uploaded_by=admin.id)
+    upload = Upload(id=generate_id("img"), content_type=content_type, size=len(data), data=bytes(data), uploaded_by=user.id)
     db.add(upload)
     db.commit()
     path = request.app.url_path_for("get_upload", upload_id=upload.id)

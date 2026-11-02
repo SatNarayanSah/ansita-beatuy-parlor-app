@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, Mail, Pencil, Phone, Plus, Star, Trash2, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Avatar, Badge, Button, Card, ConfirmDialog, Drawer, EmptyState, ErrorState, Field, ImageUpload, Input, PageHeader, SearchInput, Select, Skeleton, Stars, StatusBadge, Switch, Tabs } from "@/components/ui";
+import { Avatar, Badge, Button, Card, ConfirmDialog, Drawer, Dropdown, EmptyState, ErrorState, Field, ImageUpload, Input, PageHeader, SearchInput, Skeleton, Stars, StatusBadge, Switch, Tabs } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, time12, todayISO } from "@/lib/format";
 import { useAction, useLookups, useStaff } from "@/lib/queries";
@@ -82,13 +82,7 @@ function StaffEditor({ member, onClose }: { member: Staff | null; onClose: () =>
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} autoFocus />
           </Field>
           <Field label="Role">
-            <Select value={form.role} onChange={(e) => set("role", e.target.value as StaffRole)}>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {label(r)}
-                </option>
-              ))}
-            </Select>
+            <Dropdown value={form.role} onChange={(v) => set("role", v)} options={ROLES.map((v) => ({ value: v, label: label(v) }))} />
           </Field>
           <Field label="Phone">
             <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+977…" />

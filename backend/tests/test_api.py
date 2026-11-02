@@ -314,7 +314,7 @@ def test_push_devices(client, monkeypatch):
 
 def test_image_upload(client, admin):
     png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
-    # Admins only.
+    # Signed-in users only.
     assert client.post("/uploads", content=png, headers={"Content-Type": "image/png"}).status_code == 401
     response = client.post("/uploads", content=png, headers={**admin, "Content-Type": "image/png"})
     assert response.status_code == 201, response.text
@@ -329,3 +329,18 @@ def test_image_upload(client, admin):
     too_big = client.post("/uploads", content=b"\xff\xd8\xff" + b"0" * (5 * 1024 * 1024), headers={**admin, "Content-Type": "image/jpeg"})
     assert too_big.json()["code"] == "VALIDATION"
     assert client.get("/uploads/img_missing").status_code == 404
+
+
+def test_customer_profile_photo(client, admin):
+    user, headers = register(client, "Photo Kumari", "photo@example.com", "9812000021")
+    jpg = b"\xff\xd8\xff\xe0" + b"\x00" * 64
+    # A customer can upload their own photo; the saved link is what admins see.
+    uploaded = client.post("/uploads", content=jpg, headers={**headers, "Content-Type": "image/jpeg"})
+    assert uploaded.status_code == 201, uploaded.text
+    url = uploaded.json()["url"]
+    assert client.patch("/auth/me", json={"avatar": url}, headers=headers).json()["avatar"] == url
+    assert client.get(f"/customers/{user['customerId']}", headers=admin).json()["avatar"] == url
+    # A path on the phone would only ever work on that phone.
+    local = client.patch("/auth/me", json={"avatar": "file:///data/user/0/cache/photo.jpg"}, headers=headers)
+    assert local.status_code == 422
+    assert client.patch("/auth/me", json={"avatar": None}, headers=headers).json()["avatar"] is None

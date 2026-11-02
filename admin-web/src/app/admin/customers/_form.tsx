@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { useState } from "react";
-import { Button, Field, Input, Modal, Select, Textarea } from "@/components/ui";
+import { Button, Dropdown, Field, Input, Modal, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { label } from "@/lib/format";
 import { useAction } from "@/lib/queries";
@@ -111,11 +111,7 @@ export function CustomerForm({ customer, open, onClose, onSaved }: { customer: C
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Gender">
-            <Select value={form.gender} onChange={(e) => set("gender", e.target.value as Gender)}>
-              <option value="female">Female</option>
-              <option value="male">Male</option>
-              <option value="other">Other</option>
-            </Select>
+            <Dropdown value={form.gender} onChange={(v) => set("gender", v as Gender)} options={[{ value: "female", label: "Female" }, { value: "male", label: "Male" }, { value: "other", label: "Other" }]} />
           </Field>
           <Field label="Birthday">
             <Input type="date" value={form.dob} onChange={(e) => set("dob", e.target.value)} />

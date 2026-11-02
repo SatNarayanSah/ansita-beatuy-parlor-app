@@ -3,7 +3,7 @@ import { selectCurrentUser, useAuthStore } from '@/store/authStore';
 import { useCustomerStore } from '@/store/customerStore';
 import type { Customer, ImageUri, User } from '@/types';
 
-import { api } from './client';
+import { api, isLocalImageUri, uploadImage } from './client';
 import { unregisterPhoneNotifications } from './phoneNotifications';
 import { loadSessionData, refreshNotificationsSoon } from './sync';
 
@@ -98,7 +98,9 @@ export const authService = {
 
   /** Updates the account and, for customers, the linked customer profile. */
   updateProfile: async (input: ProfileInput): Promise<User> => {
-    const user = await api<User>('PATCH', '/auth/me', { body: input });
+    // A photo picked on this phone is uploaded first, so the saved link works everywhere.
+    const body = isLocalImageUri(input.avatar) ? { ...input, avatar: await uploadImage(input.avatar) } : input;
+    const user = await api<User>('PATCH', '/auth/me', { body });
     useAuthStore.getState().setUser(user);
     if (user.customerId) {
       const customer = await api<Customer>('GET', `/customers/${user.customerId}`).catch(() => null);

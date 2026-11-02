@@ -98,7 +98,7 @@ export function errorMessage(error: unknown): string {
 export type UploadedImage = { id: string; url: string; contentType: string; size: number };
 
 /**
- * Upload an image (admins only). Sends the raw bytes, not form data, and reports progress
+ * Upload an image (any signed-in user; customers use it for their profile photo). Sends the raw bytes, not form data, and reports progress
  * from 0 to 1 (fetch can't report upload progress, so this uses XMLHttpRequest).
  */
 export function uploadImage(file: Blob, onProgress?: (fraction: number) => void): Promise<UploadedImage> {

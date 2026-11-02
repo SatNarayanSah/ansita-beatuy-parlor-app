@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Award, BookOpen, CalendarRange, Clock, GraduationCap, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Badge, Button, Card, Checkbox, ConfirmDialog, Drawer, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Select, Skeleton, StatusBadge, Switch, Tabs, Textarea } from "@/components/ui";
+import { Badge, Button, Card, Checkbox, ConfirmDialog, Drawer, Dropdown, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Skeleton, StatusBadge, Switch, Tabs, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, money, time12 } from "@/lib/format";
 import { useAction, useBatchAvailability, useCourses, useLookups, useStaff } from "@/lib/queries";
@@ -98,22 +98,10 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
             <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Professional Makeup Artistry" autoFocus />
           </Field>
           <Field label="Type">
-            <Select value={form.type} onChange={(e) => set("type", e.target.value as CourseType)}>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {label(t)}
-                </option>
-              ))}
-            </Select>
+            <Dropdown value={form.type} onChange={(v) => set("type", v)} options={TYPES.map((v) => ({ value: v, label: label(v) }))} />
           </Field>
           <Field label="Level">
-            <Select value={form.level} onChange={(e) => set("level", e.target.value as CourseLevel)}>
-              {LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {label(l)}
-                </option>
-              ))}
-            </Select>
+            <Dropdown value={form.level} onChange={(v) => set("level", v)} options={LEVELS.map((v) => ({ value: v, label: label(v) }))} />
           </Field>
           <Field label="Duration" hint='e.g. "3 months" or "2 days"'>
             <Input value={form.duration} onChange={(e) => set("duration", e.target.value)} />
@@ -122,13 +110,7 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
             <Input type="number" min={0} value={form.fee} onChange={(e) => set("fee", e.target.value)} />
           </Field>
           <Field label="Instructor">
-            <Select value={instructor} onChange={(e) => set("instructor", e.target.value)}>
-              {instructors.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </Select>
+            <Dropdown value={instructor} onChange={(v) => set("instructor", v)} placeholder="Choose an instructor" options={instructors.map((s) => ({ value: s.id, label: s.name, description: label(s.role) }))} />
           </Field>
           <Field label="Seats per batch">
             <Input type="number" min={1} value={form.seats} onChange={(e) => set("seats", e.target.value)} />
@@ -290,13 +272,7 @@ function BatchModal({ course, batch, onClose }: { course: Course; batch: Batch |
           <Input type="number" min={1} value={form.seats} onChange={(e) => set("seats", e.target.value)} />
         </Field>
         <Field label="Status">
-          <Select value={form.status} onChange={(e) => set("status", e.target.value as BatchStatus)}>
-            {BATCH_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {label(s)}
-              </option>
-            ))}
-          </Select>
+          <Dropdown value={form.status} onChange={(v) => set("status", v)} options={BATCH_STATUSES.map((v) => ({ value: v, label: label(v) }))} />
         </Field>
       </div>
     </Modal>

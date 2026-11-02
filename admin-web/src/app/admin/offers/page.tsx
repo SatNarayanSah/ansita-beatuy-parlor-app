@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Copy, Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, Select, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, Dropdown, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { addDaysISO, formatDate, money, todayISO, type Tone } from "@/lib/format";
 import { useAction, useCategories, useOffers } from "@/lib/queries";
@@ -99,10 +99,7 @@ function OfferEditor({ offer, onClose }: { offer: Offer | null; onClose: () => v
           <Input value={form.code} onChange={(e) => set("code", e.target.value.toUpperCase())} placeholder="GLOW20" className="font-mono tracking-wider" />
         </Field>
         <Field label="Discount type">
-          <Select value={form.discountType} onChange={(e) => set("discountType", e.target.value as DiscountType)}>
-            <option value="percent">Percentage</option>
-            <option value="flat">Flat amount</option>
-          </Select>
+          <Dropdown value={form.discountType} onChange={(v) => set("discountType", v as DiscountType)} options={[{ value: "percent", label: "Percentage" }, { value: "flat", label: "Flat amount" }]} />
         </Field>
         <Field label={form.discountType === "percent" ? "Discount (%)" : "Discount (NPR)"} error={form.discountType === "percent" && value > 100 ? "Max 100%" : undefined}>
           <Input type="number" min={1} value={form.discountValue} onChange={(e) => set("discountValue", e.target.value)} />

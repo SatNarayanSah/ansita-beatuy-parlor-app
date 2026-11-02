@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 
 import { useLiveSync } from '@/hooks/useLiveSync';
 import { usePhoneNotifications } from '@/hooks/usePhoneNotifications';
+import { useUploadLocalAvatar } from '@/hooks/useUploadLocalAvatar';
 
 import { useT } from '@/i18n';
 import { AppointmentDetailScreen } from '@/screens/admin/AppointmentDetailScreen';
@@ -68,6 +69,8 @@ export const RootNavigator = () => {
   useLiveSync(user !== null);
   // Push registration, reminders, app-icon badge and notification taps.
   usePhoneNotifications(user);
+  // Moves a photo saved only on this phone to the server so the website shows it too.
+  useUploadLocalAvatar(user);
 
   return (
     <NavigationContainer ref={navigationRef} theme={navigationTheme}>

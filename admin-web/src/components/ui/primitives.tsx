@@ -80,26 +80,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttrib
   },
 );
 
-export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(function Select(
-  { className, children, ...props },
-  ref,
-) {
-  return (
-    <select
-      ref={ref}
-      className={cn(
-        fieldBase,
-        "h-10 cursor-pointer appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-9",
-        "bg-[url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a7c82' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>\")]",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </select>
-  );
-});
-
 export function Field({
   label,
   hint,
