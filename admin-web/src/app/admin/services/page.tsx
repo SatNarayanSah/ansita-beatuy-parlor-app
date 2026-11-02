@@ -3,23 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Clock, Pencil, Plus, Scissors, Settings2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  ConfirmDialog,
-  EmptyState,
-  ErrorState,
-  Field,
-  Input,
-  Modal,
-  PageHeader,
-  SearchInput,
-  Select,
-  Skeleton,
-  Switch,
-  Textarea,
-} from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Select, Skeleton, Switch, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { minutesLabel, money } from "@/lib/format";
 import { useAction, useCategories, useServices } from "@/lib/queries";
@@ -191,6 +175,7 @@ function ServiceModal({
     isActive: service?.isActive ?? true,
   });
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const [uploading, setUploading] = useState(false);
   const body = {
     ...form,
     duration: Number(form.duration),
@@ -214,7 +199,7 @@ function ServiceModal({
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button loading={save.isPending} disabled={!valid} onClick={() => save.mutate()}>
+          <Button loading={save.isPending} disabled={!valid || uploading} onClick={() => save.mutate()}>
             Save service
           </Button>
         </>
@@ -242,9 +227,13 @@ function ServiceModal({
         <Field label="Description" className="sm:col-span-2">
           <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} />
         </Field>
-        <Field label="Image URL" className="sm:col-span-2" hint="Optional. Use an https:// link.">
-          <Input value={form.image} onChange={(e) => set("image", e.target.value)} placeholder="https://…" />
-        </Field>
+        <ImageUpload
+          label="Service image (optional)"
+          value={form.image}
+          onChange={(url) => set("image", url)}
+          onUploadingChange={setUploading}
+          className="sm:col-span-2"
+        />
         <div className="flex items-center justify-between rounded-xl border border-line p-3 sm:col-span-2">
           <div>
             <p className="text-sm font-medium text-ink">Bookable</p>

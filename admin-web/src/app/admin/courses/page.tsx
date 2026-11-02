@@ -3,27 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Award, BookOpen, CalendarRange, Clock, GraduationCap, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Checkbox,
-  ConfirmDialog,
-  Drawer,
-  EmptyState,
-  ErrorState,
-  Field,
-  Input,
-  Modal,
-  PageHeader,
-  SearchInput,
-  Select,
-  Skeleton,
-  StatusBadge,
-  Switch,
-  Tabs,
-  Textarea,
-} from "@/components/ui";
+import { Badge, Button, Card, Checkbox, ConfirmDialog, Drawer, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, SearchInput, Select, Skeleton, StatusBadge, Switch, Tabs, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, money, time12 } from "@/lib/format";
 import { useAction, useBatchAvailability, useCourses, useLookups, useStaff } from "@/lib/queries";
@@ -67,6 +47,7 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
       course?.syllabus.map((m) => ({ key: m.id, id: m.id, title: m.title, hours: String(m.hours), topics: m.topics.join(", ") })) ?? [],
   );
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const [uploading, setUploading] = useState(false);
   const instructors = (staff.data ?? []).filter((s) => s.isActive || s.id === form.instructor);
   const instructor = form.instructor || instructors[0]?.id || "";
 
@@ -105,7 +86,7 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button loading={save.isPending} disabled={!valid} onClick={() => save.mutate()}>
+          <Button loading={save.isPending} disabled={!valid || uploading} onClick={() => save.mutate()}>
             Save course
           </Button>
         </>
@@ -155,9 +136,13 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
           <Field label="Description" className="sm:col-span-2">
             <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} />
           </Field>
-          <Field label="Image URL" className="sm:col-span-2">
-            <Input value={form.image} onChange={(e) => set("image", e.target.value)} placeholder="https://…" />
-          </Field>
+          <ImageUpload
+            label="Course image (optional)"
+            value={form.image}
+            onChange={(url) => set("image", url)}
+            onUploadingChange={setUploading}
+            className="sm:col-span-2"
+          />
           <div className="flex flex-wrap items-center gap-6 sm:col-span-2">
             <Checkbox checked={form.certificate} onChange={(v) => set("certificate", v)} label="Awards a certificate" />
             <Checkbox checked={form.isActive} onChange={(v) => set("isActive", v)} label="Open for enrollment" />

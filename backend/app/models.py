@@ -6,7 +6,7 @@ so string comparison gives chronological order. Timestamps are ISO-8601 UTC stri
 
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -210,3 +210,18 @@ class BusinessSettingsRow(Base):
     holidays: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     loyalty: Mapped[dict[str, Any]] = mapped_column(JSON)
     alerts: Mapped[dict[str, Any]] = mapped_column(JSON)
+
+
+class Upload(EntityMixin, Base):
+    """An image uploaded from the admin website (service, offer, course or staff photo).
+
+    Kept in the database rather than on disk: the API host's disk is wiped on every deploy.
+    Served by `GET /uploads/{id}`, whose absolute URL is what goes in the `image`/`avatar` field.
+    """
+
+    __tablename__ = "uploads"
+
+    content_type: Mapped[str] = mapped_column(String(32))
+    size: Mapped[int] = mapped_column(Integer)
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    uploaded_by: Mapped[str | None] = mapped_column(String(64), nullable=True)

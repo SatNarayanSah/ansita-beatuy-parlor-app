@@ -310,3 +310,22 @@ def test_push_devices(client, monkeypatch):
     sent.clear()
     push._deliver([{"user_id": user["id"], "type": "payment", "title": "Again", "body": "", "data": {}}])
     assert sent == []
+
+
+def test_image_upload(client, admin):
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+    # Admins only.
+    assert client.post("/uploads", content=png, headers={"Content-Type": "image/png"}).status_code == 401
+    response = client.post("/uploads", content=png, headers={**admin, "Content-Type": "image/png"})
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["contentType"] == "image/png" and body["url"].endswith(f"/uploads/{body['id']}")
+    served = client.get(f"/uploads/{body['id']}")
+    assert served.status_code == 200 and served.content == png
+    assert served.headers["content-type"] == "image/png"
+    # Not an image (e.g. an SVG or HTML file renamed .png) is refused.
+    bad = client.post("/uploads", content=b"<svg onload=alert(1)>", headers={**admin, "Content-Type": "image/png"})
+    assert bad.status_code == 422 or bad.json()["code"] == "VALIDATION"
+    too_big = client.post("/uploads", content=b"\xff\xd8\xff" + b"0" * (5 * 1024 * 1024), headers={**admin, "Content-Type": "image/jpeg"})
+    assert too_big.json()["code"] == "VALIDATION"
+    assert client.get("/uploads/img_missing").status_code == 404

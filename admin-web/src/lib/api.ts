@@ -94,3 +94,36 @@ export function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   return "Something went wrong.";
 }
+
+export type UploadedImage = { id: string; url: string; contentType: string; size: number };
+
+/**
+ * Upload an image (admins only). Sends the raw bytes, not form data, and reports progress
+ * from 0 to 1 (fetch can't report upload progress, so this uses XMLHttpRequest).
+ */
+export function uploadImage(file: Blob, onProgress?: (fraction: number) => void): Promise<UploadedImage> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", API_URL + "/uploads");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    const token = tokenStore.get();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
+    xhr.onerror = () => reject(new ApiError("NETWORK", `Can't reach the server at ${API_URL}. Is the backend running?`));
+    xhr.onload = () => {
+      let data: { code?: ApiErrorCode; message?: string } | UploadedImage | null = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        /* not JSON */
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && data && "url" in data) return resolve(data);
+      const err = (data ?? {}) as { code?: ApiErrorCode; message?: string };
+      const code = err.code || (xhr.status === 401 ? "UNAUTHORIZED" : "VALIDATION");
+      if (code === "UNAUTHORIZED" && token) onUnauthorized?.();
+      reject(new ApiError(code, err.message || (xhr.status === 413 ? "That image is too large." : "Upload failed."), xhr.status));
+    };
+    xhr.send(file);
+  });
+}

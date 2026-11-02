@@ -4,23 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Copy, Pencil, Plus, Tag, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  Badge,
-  Button,
-  Card,
-  ConfirmDialog,
-  EmptyState,
-  ErrorState,
-  Field,
-  Input,
-  Modal,
-  PageHeader,
-  Select,
-  Skeleton,
-  Switch,
-  Tabs,
-  Textarea,
-} from "@/components/ui";
+import { Badge, Button, Card, ConfirmDialog, EmptyState, ErrorState, Field, ImageUpload, Input, Modal, PageHeader, Select, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { addDaysISO, formatDate, money, todayISO, type Tone } from "@/lib/format";
 import { useAction, useCategories, useOffers } from "@/lib/queries";
@@ -64,6 +48,7 @@ function OfferEditor({ offer, onClose }: { offer: Offer | null; onClose: () => v
     isActive: offer?.isActive ?? true,
   });
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const [uploading, setUploading] = useState(false);
 
   const body = {
     ...form,
@@ -97,7 +82,7 @@ function OfferEditor({ offer, onClose }: { offer: Offer | null; onClose: () => v
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button loading={save.isPending} disabled={!valid} onClick={() => save.mutate()}>
+          <Button loading={save.isPending} disabled={!valid || uploading} onClick={() => save.mutate()}>
             Save offer
           </Button>
         </>
@@ -136,9 +121,13 @@ function OfferEditor({ offer, onClose }: { offer: Offer | null; onClose: () => v
         <Field label="Minimum bill (NPR)">
           <Input type="number" min={0} value={form.minSpend} onChange={(e) => set("minSpend", e.target.value)} />
         </Field>
-        <Field label="Image URL">
-          <Input value={form.image} onChange={(e) => set("image", e.target.value)} placeholder="https://…" />
-        </Field>
+        <ImageUpload
+          label="Offer banner (optional)"
+          value={form.image}
+          onChange={(url) => set("image", url)}
+          onUploadingChange={setUploading}
+          className="sm:col-span-2"
+        />
         <Field label="Valid from">
           <Input type="date" value={form.validFrom} onChange={(e) => set("validFrom", e.target.value)} />
         </Field>

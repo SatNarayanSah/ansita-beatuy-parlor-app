@@ -21,6 +21,7 @@ from .routers import (
     offers,
     reviews,
     staff,
+    uploads,
 )
 from .routers import settings as settings_router
 
@@ -73,5 +74,5 @@ def health():
 
 
 for module in (auth, appointments, catalog, contact, staff, customers, courses, enrollments, reviews, notifications, offers,
-               settings_router):
+               settings_router, uploads):
     app.include_router(module.router)

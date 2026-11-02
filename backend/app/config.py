@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     # Comma-separated list of allowed browser origins ("*" for any). Native apps ignore CORS.
     cors_origins: str = "*"
 
+    # Public base URL of this API (e.g. https://ansita-api.onrender.com), used for uploaded image
+    # links. Empty: taken from the request, which needs the proxy's forwarded headers to be trusted.
+    public_url: str = ""
+
     # Until email/SMS is wired up, the reset code can be returned in the response (dev only).
     expose_reset_code: bool = True
     reset_code_ttl_minutes: int = 10

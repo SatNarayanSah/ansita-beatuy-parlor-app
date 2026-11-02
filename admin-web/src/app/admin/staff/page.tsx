@@ -4,26 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, Mail, Pencil, Phone, Plus, Star, Trash2, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  ConfirmDialog,
-  Drawer,
-  EmptyState,
-  ErrorState,
-  Field,
-  Input,
-  PageHeader,
-  SearchInput,
-  Select,
-  Skeleton,
-  Stars,
-  StatusBadge,
-  Switch,
-  Tabs,
-} from "@/components/ui";
+import { Avatar, Badge, Button, Card, ConfirmDialog, Drawer, EmptyState, ErrorState, Field, ImageUpload, Input, PageHeader, SearchInput, Select, Skeleton, Stars, StatusBadge, Switch, Tabs } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, time12, todayISO } from "@/lib/format";
 import { useAction, useLookups, useStaff } from "@/lib/queries";
@@ -59,6 +40,7 @@ function StaffEditor({ member, onClose }: { member: Staff | null; onClose: () =>
       : defaultHours(),
   );
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const [uploading, setUploading] = useState(false);
   const setDay = (day: Weekday, patch: Partial<WorkingHours>) => setHours((list) => list.map((h) => (h.day === day ? { ...h, ...patch } : h)));
 
   const body = {
@@ -88,7 +70,7 @@ function StaffEditor({ member, onClose }: { member: Staff | null; onClose: () =>
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button loading={save.isPending} disabled={!valid} onClick={() => save.mutate()}>
+          <Button loading={save.isPending} disabled={!valid || uploading} onClick={() => save.mutate()}>
             Save
           </Button>
         </>
@@ -114,9 +96,15 @@ function StaffEditor({ member, onClose }: { member: Staff | null; onClose: () =>
           <Field label="Email">
             <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
-          <Field label="Photo URL">
-            <Input value={form.avatar} onChange={(e) => set("avatar", e.target.value)} placeholder="https://…" />
-          </Field>
+          <ImageUpload
+            label="Photo (optional)"
+            shape="round"
+            hint="A square photo of the face works best."
+            value={form.avatar}
+            onChange={(url) => set("avatar", url)}
+            onUploadingChange={setUploading}
+            className="sm:col-span-2"
+          />
         </div>
 
         <div>
