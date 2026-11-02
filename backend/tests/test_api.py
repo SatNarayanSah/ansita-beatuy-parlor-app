@@ -575,3 +575,20 @@ def test_service_benefits(client, admin):
     assert client.patch(f"/services/{sid}", json={"benefits": [str(i) for i in range(9)]}, headers=admin).status_code == 422
     assert client.patch(f"/services/{sid}", json={"price": 150}, headers=admin).json()["benefits"] == ["Neat brows", "Quick"]
     assert client.patch(f"/services/{sid}", json={"benefits": []}, headers=admin).json()["benefits"] == []
+
+
+def test_starter_service_photos(client, admin):
+    """Seeded services get their photo once; one the admin removes stays removed."""
+    from app.db import SessionLocal
+    from app.seed import attach_starter_photos
+
+    service = client.get("/services/svc_deep_bleach").json()
+    assert service["image"].endswith("/uploads/img_svc_deep_bleach")
+    photo = client.get("/uploads/img_svc_deep_bleach")
+    assert photo.status_code == 200 and photo.headers["content-type"] == "image/jpeg" and photo.content[:3] == b"\xff\xd8\xff"
+
+    assert client.patch("/services/svc_deep_bleach", json={"image": None}, headers=admin).status_code == 200
+    with SessionLocal() as db:
+        assert attach_starter_photos(db) == 0  # e.g. the next deploy's seed
+        db.commit()
+    assert client.get("/services/svc_deep_bleach").json()["image"] is None

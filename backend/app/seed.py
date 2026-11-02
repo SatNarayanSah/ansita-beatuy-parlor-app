@@ -7,14 +7,40 @@ account (ADMIN_EMAIL / ADMIN_PASSWORD), business settings, service categories,
 services, staff and courses (without batches; add those in the app).
 """
 
+from pathlib import Path
+
 from sqlalchemy import select
 
 from .business import get_business
 from .config import settings
 from .db import SessionLocal, init_db
-from .models import Course, Service, ServiceCategory, Staff, User
+from .models import Course, Service, ServiceCategory, Staff, Upload, User
 from .security import hash_password
 from .service_benefits import DEFAULT_BENEFITS
+
+PHOTOS_DIR = Path(__file__).parent / "assets" / "services"
+
+
+def attach_starter_photos(db) -> int:
+    """Gives each seeded service its starter photo (assets/services/<id>.jpg) once.
+
+    Stored as an upload, like an admin's own photo. The upload's `uploaded_by` marks it as the
+    starter photo, so a photo an admin later removes or replaces is never put back.
+    """
+    attached = 0
+    for path in sorted(PHOTOS_DIR.glob("svc_*.jpg")):
+        service = db.get(Service, path.stem)
+        marker = f"seed:{path.stem}"
+        if service is None or db.scalar(select(Upload.id).where(Upload.uploaded_by == marker)):
+            continue
+        data = path.read_bytes()
+        upload = Upload(id=f"img_{path.stem}", content_type="image/jpeg", size=len(data), data=data, uploaded_by=marker)
+        db.add(upload)
+        if not service.image:
+            service.image = f"/uploads/{upload.id}"
+            attached += 1
+    return attached
+
 
 ALL_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 
@@ -142,6 +168,10 @@ def seed() -> None:
         for data in COURSES:
             if db.get(Course, data["id"]) is None:
                 db.add(Course(**data, batches=[], image=None, certificate=True, is_active=True))
+        db.flush()
+        photos = attach_starter_photos(db)
+        if photos:
+            print(f"Added starter photos to {photos} services.")
 
         email = settings.admin_email.strip().lower()
         if not email or not settings.admin_password:
