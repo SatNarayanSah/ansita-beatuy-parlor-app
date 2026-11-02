@@ -174,9 +174,20 @@ function HolidaysSection({ holidays }: { holidays: BusinessSettings["holidays"] 
 // ---------- Loyalty ----------
 
 function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
-  const [form, setForm] = useState({ enabled: loyalty.enabled, rupeesPerPoint: String(loyalty.rupeesPerPoint), pointValue: String(loyalty.pointValue) });
+  const [form, setForm] = useState({
+    enabled: loyalty.enabled,
+    rupeesPerPoint: String(loyalty.rupeesPerPoint),
+    pointValue: String(loyalty.pointValue),
+    minRedeemPoints: String(loyalty.minRedeemPoints),
+  });
   const save = useAction(
-    () => api.patch("/settings/loyalty", { enabled: form.enabled, rupeesPerPoint: Number(form.rupeesPerPoint), pointValue: Number(form.pointValue) }),
+    () =>
+      api.patch("/settings/loyalty", {
+        enabled: form.enabled,
+        rupeesPerPoint: Number(form.rupeesPerPoint),
+        pointValue: Number(form.pointValue),
+        minRedeemPoints: Number(form.minRedeemPoints),
+      }),
     { invalidate: ["settings"], success: "Loyalty rules saved" },
   );
   const perPoint = Number(form.rupeesPerPoint) || 0;
@@ -187,7 +198,7 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
     <Panel
       icon={<Gift className="h-5 w-5" />}
       title="Loyalty points"
-      description="Customers earn points on completed visits and redeem them at the desk."
+      description="Customers earn points on completed visits and use them as a discount on a bill."
       footer={
         <Button icon={<Save className="h-4 w-4" />} loading={save.isPending} onClick={() => save.mutate()}>
           Save rules
@@ -208,6 +219,9 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
         <Field label="Value of one point (NPR)" hint="Between Rs. 0.01 and Rs. 100">
           <Input type="number" min={0.01} max={100} step={0.01} value={form.pointValue} onChange={(e) => setForm((f) => ({ ...f, pointValue: e.target.value }))} />
         </Field>
+        <Field label="Points needed to use them" hint="A customer can use points as a discount once they have at least this many" className="sm:col-span-2">
+          <Input type="number" min={0} max={100000} value={form.minRedeemPoints} onChange={(e) => setForm((f) => ({ ...f, minRedeemPoints: e.target.value }))} />
+        </Field>
       </motion.div>
       <motion.div
         key={`${earned}-${value}`}
@@ -216,7 +230,7 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
         className="mt-5 rounded-2xl bg-gradient-to-br from-gold-soft to-primary-soft p-4 text-sm text-ink"
       >
         A <b>Rs. 1,000</b> visit earns <b className="text-primary-dark">{earned} points</b>, worth <b className="text-gold-text">{money(earned * value)}</b> off a
-        later visit.
+        later visit, once they have <b>{Number(form.minRedeemPoints) || 0} points</b>.
       </motion.div>
     </Panel>
   );

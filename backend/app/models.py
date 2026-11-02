@@ -119,6 +119,9 @@ class Appointment(EntityMixin, Base):
     notes: Mapped[str] = mapped_column(Text, default="")
     total_price: Mapped[int] = mapped_column(Integer)
     amount_paid: Mapped[int] = mapped_column(Integer, default=0)
+    # Loyalty points the customer spent on this bill, and the rupees they took off it.
+    points_redeemed: Mapped[int] = mapped_column(Integer, default=0)
+    points_discount: Mapped[int] = mapped_column(Integer, default=0)
     # Each payment with the day it was received; revenue is counted on that day.
     payments: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     payment_status: Mapped[str] = mapped_column(String(16), default="unpaid")

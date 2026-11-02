@@ -100,7 +100,7 @@ export default function DashboardPage() {
       revenueMonth: payments.filter((p) => p.paidOn.startsWith(monthPrefix)).reduce((s, p) => s + p.amount, 0),
       outstanding: list
         .filter((a) => a.status === "completed" || a.status === "confirmed")
-        .reduce((s, a) => s + Math.max(0, a.totalPrice - a.amountPaid), 0),
+        .reduce((s, a) => s + Math.max(0, a.totalPrice - a.amountPaid - (a.pointsDiscount ?? 0)), 0),
       trend: days.map((d) => ({ day: formatDate(d, "d MMM"), revenue: revenueOn(d) })),
       statusMix: (Object.keys(STATUS_COLORS) as AppointmentStatus[])
         .map((s) => ({ name: label(s), key: s, value: monthAppointments.filter((a) => a.status === s).length }))

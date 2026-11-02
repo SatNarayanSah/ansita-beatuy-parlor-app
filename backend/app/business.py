@@ -18,7 +18,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         "closeTime": "19:00",
     },
     "holidays": [],
-    "loyalty": {"enabled": True, "rupeesPerPoint": 100, "pointValue": 1},
+    "loyalty": {"enabled": True, "rupeesPerPoint": 100, "pointValue": 1, "minRedeemPoints": 500},
     "alerts": {"newBookings": True, "cancellations": True, "payments": True, "enrollments": True},
 }
 
@@ -41,7 +41,8 @@ def _copy(value: Any) -> Any:
 
 
 def snapshot(row: BusinessSettingsRow) -> dict[str, Any]:
-    return {"profile": row.profile, "holidays": row.holidays, "loyalty": row.loyalty, "alerts": row.alerts}
+    loyalty = {"minRedeemPoints": DEFAULT_SETTINGS["loyalty"]["minRedeemPoints"], **row.loyalty}
+    return {"profile": row.profile, "holidays": row.holidays, "loyalty": loyalty, "alerts": row.alerts}
 
 
 def holiday_on(row: BusinessSettingsRow, date: str) -> dict[str, Any] | None:
@@ -53,6 +54,16 @@ def points_for(row: BusinessSettingsRow, amount: int) -> int:
     if not loyalty.get("enabled"):
         return 0
     return amount // max(1, int(loyalty.get("rupeesPerPoint") or 1))
+
+
+def min_redeem_points(row: BusinessSettingsRow) -> int:
+    """Points a customer must have before any can be used as a discount."""
+    return int(row.loyalty.get("minRedeemPoints", DEFAULT_SETTINGS["loyalty"]["minRedeemPoints"]))
+
+
+def points_worth(row: BusinessSettingsRow, points: int) -> int:
+    """Rupees off the bill for `points`, rounded down to whole rupees."""
+    return int(points * float(row.loyalty.get("pointValue") or 0))
 
 
 def alert_enabled(row: BusinessSettingsRow, notification_type: str) -> bool:

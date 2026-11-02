@@ -25,6 +25,8 @@ export interface LoyaltyRules {
   rupeesPerPoint: number;
   /** NPR discount one point is worth when redeemed at the desk. */
   pointValue: number;
+  /** Points a customer needs before any can be used as a discount. */
+  minRedeemPoints: number;
 }
 
 /** Which events notify admins. */

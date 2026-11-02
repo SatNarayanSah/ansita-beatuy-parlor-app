@@ -8,7 +8,7 @@ import { appointmentService, customerService } from '@/services';
 import { selectCurrentUser, selectPointsFor, useAppointmentStore, useAuthStore, useBusinessStore, useCustomerStore } from '@/store';
 import { useTheme } from '@/theme';
 import { formatShortDate } from '@/utils/date';
-import { formatNumber } from '@/utils/format';
+import { formatCurrency, formatNumber } from '@/utils/format';
 
 type Props = RootStackScreenProps<'LoyaltyHistory'>;
 
@@ -24,8 +24,8 @@ const tierFor = (points: number) => {
 };
 
 /**
- * Points earned per completed visit. Points from before the app's records
- * (and any bonuses) show as a single "Earlier visits & bonuses" line.
+ * Points earned per completed visit and points used as a discount on a bill. Points
+ * from before the app's records (and any bonuses) show as one "Earlier visits & bonuses" line.
  */
 export const LoyaltyHistoryScreen = (_props: Props) => {
   const { colors, spacing, radius } = useTheme();
@@ -37,17 +37,18 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
 
   const query = useServiceQuery(
     async () => {
-      const [customer, appointments] = await Promise.all([
-        customerService.getCustomer(customerId),
-        appointmentService.listAppointments({ status: 'completed' }),
+      const [customer, appointments] = await Promise.all([customerService.getCustomer(customerId), appointmentService.listAppointments()]);
+      // Newest first. A visit paid partly with points shows both lines.
+      const entries = [...appointments].reverse().flatMap((appointment) => [
+        ...(appointment.pointsRedeemed > 0 && appointment.status !== 'cancelled' && appointment.status !== 'no_show'
+          ? [{ key: `${appointment.id}-used`, appointment, points: -appointment.pointsRedeemed }]
+          : []),
+        ...(appointment.status === 'completed'
+          ? [{ key: appointment.id, appointment, points: selectPointsFor(loyalty, appointment.totalPrice - appointment.pointsDiscount) }]
+          : []),
       ]);
-      // Newest first.
-      const entries = [...appointments].reverse().map((appointment) => ({
-        appointment,
-        points: selectPointsFor(loyalty, appointment.totalPrice),
-      }));
-      const earnedHere = entries.reduce((sum, entry) => sum + entry.points, 0);
-      return { customer, entries, earlier: Math.max(0, customer.loyaltyPoints - earnedHere) };
+      const netHere = entries.reduce((sum, entry) => sum + entry.points, 0);
+      return { customer, entries, earlier: Math.max(0, customer.loyaltyPoints - netHere) };
     },
     [customerId, loyalty],
     { refetchOn: [useCustomerStore, useAppointmentStore] },
@@ -97,7 +98,7 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
                 <Text variant="label">How it works</Text>
                 <Text variant="bodySmall" tone="secondary">
                   {loyalty.enabled
-                    ? `Earn 1 point for every Rs. ${loyalty.rupeesPerPoint} spent on completed visits. Each point is worth Rs. ${loyalty.pointValue} at the front desk.`
+                    ? `Earn 1 point for every Rs. ${loyalty.rupeesPerPoint} spent on completed visits. Once you have ${formatNumber(loyalty.minRedeemPoints)} points, ask at the desk to use them: each point is ${formatCurrency(loyalty.pointValue)} off your bill.`
                     : 'The loyalty programme is paused. Points you have already earned stay on your account.'}
                 </Text>
               </Card>
@@ -105,23 +106,24 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
               <View style={{ gap: spacing.md }}>
                 <SectionHeader title="Points history" compact />
                 <Card padding="md">
-                  {entries.map(({ appointment, points }, index) => (
-                    <View key={appointment.id}>
+                  {entries.map(({ key, appointment, points }, index) => (
+                    <View key={key}>
                       {index > 0 ? <Divider spacing="sm" /> : null}
                       <View style={styles.entry}>
-                        <View style={[styles.dot, { backgroundColor: colors.successSoft }]}>
-                          <Icon name="add" size={16} color={colors.success} />
+                        <View style={[styles.dot, { backgroundColor: points < 0 ? colors.accentSoft : colors.successSoft }]}>
+                          <Icon name={points < 0 ? 'diamond-outline' : 'add'} size={16} color={points < 0 ? colors.accent : colors.success} />
                         </View>
                         <View style={styles.flex}>
                           <Text variant="bodyMedium" numberOfLines={1}>
-                            {serviceNames(appointment.serviceIds, services)}
+                            {points < 0 ? `Used: ${formatCurrency(appointment.pointsDiscount)} off` : serviceNames(appointment.serviceIds, services)}
                           </Text>
                           <Text variant="caption" tone="muted">
+                            {points < 0 ? `${serviceNames(appointment.serviceIds, services)} · ` : ''}
                             {formatShortDate(appointment.date)}
                           </Text>
                         </View>
-                        <Text variant="label" tone="success">
-                          +{points}
+                        <Text variant="label" tone={points < 0 ? 'secondary' : 'success'}>
+                          {points < 0 ? `−${formatNumber(-points)}` : `+${points}`}
                         </Text>
                       </View>
                     </View>

@@ -15,7 +15,7 @@ type Props = RootStackScreenProps<'HelpContact'>;
 const FAQS = [
   { q: 'How do I cancel or reschedule?', a: 'Open Bookings, choose the appointment and tap Reschedule or Cancel. There is no fee for changes made before your visit.' },
   { q: 'Do I need to pay in advance?', a: 'Not for regular services. Bridal and engagement bookings need a 30-50% advance to hold the date.' },
-  { q: 'How do loyalty points work?', a: 'You earn points on every completed visit; see Profile → Loyalty history for the current rate. Ask at the front desk to redeem them.' },
+  { q: 'How do loyalty points work?', a: 'You earn points on every completed visit; see Profile → Loyalty history for the current rate. Once you have enough points (500 by default), ask at the front desk to use them as a discount on your bill.' },
   { q: 'Which payment methods do you accept?', a: 'Cash, eSewa, Khalti, Fonepay QR and cards at the parlour.' },
   { q: 'Can I bring my own products?', a: 'Yes. Tell your stylist when you book so they can do a patch test first.' },
 ];

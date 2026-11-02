@@ -31,6 +31,16 @@ def init_db() -> None:
 
     Base.metadata.create_all(bind=engine)
     _add_appointment_payments()
+    _add_appointment_points()
+
+
+def _add_appointment_points() -> None:
+    """Adds the loyalty redemption columns to databases created before redemption existed."""
+    existing = {column["name"] for column in inspect(engine).get_columns("appointments")}
+    with engine.begin() as conn:
+        for column in ("points_redeemed", "points_discount"):
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE appointments ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0"))
 
 
 def _add_appointment_payments() -> None:

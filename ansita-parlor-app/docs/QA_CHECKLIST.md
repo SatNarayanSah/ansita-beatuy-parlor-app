@@ -86,6 +86,8 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | E11 | Record the remaining balance. | Payment status **Paid**. | ☐ |
 | E12 | **Mark no-show** on a started booking; **Cancel** another with an admin reason. | Confirm dialogs; statuses update; customer notified of the cancellation. | ☐ |
 | E13 | **Reschedule** from admin, then **Delete booking** on a test booking. | Edit form prefilled; delete asks to confirm and removes it everywhere. | ☐ |
+| E14 | Booking with a balance due for a customer with **500+ points**: tap **Use points**, keep the suggested amount, confirm. | Bill shows “Loyalty points (N pts) − Rs. N”, balance due drops, customer’s points drop and they get a “Loyalty points used” notification. Below 500 points the button is replaced by “they can be used from 500 points”. | ☐ |
+| E15 | Same booking: **Remove points discount**, then use points again and **Cancel** the booking. | Both times the points return to the customer and the balance due goes back up. | ☐ |
 
 ## 6. Admin – customers, services, staff
 

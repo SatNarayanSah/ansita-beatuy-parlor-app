@@ -57,6 +57,12 @@ export const canTransition = (from: AppointmentStatus, to: AppointmentStatus): b
 const isUnfiltered = (filter: AppointmentFilter): boolean => Object.values(filter).every((value) => !value);
 
 /** Caches the saved appointment and picks up the notifications the server created. */
+/** Re-reads a customer whose loyalty balance the server just changed. */
+const refreshCustomer = async (customerId: ID): Promise<void> => {
+  const customer = await api<Customer>('GET', `/customers/${customerId}`).catch(() => null);
+  if (customer) useCustomerStore.getState().mergeCustomers([customer]);
+};
+
 const saved = (appointment: Appointment): Appointment => {
   useAppointmentStore.getState().mergeAppointments([appointment]);
   refreshNotificationsSoon();
@@ -101,17 +107,31 @@ export const appointmentService = {
   /** Customers may only cancel; everything else is admin-only (enforced by the server). */
   updateStatus: async (id: ID, status: AppointmentStatus, reason?: string): Promise<Appointment> => {
     const appointment = saved(await api<Appointment>('POST', `/appointments/${id}/status`, { body: { status, reason } }));
-    if (status === 'completed') {
-      // Completing a visit awards loyalty points: refresh the customer's balance.
-      const customer = await api<Customer>('GET', `/customers/${appointment.customerId}`).catch(() => null);
-      if (customer) useCustomerStore.getState().mergeCustomers([customer]);
-    }
+    // Completing awards loyalty points; cancelling or a no-show gives back points used on the bill.
+    if (status !== 'confirmed') await refreshCustomer(appointment.customerId);
     return appointment;
   },
 
   /** Adds a payment; the server derives the payment status from the running total. */
   recordPayment: async (id: ID, input: PaymentInput): Promise<Appointment> =>
     saved(await api<Appointment>('POST', `/appointments/${id}/payments`, { body: input })),
+
+  /**
+   * Uses the customer's loyalty points as a discount on this bill (admin only). The server
+   * checks the minimum balance and that the discount fits the amount due.
+   */
+  redeemPoints: async (id: ID, points: number): Promise<Appointment> => {
+    const appointment = saved(await api<Appointment>('POST', `/appointments/${id}/redeem-points`, { body: { points } }));
+    await refreshCustomer(appointment.customerId);
+    return appointment;
+  },
+
+  /** Takes the loyalty discount off and gives the points back. */
+  removePointsDiscount: async (id: ID): Promise<Appointment> => {
+    const appointment = saved(await api<Appointment>('DELETE', `/appointments/${id}/redeem-points`));
+    await refreshCustomer(appointment.customerId);
+    return appointment;
+  },
 
   /** Hard delete, for removing bookings entered by mistake. */
   deleteAppointment: async (id: ID): Promise<void> => {

@@ -30,6 +30,9 @@ export interface Appointment extends BaseEntity {
   /** Total in NPR, captured at booking time so later price changes keep history intact. */
   totalPrice: number;
   amountPaid: number;
+  /** Loyalty points used on this bill, and the NPR they took off it (0 when none). */
+  pointsRedeemed: number;
+  pointsDiscount: number;
   /** Every payment with the day it was received; adds up to `amountPaid`. */
   payments: AppointmentPayment[];
   paymentStatus: PaymentStatus;

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..business import get_business, holiday_on, points_for
+from ..business import get_business, holiday_on, min_redeem_points, points_for, points_worth
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Appointment, Customer, Staff, User
@@ -16,7 +16,7 @@ from ..queries import (
     upcoming_appointments,
     working_hours_on,
 )
-from ..schemas import AppointmentInput, AppointmentUpdate, PaymentInput, StatusInput
+from ..schemas import AppointmentInput, AppointmentUpdate, PaymentInput, RedeemPointsInput, StatusInput
 from ..security import assert_customer_access, get_current_user, require_admin
 from ..serializers import to_dict, to_list
 from ..utils import (
@@ -60,6 +60,27 @@ def _payment_status(amount_paid: int, total: int) -> str:
     if amount_paid >= total:
         return "paid"
     return "partial"
+
+
+def _settled(appointment: Appointment) -> int:
+    """Money paid plus the loyalty discount: what no longer has to be paid."""
+    return appointment.amount_paid + appointment.points_discount
+
+
+def _refresh_payment_status(appointment: Appointment) -> None:
+    appointment.payment_status = _payment_status(_settled(appointment), appointment.total_price)
+
+
+def _refund_points(db: Session, appointment: Appointment) -> int:
+    """Gives back points used on this bill (booking cancelled, or the discount removed)."""
+    points = appointment.points_redeemed
+    if points > 0:
+        customer = db.get(Customer, appointment.customer_id, with_for_update=True)
+        if customer is not None:
+            customer.loyalty_points += points
+    appointment.points_redeemed = 0
+    appointment.points_discount = 0
+    return points
 
 
 def _busy(db: Session, date: str, *, staff_id: str | None = None, customer_id: str | None = None,
@@ -250,6 +271,8 @@ def create_appointment(body: AppointmentInput, user: User = Depends(get_current_
         notes=body.notes.strip(),
         total_price=total,
         amount_paid=0,
+        points_redeemed=0,
+        points_discount=0,
         payments=[],
         payment_status="unpaid",
         payment_method=None,
@@ -292,6 +315,8 @@ def update_appointment(id_: str, body: AppointmentUpdate, user: User = Depends(g
         "notes": body.notes if body.notes is not None else appointment.notes,
     }
     end, total = _validate_booking(db, data, exclude_id=id_)
+    if appointment.points_discount > total:
+        raise ApiError("VALIDATION", "The loyalty discount is more than the new total. Remove the points discount first.")
     appointment.service_ids = list(data["service_ids"])
     appointment.staff_id = data["staff_id"]
     appointment.date = data["date"]
@@ -301,7 +326,7 @@ def update_appointment(id_: str, body: AppointmentUpdate, user: User = Depends(g
     appointment.total_price = total
     if user.role != "admin":
         appointment.status = "pending"
-    appointment.payment_status = _payment_status(appointment.amount_paid, total)
+    _refresh_payment_status(appointment)
     db.flush()
 
     lnk = link("appointment", id_)
@@ -341,11 +366,15 @@ def update_status(id_: str, body: StatusInput, user: User = Depends(get_current_
     appointment.status = status
     if status == "cancelled":
         appointment.cancellation_reason = (body.reason or "").strip() or None
+    refunded = _refund_points(db, appointment) if status in ("cancelled", "no_show") else 0
+    if refunded:
+        _refresh_payment_status(appointment)
     db.flush()
 
     lnk = link("appointment", id_)
     if status == "completed":
-        points = points_for(get_business(db), appointment.total_price)
+        # Earned on what the customer pays, not on the part covered by points.
+        points = points_for(get_business(db), appointment.total_price - appointment.points_discount)
         if points > 0:
             customer = db.get(Customer, appointment.customer_id)
             if customer is not None:
@@ -360,6 +389,9 @@ def update_status(id_: str, body: StatusInput, user: User = Depends(get_current_
         notify_customer(db, appointment.customer_id, "appointment_confirmed", "Appointment confirmed",
                         f"{_describe(db, appointment)} is confirmed. See you soon!", lnk)
     elif status == "cancelled":
+        if refunded:
+            notify_customer(db, appointment.customer_id, "system", "Points returned",
+                            f"{refunded} loyalty points are back in your account.", lnk)
         if user.role == "admin":
             reason = appointment.cancellation_reason
             notify_customer(db, appointment.customer_id, "appointment_cancelled", "Appointment cancelled",
@@ -377,7 +409,7 @@ def record_payment(id_: str, body: PaymentInput, _: User = Depends(require_admin
     appointment = ensure_found(db.get(Appointment, id_, with_for_update=True), "Appointment")
     if appointment.status in ("cancelled", "no_show"):
         raise ApiError("VALIDATION", "Payments cannot be recorded for this appointment.")
-    due = appointment.total_price - appointment.amount_paid
+    due = appointment.total_price - _settled(appointment)
     if body.amount <= 0:
         raise ApiError("VALIDATION", "Enter a valid amount.")
     if body.amount > due:
@@ -388,10 +420,65 @@ def record_payment(id_: str, body: PaymentInput, _: User = Depends(require_admin
         {"id": generate_id("pay"), "amount": body.amount, "paidOn": today_iso(), "method": body.method},
     ]
     appointment.payment_method = body.method
-    appointment.payment_status = _payment_status(appointment.amount_paid, appointment.total_price)
+    _refresh_payment_status(appointment)
     notify_customer(db, appointment.customer_id, "payment", "Payment received",
                     f"Thank you! {format_currency(body.amount)} received for {_describe(db, appointment)}.",
                     link("appointment", id_))
+    db.commit()
+    return to_dict(appointment)
+
+
+@router.post("/appointments/{id_}/redeem-points")
+def redeem_points(id_: str, body: RedeemPointsInput, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Uses the customer's loyalty points as a discount on this bill.
+
+    Only once the customer has at least the minimum set in Settings (500 by default), and
+    never for more than the balance due. Points used here earn no new points.
+    """
+    appointment = ensure_found(db.get(Appointment, id_, with_for_update=True), "Appointment")
+    if appointment.status in ("cancelled", "no_show"):
+        raise ApiError("VALIDATION", "Points can't be used on a cancelled or missed booking.")
+    if appointment.points_redeemed > 0:
+        raise ApiError("CONFLICT", "Points are already used on this booking. Remove that discount to change it.")
+    business = get_business(db)
+    if not business.loyalty.get("enabled"):
+        raise ApiError("VALIDATION", "Loyalty points are switched off in Settings.")
+    customer = ensure_found(db.get(Customer, appointment.customer_id, with_for_update=True), "Customer")
+    minimum = min_redeem_points(business)
+    if customer.loyalty_points < minimum:
+        raise ApiError("VALIDATION", f"Points can be used once the customer has {minimum} or more. They have {customer.loyalty_points}.")
+    if body.points <= 0:
+        raise ApiError("VALIDATION", "Enter how many points to use.")
+    if body.points > customer.loyalty_points:
+        raise ApiError("VALIDATION", f"The customer has only {customer.loyalty_points} points.")
+    discount = points_worth(business, body.points)
+    due = appointment.total_price - _settled(appointment)
+    if discount <= 0:
+        raise ApiError("VALIDATION", "That many points isn't worth a whole rupee yet.")
+    if discount > due:
+        raise ApiError("VALIDATION", f"That's {format_currency(discount)} off, more than the balance due ({format_currency(due)}).")
+
+    customer.loyalty_points -= body.points
+    appointment.points_redeemed = body.points
+    appointment.points_discount = discount
+    _refresh_payment_status(appointment)
+    notify_customer(db, appointment.customer_id, "system", "Loyalty points used",
+                    f"You used {body.points} points: {format_currency(discount)} off {_describe(db, appointment)}.",
+                    link("appointment", id_))
+    db.commit()
+    return to_dict(appointment)
+
+
+@router.delete("/appointments/{id_}/redeem-points")
+def remove_points_discount(id_: str, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Takes the loyalty discount off this bill and gives the points back."""
+    appointment = ensure_found(db.get(Appointment, id_, with_for_update=True), "Appointment")
+    refunded = _refund_points(db, appointment)
+    if refunded == 0:
+        raise ApiError("VALIDATION", "No points are used on this booking.")
+    _refresh_payment_status(appointment)
+    notify_customer(db, appointment.customer_id, "system", "Points returned",
+                    f"{refunded} loyalty points are back in your account.", link("appointment", id_))
     db.commit()
     return to_dict(appointment)
 

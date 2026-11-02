@@ -12,7 +12,7 @@ import type { RootStackScreenProps } from '@/navigation/types';
 import { businessService, getErrorMessage } from '@/services';
 import { selectPointsFor, useBusinessStore } from '@/store';
 import { useTheme } from '@/theme';
-import type { AdminAlerts } from '@/types';
+import type { AdminAlerts, LoyaltyRules } from '@/types';
 import { formatDisplayDate, todayISO } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 import { businessProfileSchema, holidaySchema, loyaltySchema } from '@/utils/formSchemas';
@@ -29,6 +29,12 @@ const ALERTS: readonly { key: keyof AdminAlerts; title: string; subtitle: string
 const EXAMPLE_BILL = 2500;
 
 /** Parlour profile, opening hours, holidays, loyalty rules and admin alerts. Changes apply app-wide. */
+const loyaltyDefaults = (loyalty: LoyaltyRules) => ({
+  rupeesPerPoint: String(loyalty.rupeesPerPoint),
+  pointValue: String(loyalty.pointValue),
+  minRedeemPoints: String(loyalty.minRedeemPoints),
+});
+
 export const BusinessSettingsScreen = (_props: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
@@ -46,7 +52,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
   });
   const loyaltyForm = useForm<z.input<typeof loyaltySchema>, unknown, z.output<typeof loyaltySchema>>({
     resolver: zodResolver(loyaltySchema),
-    defaultValues: { rupeesPerPoint: String(loyalty.rupeesPerPoint), pointValue: String(loyalty.pointValue) },
+    defaultValues: loyaltyDefaults(loyalty),
     mode: 'onTouched',
   });
 
@@ -54,7 +60,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
   const resetProfile = profileForm.reset;
   const resetLoyalty = loyaltyForm.reset;
   useEffect(() => resetProfile(profile), [profile, resetProfile]);
-  useEffect(() => resetLoyalty({ rupeesPerPoint: String(loyalty.rupeesPerPoint), pointValue: String(loyalty.pointValue) }), [loyalty, resetLoyalty]);
+  useEffect(() => resetLoyalty(loyaltyDefaults(loyalty)), [loyalty, resetLoyalty]);
 
   const dirty = profileForm.formState.isDirty || loyaltyForm.formState.isDirty;
   const { dialog } = useUnsavedChangesGuard(dirty && !profileForm.formState.isSubmitting && !loyaltyForm.formState.isSubmitting);
@@ -207,6 +213,13 @@ export const BusinessSettingsScreen = (_props: Props) => {
             <FormInput control={loyaltyForm.control} name="rupeesPerPoint" label="Spend per point (Rs.)" keyboardType="number-pad" containerStyle={styles.flex} />
             <FormInput control={loyaltyForm.control} name="pointValue" label="Point value (Rs.)" keyboardType="decimal-pad" containerStyle={styles.flex} />
           </View>
+          <FormInput
+            control={loyaltyForm.control}
+            name="minRedeemPoints"
+            label="Points needed to use them"
+            keyboardType="number-pad"
+            helperText="A customer can use points as a discount once they have at least this many."
+          />
           <Text variant="caption" tone="muted">
             Example: a {formatCurrency(EXAMPLE_BILL)} visit earns {examplePoints} points, worth {formatCurrency(Math.round(examplePoints * (Number(valueText) || 0)))} when redeemed.
           </Text>

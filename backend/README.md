@@ -82,6 +82,7 @@ All endpoints except auth and public catalogue reads need `Authorization: Bearer
 | `createAppointment` / `updateAppointment` | `POST /appointments`, `PATCH /appointments/{id}` |
 | `updateStatus` | `POST /appointments/{id}/status` `{status, reason?}` |
 | `recordPayment` / `deleteAppointment` | `POST /appointments/{id}/payments` `{amount, method}`, `DELETE /appointments/{id}` |
+| `redeemPoints` / `removePointsDiscount` | `POST /appointments/{id}/redeem-points` `{points}` (admin; needs the customer to have `minRedeemPoints`, 500 by default, and the discount must fit the balance due), `DELETE /appointments/{id}/redeem-points` (gives the points back; cancelling or a no-show does too) |
 | `catalogService` categories | `GET/POST /categories`, `PATCH/DELETE /categories/{id}` |
 | `catalogService` services | `GET /services?query&categoryId&activeOnly`, `GET/PATCH/DELETE /services/{id}`, `POST /services`, `POST /services/{id}/active` `{isActive}` |
 | `staffService` | `GET /staff?query&activeOnly`, `GET/PATCH/DELETE /staff/{id}`, `POST /staff`, `POST /staff/{id}/active`, `GET /staff/{id}/schedule?date`, `GET /staff/{id}/reviews` |

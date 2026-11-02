@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { CalendarClock, CheckCircle2, CircleSlash, Trash2, Wallet, XCircle, Check } from "lucide-react";
+import { CalendarClock, CheckCircle2, CircleSlash, Crown, Trash2, Undo2, Wallet, XCircle, Check } from "lucide-react";
 import { useState } from "react";
 import {
   Avatar,
@@ -18,8 +18,8 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, money, NEXT_STATUSES, time12, todayISO } from "@/lib/format";
-import { useAction, useLookups } from "@/lib/queries";
-import type { Appointment, AppointmentStatus, PaymentMethod } from "@/lib/types";
+import { useAction, useLookups, useSettings } from "@/lib/queries";
+import type { Appointment, AppointmentStatus, LoyaltyRules, PaymentMethod } from "@/lib/types";
 import { SlotPicker, StaffChooser, useAvailableStaff } from "./_booking";
 
 const STATUS_ACTION: Record<string, { label: string; icon: React.ReactNode; variant: "primary" | "outline" | "danger" | "secondary" }> = {
@@ -96,6 +96,74 @@ function RescheduleModal({ appointment, open, onClose }: { appointment: Appointm
   );
 }
 
+/** Rupees off for `points`, rounded down like the server. */
+const pointsWorth = (loyalty: LoyaltyRules, points: number) => Math.floor(points * loyalty.pointValue);
+
+/** Most points usable on a bill: what the customer has, but no more than covers the balance due. */
+const maxRedeemable = (loyalty: LoyaltyRules, balance: number, due: number) =>
+  loyalty.pointValue > 0 ? Math.min(balance, Math.floor(due / loyalty.pointValue)) : 0;
+
+/** How many loyalty points to put on this bill; prefilled with as many as fit the balance due. */
+function RedeemPointsModal({
+  open,
+  onClose,
+  customerName,
+  balance,
+  due,
+  loyalty,
+  loading,
+  onSubmit,
+}: {
+  open: boolean;
+  onClose: () => void;
+  customerName: string;
+  balance: number;
+  due: number;
+  loyalty: LoyaltyRules;
+  loading?: boolean;
+  onSubmit: (points: number) => void;
+}) {
+  const max = maxRedeemable(loyalty, balance, due);
+  const [text, setText] = useState("");
+  const points = Number(text || max);
+  const invalid = !Number.isInteger(points) || points < 1 || points > max;
+  const discount = invalid ? 0 : pointsWorth(loyalty, points);
+  const close = () => {
+    setText("");
+    onClose();
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={close}
+      title="Use loyalty points"
+      description={`${customerName} has ${balance.toLocaleString("en-IN")} points · each is worth ${money(loyalty.pointValue)}`}
+      footer={
+        <>
+          <Button variant="ghost" onClick={close}>
+            Cancel
+          </Button>
+          <Button variant="gold" icon={<Crown className="h-4 w-4" />} loading={loading} disabled={invalid} onClick={() => onSubmit(points)}>
+            Take {money(discount)} off
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <Field
+          label="Points to use"
+          error={points > max ? `At most ${max.toLocaleString("en-IN")} points on this bill` : undefined}
+          hint={invalid ? undefined : `${money(due - discount)} left to pay · ${(balance - points).toLocaleString("en-IN")} points left`}
+        >
+          <Input type="number" min={1} max={max} placeholder={String(max)} value={text} onChange={(e) => setText(e.target.value)} autoFocus />
+        </Field>
+        <p className="text-xs text-muted">Balance due: {money(due)}. The part paid with points earns no new points.</p>
+      </div>
+    </Modal>
+  );
+}
+
 export function AppointmentDrawer({ appointment, onClose }: { appointment: Appointment | null; onClose: () => void }) {
   const lookups = useLookups();
   const [paying, setPaying] = useState(false);
@@ -103,6 +171,9 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
+  const [unredeeming, setUnredeeming] = useState(false);
+  const loyalty = useSettings().data?.loyalty;
 
   const setStatus = useAction(
     (vars: { status: AppointmentStatus; reason?: string }) => api.post<Appointment>(`/appointments/${appointment?.id}/status`, vars),
@@ -119,6 +190,16 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
     (vars: { amount: number; method: PaymentMethod }) => api.post<Appointment>(`/appointments/${appointment?.id}/payments`, vars),
     { invalidate: INVALIDATE, success: (_, v) => `${money(v.amount)} recorded`, onSuccess: () => setPaying(false) },
   );
+  const redeem = useAction((points: number) => api.post<Appointment>(`/appointments/${appointment?.id}/redeem-points`, { points }), {
+    invalidate: INVALIDATE,
+    success: (result, points) => `${points} points used: ${money(result.pointsDiscount)} off`,
+    onSuccess: () => setRedeeming(false),
+  });
+  const unredeem = useAction(() => api.del(`/appointments/${appointment?.id}/redeem-points`), {
+    invalidate: INVALIDATE,
+    success: "Points returned to the customer",
+    onSuccess: () => setUnredeeming(false),
+  });
   const remove = useAction(() => api.del(`/appointments/${appointment?.id}`), {
     invalidate: INVALIDATE,
     success: "Appointment deleted",
@@ -131,8 +212,12 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
   const a = appointment;
   const customer = a ? lookups.customer.get(a.customerId) : undefined;
   const member = a ? lookups.staff.get(a.staffId) : undefined;
-  const due = a ? a.totalPrice - a.amountPaid : 0;
+  const due = a ? Math.max(0, a.totalPrice - a.amountPaid - (a.pointsDiscount ?? 0)) : 0;
   const canPay = a && due > 0 && a.status !== "cancelled" && a.status !== "no_show";
+  const points = customer?.loyaltyPoints ?? 0;
+  // Points go on a bill with money still due, once the customer has the minimum.
+  const canOfferPoints = !!a && !!loyalty?.enabled && (a.status === "confirmed" || a.status === "completed") && !a.pointsRedeemed && due > 0;
+  const canRedeem = canOfferPoints && !!loyalty && points >= loyalty.minRedeemPoints && maxRedeemable(loyalty, points, due) > 0;
   const canReschedule = a && (a.status === "pending" || a.status === "confirmed");
 
   return (
@@ -260,7 +345,43 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                   <StatusBadge status={a.paymentStatus} />
                   {a.preferredPaymentMethod && <span className="text-xs text-muted">Prefers {label(a.preferredPaymentMethod)}</span>}
                 </div>
-                <PaymentProgress paid={a.amountPaid} total={a.totalPrice} />
+                <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} />
+                {a.pointsRedeemed > 0 && (
+                  <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-gold-soft/60 px-3 py-2 text-xs">
+                    <span className="flex items-center gap-1.5 text-gold-text">
+                      <Crown className="h-3.5 w-3.5" /> {a.pointsRedeemed.toLocaleString("en-IN")} loyalty points used
+                    </span>
+                    <span className="flex items-center gap-3">
+                      <span className="font-semibold text-success">−{money(a.pointsDiscount)}</span>
+                      {a.status !== "cancelled" && a.status !== "no_show" && (
+                        <button
+                          type="button"
+                          onClick={() => setUnredeeming(true)}
+                          className="flex cursor-pointer items-center gap-1 text-muted transition hover:text-danger"
+                        >
+                          <Undo2 className="h-3.5 w-3.5" /> Remove
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {canRedeem && loyalty && (
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-gold/40 bg-gold-soft/40 px-3 py-2.5">
+                    <p className="text-xs text-ink-2">
+                      <Crown className="mr-1 inline h-3.5 w-3.5 text-gold-text" />
+                      {customer?.name.split(" ")[0]} has <b>{points.toLocaleString("en-IN")} points</b>, worth up to{" "}
+                      <b>{money(Math.min(due, pointsWorth(loyalty, points)))}</b> off.
+                    </p>
+                    <Button size="sm" variant="gold" icon={<Crown className="h-3.5 w-3.5" />} onClick={() => setRedeeming(true)}>
+                      Use points
+                    </Button>
+                  </div>
+                )}
+                {canOfferPoints && !canRedeem && loyalty && points > 0 && points < loyalty.minRedeemPoints && (
+                  <p className="mt-3 text-xs text-muted">
+                    {points.toLocaleString("en-IN")} points · they can be used from {loyalty.minRedeemPoints.toLocaleString("en-IN")} points
+                  </p>
+                )}
                 {a.payments?.length > 0 && (
                   <ul className="mt-3 flex flex-col gap-1.5 border-t border-dashed border-line pt-3">
                     {a.payments.map((p) => (
@@ -306,6 +427,28 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             loading={remove.isPending}
             title="Delete appointment?"
             message="This removes the booking and its payment history permanently. To keep a record, cancel it instead."
+          />
+          {loyalty && (
+            <RedeemPointsModal
+              key={`${a.id}-${redeeming}`}
+              open={redeeming}
+              onClose={() => setRedeeming(false)}
+              customerName={customer?.name.split(" ")[0] ?? "The customer"}
+              balance={points}
+              due={due}
+              loyalty={loyalty}
+              loading={redeem.isPending}
+              onSubmit={(value) => redeem.mutate(value)}
+            />
+          )}
+          <ConfirmDialog
+            open={unredeeming}
+            onClose={() => setUnredeeming(false)}
+            onConfirm={() => unredeem.mutate()}
+            loading={unredeem.isPending}
+            title="Remove the points discount?"
+            message={`${a.pointsRedeemed} points go back to the customer and ${money(a.pointsDiscount)} is added back to the bill.`}
+            confirmLabel="Remove discount"
           />
           {rescheduling && <RescheduleModal key={a.id} appointment={a} open={rescheduling} onClose={() => setRescheduling(false)} />}
         </>

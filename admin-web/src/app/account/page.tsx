@@ -23,7 +23,7 @@ import { useAppointments, useCustomerStats, useEnrollments, useMyCustomer, useNo
 import type { Appointment } from "@/lib/types";
 import { isUpcoming, serviceNames, startsAt, useNames } from "./_parts";
 
-function LoyaltyCard({ points, pointValue, enabled, name }: { points: number; pointValue: number; enabled: boolean; name: string }) {
+function LoyaltyCard({ points, pointValue, minRedeem, enabled, name }: { points: number; pointValue: number; minRedeem: number; enabled: boolean; name: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 24, rotateX: 12 }}
@@ -64,7 +64,9 @@ function LoyaltyCard({ points, pointValue, enabled, name }: { points: number; po
           <p className="text-xl font-semibold">
             <AnimatedNumber value={points * pointValue} format={(n) => money(n)} />
           </p>
-          <p className="text-xs text-white/75">{enabled ? "to spend at the desk" : "rewards paused"}</p>
+          <p className="text-xs text-white/75">
+            {!enabled ? "rewards paused" : points >= minRedeem ? "ready to use at the desk" : `usable from ${minRedeem.toLocaleString("en-IN")} points`}
+          </p>
         </div>
       </div>
     </motion.div>
@@ -211,6 +213,7 @@ export default function AccountDashboard() {
             name={customer.data?.name ?? user?.name ?? ""}
             points={customer.data?.loyaltyPoints ?? 0}
             pointValue={settings.data?.loyalty.pointValue ?? 0}
+            minRedeem={settings.data?.loyalty.minRedeemPoints ?? 500}
             enabled={settings.data?.loyalty.enabled ?? false}
           />
         )}

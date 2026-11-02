@@ -198,7 +198,7 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
               <h3 className="mb-2 flex items-center justify-between text-[11px] font-semibold tracking-wider text-muted uppercase">
                 Payment <StatusBadge status={a.paymentStatus} />
               </h3>
-              <PaymentProgress paid={a.amountPaid} total={a.totalPrice} />
+              <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} />
               {a.payments?.length > 0 && (
                 <ul className="mt-3 flex flex-col gap-1.5">
                   {a.payments.map((p) => (

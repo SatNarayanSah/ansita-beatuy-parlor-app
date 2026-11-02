@@ -104,6 +104,9 @@ def update_loyalty(body: LoyaltyUpdate, _: User = Depends(require_admin), db: Se
     value = patch.get("pointValue")
     if value is not None and not 0 < value <= 100:
         raise ApiError("VALIDATION", "Point value must be between Rs. 0.01 and Rs. 100.")
+    minimum = patch.get("minRedeemPoints")
+    if minimum is not None and not 0 <= minimum <= 100000:
+        raise ApiError("VALIDATION", "Points needed to redeem must be between 0 and 100,000.")
     row.loyalty = {**row.loyalty, **patch}
     db.commit()
     return snapshot(row)

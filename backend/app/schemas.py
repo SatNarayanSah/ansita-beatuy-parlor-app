@@ -115,6 +115,10 @@ class PaymentInput(CamelModel):
     method: PaymentMethod
 
 
+class RedeemPointsInput(CamelModel):
+    points: int
+
+
 # ---------- Catalog ----------
 
 
@@ -388,6 +392,7 @@ class LoyaltyUpdate(CamelModel):
     enabled: bool | None = None
     rupees_per_point: int | None = None
     point_value: float | None = None
+    min_redeem_points: int | None = None
 
 
 class AlertsUpdate(CamelModel):

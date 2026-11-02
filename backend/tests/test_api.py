@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from app.db import SessionLocal
-from app.models import Appointment
+from app.models import Appointment, Customer
 from app.utils import generate_id, now_local
 
 from .conftest import register
@@ -242,7 +242,7 @@ def test_settings_and_offers(client, admin):
     assert settings["loyalty"]["rupeesPerPoint"] == 100
     assert client.patch("/settings/loyalty", json={"rupeesPerPoint": 50}, headers=customer).status_code == 403
     assert client.patch("/settings/loyalty", json={"rupeesPerPoint": 50}, headers=admin).json()["loyalty"] == {
-        "enabled": True, "rupeesPerPoint": 50, "pointValue": 1}
+        "enabled": True, "rupeesPerPoint": 50, "pointValue": 1, "minRedeemPoints": 500}
 
     today = now_local().date()
     offer = {"title": "Tihar Glow", "discountType": "percent", "discountValue": 20, "code": " tihar20 ",
@@ -344,3 +344,65 @@ def test_customer_profile_photo(client, admin):
     local = client.patch("/auth/me", json={"avatar": "file:///data/user/0/cache/photo.jpg"}, headers=headers)
     assert local.status_code == 422
     assert client.patch("/auth/me", json={"avatar": None}, headers=headers).json()["avatar"] is None
+
+
+def test_redeem_loyalty_points(client, admin):
+    user, customer = register(client, "Mala Das", "mala@example.com", "9812000022")
+    customer_id = user["customerId"]
+    later = (now_local().date() + timedelta(days=5)).isoformat()
+    with SessionLocal() as db:
+        ids = []
+        for start in ("11:00", "15:00"):
+            appointment = Appointment(
+                id=generate_id("apt"), customer_id=customer_id, service_ids=["svc_pedicure"],
+                staff_id="stf_rojina", date=later, start_time=start, end_time=start[:2] + ":50", status="confirmed",
+                notes="", total_price=1680, amount_paid=0, payment_status="unpaid", payments=[],
+            )
+            db.add(appointment)
+            ids.append(appointment.id)
+        db.get(Customer, customer_id).loyalty_points = 499
+        db.commit()
+    first, second = ids
+
+    def points() -> int:
+        return client.get(f"/customers/{customer_id}", headers=admin).json()["loyaltyPoints"]
+
+    # Below the 500 minimum: nothing can be used yet. Customers can't redeem for themselves.
+    assert client.post(f"/appointments/{first}/redeem-points", json={"points": 100}, headers=admin).json()["code"] == "VALIDATION"
+    with SessionLocal() as db:
+        db.get(Customer, customer_id).loyalty_points = 2000
+        db.commit()
+    assert client.post(f"/appointments/{first}/redeem-points", json={"points": 100}, headers=customer).status_code == 403
+    # Never more than the customer has, or worth more than the bill.
+    assert client.post(f"/appointments/{first}/redeem-points", json={"points": 2001}, headers=admin).status_code == 422
+    assert client.post(f"/appointments/{first}/redeem-points", json={"points": 1700}, headers=admin).status_code == 422
+
+    used = client.post(f"/appointments/{first}/redeem-points", json={"points": 500}, headers=admin)
+    assert used.status_code == 200, used.text
+    assert used.json()["pointsRedeemed"] == 500 and used.json()["pointsDiscount"] == 500
+    assert used.json()["paymentStatus"] == "partial" and points() == 1500
+    assert client.post(f"/appointments/{first}/redeem-points", json={"points": 10}, headers=admin).status_code == 409
+    # Only the rest is left to pay; the visit earns points on that part only.
+    assert client.post(f"/appointments/{first}/payments", json={"amount": 1181, "method": "cash"}, headers=admin).status_code == 422
+    paid = client.post(f"/appointments/{first}/payments", json={"amount": 1180, "method": "cash"}, headers=admin)
+    assert paid.json()["paymentStatus"] == "paid" and paid.json()["amountPaid"] == 1180
+    with SessionLocal() as db:  # back-date it so it can be completed normally
+        db.get(Appointment, first).date = (now_local().date() - timedelta(days=1)).isoformat()
+        db.commit()
+    rate = client.get("/settings", headers=admin).json()["loyalty"]["rupeesPerPoint"]
+    client.post(f"/appointments/{first}/status", json={"status": "completed"}, headers=admin)
+    earned = 1180 // rate
+    assert points() == 1500 + earned
+
+    # Removing the discount, or cancelling the booking, gives the points back.
+    client.post(f"/appointments/{second}/redeem-points", json={"points": 600}, headers=admin)
+    assert points() == 900 + earned
+    removed = client.delete(f"/appointments/{second}/redeem-points", headers=admin).json()
+    assert removed["pointsRedeemed"] == 0 and removed["paymentStatus"] == "unpaid" and points() == 1500 + earned
+    client.post(f"/appointments/{second}/redeem-points", json={"points": 600}, headers=admin)
+    client.post(f"/appointments/{second}/status", json={"status": "cancelled"}, headers=admin)
+    assert points() == 1500 + earned
+
+    # The minimum is a setting.
+    assert client.patch("/settings/loyalty", json={"minRedeemPoints": 2000}, headers=admin).json()["loyalty"]["minRedeemPoints"] == 2000
+    client.patch("/settings/loyalty", json={"minRedeemPoints": 500}, headers=admin)

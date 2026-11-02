@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import type { AdminAlerts, BusinessSettings, Holiday, ISODate, LoyaltyRules, NotificationType } from '@/types';
+import type { AdminAlerts, Appointment, BusinessSettings, Holiday, ISODate, LoyaltyRules, NotificationType } from '@/types';
 
 interface BusinessData extends BusinessSettings {
   /** False until the settings have been loaded from the server once. */
@@ -18,7 +18,7 @@ export type BusinessState = BusinessData & BusinessActions;
 const emptySettings = (): BusinessData => ({
   profile: { name: '', tagline: '', phone: '', whatsapp: '', email: '', address: '', openTime: '10:00', closeTime: '19:00' },
   holidays: [],
-  loyalty: { enabled: false, rupeesPerPoint: 100, pointValue: 1 },
+  loyalty: { enabled: false, rupeesPerPoint: 100, pointValue: 1, minRedeemPoints: 500 },
   alerts: { newBookings: true, cancellations: true, payments: true, enrollments: true },
   loaded: false,
 });
@@ -45,6 +45,13 @@ export const selectHolidayOn = (holidays: readonly Holiday[], date: ISODate): Ho
 /** Points earned for a completed visit under the current rules. */
 export const selectPointsFor = (loyalty: LoyaltyRules, amount: number): number =>
   loyalty.enabled ? Math.floor(amount / Math.max(1, loyalty.rupeesPerPoint)) : 0;
+
+/** NPR off the bill for `points`, in whole rupees (the server rounds the same way). */
+export const selectPointsWorth = (loyalty: LoyaltyRules, points: number): number => Math.floor(points * loyalty.pointValue);
+
+/** Balance still to pay: the total less money received and any loyalty discount. */
+export const selectAmountDue = (appointment: Pick<Appointment, 'totalPrice' | 'amountPaid' | 'pointsDiscount'>): number =>
+  Math.max(0, appointment.totalPrice - appointment.amountPaid - (appointment.pointsDiscount ?? 0));
 
 /** Admin alert switch governing a notification type; untoggled types always send. */
 export const selectAlertEnabled = (alerts: AdminAlerts, type: NotificationType): boolean => {

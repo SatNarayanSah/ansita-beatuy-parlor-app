@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, RatingStars, StatusPill, Text } from '@/components/ui';
 import { firstName, serviceNames } from '@/hooks/useCatalog';
 import { useT } from '@/i18n';
+import { selectAmountDue } from '@/store';
 import { useTheme } from '@/theme';
 import type { Appointment, ID, Review, Service, Staff } from '@/types';
 import { formatTimeRange, parseISODate } from '@/utils/date';
@@ -29,7 +30,7 @@ const AppointmentCardBase = ({ appointment, services, staff, review, onReschedul
   const t = useT();
   const date = parseISODate(appointment.date);
   const stylist = firstName(staff.get(appointment.staffId)?.name);
-  const due = appointment.totalPrice - appointment.amountPaid;
+  const due = selectAmountDue(appointment);
 
   const actions = [
     onReschedule ? <Button key="r" title={t('appointments.reschedule')} size="sm" variant="secondary" leftIcon="time-outline" onPress={onReschedule} /> : null,
@@ -77,6 +78,11 @@ const AppointmentCardBase = ({ appointment, services, staff, review, onReschedul
       <View style={[styles.footer, { borderTopColor: colors.border, paddingTop: spacing.md }]}>
         <View style={styles.flex}>
           <Text variant="label">{formatCurrency(appointment.totalPrice)}</Text>
+          {appointment.pointsDiscount > 0 && appointment.status !== 'cancelled' ? (
+            <Text variant="caption" tone="accent">
+              {formatCurrency(appointment.pointsDiscount)} off with points
+            </Text>
+          ) : null}
           {appointment.status !== 'cancelled' && appointment.amountPaid > 0 && due > 0 ? (
             <Text variant="caption" tone="warning">
               {formatCurrency(appointment.amountPaid)} paid · {formatCurrency(due)} due

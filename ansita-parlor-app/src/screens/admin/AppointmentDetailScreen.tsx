@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
+import { maxRedeemablePoints, RedeemPointsSheet } from '@/components/admin/RedeemPointsSheet';
 import { ADMIN_CANCEL_REASONS, CancelAppointmentSheet } from '@/components/customer/AppointmentSheets';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import {
@@ -26,11 +27,18 @@ import { serviceNames, useCustomerMap, useServiceMap, useStaffMap } from '@/hook
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, getErrorMessage } from '@/services';
-import { selectPointsFor, selectReviewForAppointment, useAppointmentStore, useBusinessStore, useReviewStore } from '@/store';
+import {
+  selectAmountDue,
+  selectPointsFor,
+  selectReviewForAppointment,
+  useAppointmentStore,
+  useBusinessStore,
+  useReviewStore,
+} from '@/store';
 import { useTheme } from '@/theme';
 import type { AppointmentStatus, PaymentMethod } from '@/types';
 import { formatDisplayDate, formatRelativeDay, formatTime12, formatTimeAgo, formatTimeRange, isPastDateTime } from '@/utils/date';
-import { formatCurrency, formatDuration } from '@/utils/format';
+import { formatCurrency, formatDuration, formatNumber } from '@/utils/format';
 import { formatPhone } from '@/utils/phone';
 
 type Props = RootStackScreenProps<'AppointmentDetail'>;
@@ -53,6 +61,9 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
   const [noShowOpen, setNoShowOpen] = useState(false);
   const [earlyOpen, setEarlyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [redeemOpen, setRedeemOpen] = useState(false);
+  const [redeemError, setRedeemError] = useState<string | null>(null);
+  const [removePointsOpen, setRemovePointsOpen] = useState(false);
 
   const run = async (key: string, action: () => Promise<unknown>, success: string): Promise<boolean> => {
     setBusy(key);
@@ -86,6 +97,20 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
     }
   };
 
+  const redeem = async (points: number): Promise<void> => {
+    setRedeemError(null);
+    setBusy('redeem');
+    try {
+      const updated = await appointmentService.redeemPoints(appointmentId, points);
+      toast.success(`${formatNumber(points)} points used: ${formatCurrency(updated.pointsDiscount)} off`);
+      setRedeemOpen(false);
+    } catch (error) {
+      setRedeemError(getErrorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   /** With a balance due, completing goes through the payment sheet. */
   const complete = (due: number): void => {
     if (due > 0) setPaymentMode('complete');
@@ -102,7 +127,12 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
         {(appointment) => {
           const customer = customers.get(appointment.customerId);
           const member = staff.get(appointment.staffId);
-          const due = appointment.totalPrice - appointment.amountPaid;
+          const due = selectAmountDue(appointment);
+          const points = customer?.loyaltyPoints ?? 0;
+          // Points can go on a bill with money still due, once the customer has the minimum.
+          const billOpen = appointment.status === 'confirmed' || appointment.status === 'completed';
+          const canOfferPoints = loyalty.enabled && billOpen && appointment.pointsRedeemed === 0 && due > 0;
+          const canRedeem = canOfferPoints && points >= loyalty.minRedeemPoints && maxRedeemablePoints(points, due, loyalty) > 0;
           const started = isPastDateTime(appointment.date, appointment.startTime);
           const active = appointment.status === 'pending' || appointment.status === 'confirmed';
           const summary = `${serviceNames(appointment.serviceIds, services)} · ${formatRelativeDay(appointment.date)} at ${formatTime12(appointment.startTime)}`;
@@ -176,6 +206,16 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                     {formatCurrency(appointment.amountPaid)}
                   </Text>
                 </View>
+                {appointment.pointsDiscount > 0 ? (
+                  <View style={styles.line}>
+                    <Text variant="bodySmall" tone="secondary" style={styles.flex}>
+                      Loyalty points ({formatNumber(appointment.pointsRedeemed)} pts)
+                    </Text>
+                    <Text variant="bodySmall" tone="success">
+                      − {formatCurrency(appointment.pointsDiscount)}
+                    </Text>
+                  </View>
+                ) : null}
                 {due > 0 && appointment.status !== 'cancelled' ? (
                   <View style={styles.line}>
                     <Text variant="label" tone="warning" style={styles.flex}>
@@ -193,8 +233,44 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                 ) : null}
                 {appointment.status === 'confirmed' && loyalty.enabled ? (
                   <Text variant="caption" tone="muted">
-                    Earns {selectPointsFor(loyalty, appointment.totalPrice)} loyalty points on completion
+                    Earns {selectPointsFor(loyalty, appointment.totalPrice - appointment.pointsDiscount)} loyalty points on completion
                   </Text>
+                ) : null}
+                {canRedeem ? (
+                  <Card variant="filled" padding="sm" style={{ gap: spacing.sm }}>
+                    <View style={styles.row}>
+                      <Icon name="diamond-outline" size={18} color={colors.accent} />
+                      <Text variant="bodySmall" style={styles.flex}>
+                        {customer?.name.split(' ')[0]} has <Text variant="label">{formatNumber(points)} points</Text>, worth up to{' '}
+                        {formatCurrency(Math.min(due, Math.floor(points * loyalty.pointValue)))} off.
+                      </Text>
+                    </View>
+                    <Button
+                      title="Use points"
+                      variant="secondary"
+                      size="sm"
+                      leftIcon="diamond-outline"
+                      onPress={() => {
+                        setRedeemError(null);
+                        setRedeemOpen(true);
+                      }}
+                      fullWidth
+                    />
+                  </Card>
+                ) : canOfferPoints && points > 0 && points < loyalty.minRedeemPoints ? (
+                  <Text variant="caption" tone="muted">
+                    {formatNumber(points)} points · they can be used from {formatNumber(loyalty.minRedeemPoints)} points
+                  </Text>
+                ) : null}
+                {appointment.pointsRedeemed > 0 && appointment.status !== 'cancelled' && appointment.status !== 'no_show' ? (
+                  <Button
+                    title="Remove points discount"
+                    variant="ghost"
+                    size="sm"
+                    loading={busy === 'removePoints'}
+                    onPress={() => setRemovePointsOpen(true)}
+                    style={styles.center}
+                  />
                 ) : null}
               </Card>
 
@@ -303,6 +379,29 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                   setPaymentMode(null);
                   setPaymentError(null);
                 }}
+              />
+              <RedeemPointsSheet
+                visible={redeemOpen}
+                customerName={customer?.name.split(' ')[0] ?? 'The customer'}
+                balance={points}
+                due={due}
+                loyalty={loyalty}
+                loading={busy === 'redeem'}
+                error={redeemError}
+                onSubmit={(value) => void redeem(value)}
+                onClose={() => setRedeemOpen(false)}
+              />
+              <ConfirmDialog
+                visible={removePointsOpen}
+                icon="diamond-outline"
+                title="Remove the points discount?"
+                message={`${formatNumber(appointment.pointsRedeemed)} points go back to the customer and ${formatCurrency(appointment.pointsDiscount)} is added back to the bill.`}
+                confirmLabel="Remove discount"
+                onConfirm={() => {
+                  setRemovePointsOpen(false);
+                  void run('removePoints', () => appointmentService.removePointsDiscount(appointmentId), 'Points returned to the customer');
+                }}
+                onCancel={() => setRemovePointsOpen(false)}
               />
               <CancelAppointmentSheet
                 appointment={cancelOpen ? appointment : null}

@@ -251,7 +251,7 @@ function ListView({ onOpen }: { onOpen: (id: string) => void }) {
               ),
             },
             { header: "Total", cell: (a) => <span className="font-semibold text-ink">{money(a.totalPrice)}</span> },
-            { header: "Paid", className: "w-[150px]", cell: (a) => <PaymentProgress paid={a.amountPaid} total={a.totalPrice} /> },
+            { header: "Paid", className: "w-[150px]", cell: (a) => <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} /> },
             { header: "Status", cell: (a) => <StatusBadge status={a.status} /> },
           ]}
         />

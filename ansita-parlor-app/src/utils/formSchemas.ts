@@ -119,6 +119,7 @@ export const loyaltySchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, { error: 'Enter an amount like 1 or 0.50' })
     .transform(Number)
     .pipe(z.number().gt(0, { error: 'Must be more than zero' }).max(100, { error: 'At most Rs. 100' })),
+  minRedeemPoints: wholeNumberText(z.number().min(0, { error: 'Zero or more' }).max(100000, { error: 'At most 100,000' }), 'the points needed'),
 });
 
 // ---------- Payments & points ----------
@@ -131,6 +132,15 @@ export const paymentSchema = (due: number) =>
       'the amount',
     ),
     method: z.enum(['cash', 'esewa', 'khalti', 'fonepay', 'card']),
+  });
+
+/** Points to use on a bill: at least 1, at most `max` (what the customer has, capped at the balance due). */
+export const redeemPointsSchema = (max: number) =>
+  z.object({
+    points: wholeNumberText(
+      z.number().min(1, { error: 'Enter at least 1 point' }).max(max, { error: `At most ${max.toLocaleString('en-IN')} points here` }),
+      'the points',
+    ),
   });
 
 export const quickCustomerSchema = z.object({ name: nameSchema, phone: phoneSchema });
