@@ -1,7 +1,7 @@
 import { useServiceStore, type ServiceFilter } from '@/store/serviceStore';
 import type { ID, Service, ServiceCategory } from '@/types';
 
-import { api } from './client';
+import { api, withUploadedImage } from './client';
 
 export type ServiceInput = Pick<
   Service,
@@ -38,10 +38,10 @@ export const catalogService = {
   getService: async (id: ID): Promise<Service> => cacheService(await api<Service>('GET', `/services/${id}`)),
 
   createService: async (input: ServiceInput): Promise<Service> =>
-    cacheService(await api<Service>('POST', '/services', { body: input })),
+    cacheService(await api<Service>('POST', '/services', { body: await withUploadedImage(input, 'image') })),
 
   updateService: async (id: ID, input: Partial<ServiceInput>): Promise<Service> =>
-    cacheService(await api<Service>('PATCH', `/services/${id}`, { body: input })),
+    cacheService(await api<Service>('PATCH', `/services/${id}`, { body: await withUploadedImage(input, 'image') })),
 
   setServiceActive: async (id: ID, isActive: boolean): Promise<Service> =>
     cacheService(await api<Service>('POST', `/services/${id}/active`, { body: { isActive } })),

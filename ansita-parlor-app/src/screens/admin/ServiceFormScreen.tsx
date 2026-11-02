@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { ChipSelect } from '@/components/admin/Pickers';
 import { FormInput } from '@/components/form/FormFields';
+import { ImagePickerField } from '@/components/form/ImagePickerField';
 import { Button, Card, ConfirmDialog, ListItem, QueryState, Screen, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -24,6 +25,7 @@ const schema = z.object({
   price: wholeNumberText(priceSchema, 'the price'),
   description: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
   isActive: z.boolean(),
+  image: z.string().nullable(),
 });
 
 type Values = z.input<typeof schema>;
@@ -42,14 +44,14 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
 
   const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', categoryId: route.params?.categoryId ?? '', duration: '30', price: '', description: '', isActive: true },
+    defaultValues: { name: '', categoryId: route.params?.categoryId ?? '', duration: '30', price: '', description: '', isActive: true, image: null },
     mode: 'onTouched',
   });
   const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   useEffect(() => {
     const s = query.data?.service;
-    if (s) reset({ name: s.name, categoryId: s.categoryId, duration: String(s.duration), price: String(s.price), description: s.description, isActive: s.isActive });
+    if (s) reset({ name: s.name, categoryId: s.categoryId, duration: String(s.duration), price: String(s.price), description: s.description, isActive: s.isActive, image: s.image });
   }, [query.data, reset]);
 
   const save = handleSubmit(async (values) => {
@@ -58,7 +60,7 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
         await catalogService.updateService(serviceId, values);
         toast.success('Service updated');
       } else {
-        await catalogService.createService({ ...values, image: null });
+        await catalogService.createService(values);
         toast.success(`${values.name} added`);
       }
       allowLeave();
@@ -89,6 +91,11 @@ export const ServiceFormScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ categories }) => (
           <View style={{ gap: spacing.lg }}>
+            <Controller
+              control={control}
+              name="image"
+              render={({ field }) => <ImagePickerField label="Photo" value={field.value} onChange={field.onChange} helperText="Shown to customers in the app and on the website." />}
+            />
             <FormInput control={control} name="name" label="Service name" required placeholder="e.g. Hair Botox" />
             <View style={{ gap: spacing.sm }}>
               <Text variant="label" tone="secondary">

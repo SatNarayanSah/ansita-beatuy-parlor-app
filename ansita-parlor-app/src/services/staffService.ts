@@ -3,7 +3,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { useStaffStore } from '@/store/staffStore';
 import type { Appointment, ID, ISODate, Review, Staff } from '@/types';
 
-import { api } from './client';
+import { api, withUploadedImage } from './client';
 
 export type StaffInput = Pick<
   Staff,
@@ -31,11 +31,11 @@ export const staffService = {
 
   getStaff: async (id: ID): Promise<Staff> => cacheStaff(await api<Staff>('GET', `/staff/${id}`)),
 
-  createStaff: async (input: StaffInput): Promise<Staff> => cacheStaff(await api<Staff>('POST', '/staff', { body: input })),
+  createStaff: async (input: StaffInput): Promise<Staff> => cacheStaff(await api<Staff>('POST', '/staff', { body: await withUploadedImage(input, 'avatar') })),
 
   /** Hour changes that would strand upcoming bookings are refused by the server. */
   updateStaff: async (id: ID, input: Partial<StaffInput>): Promise<Staff> =>
-    cacheStaff(await api<Staff>('PATCH', `/staff/${id}`, { body: input })),
+    cacheStaff(await api<Staff>('PATCH', `/staff/${id}`, { body: await withUploadedImage(input, 'avatar') })),
 
   /** Deactivating is refused while the member has upcoming bookings. */
   setStaffActive: async (id: ID, isActive: boolean): Promise<Staff> =>

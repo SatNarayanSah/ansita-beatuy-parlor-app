@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { useState } from "react";
-import { Button, Dropdown, Field, Input, Modal, Textarea } from "@/components/ui";
+import { Button, Dropdown, Field, ImageUpload, Input, Modal, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { label } from "@/lib/format";
 import { useAction } from "@/lib/queries";
@@ -24,6 +24,7 @@ const EMPTY = {
   postalCode: "",
   notes: "",
   tags: [] as CustomerTag[],
+  avatar: "",
 };
 
 function fromCustomer(c: Customer | null) {
@@ -41,12 +42,14 @@ function fromCustomer(c: Customer | null) {
     postalCode: c.address?.postalCode ?? "",
     notes: c.notes,
     tags: c.tags,
+    avatar: c.avatar && /^https?:\/\//.test(c.avatar) ? c.avatar : "",
   };
 }
 
 /** Mount with a `key` per customer so the form starts from that customer's values. */
 export function CustomerForm({ customer, open, onClose, onSaved }: { customer: Customer | null; open: boolean; onClose: () => void; onSaved?: (c: Customer) => void }) {
   const [form, setForm] = useState(() => fromCustomer(customer));
+  const [uploading, setUploading] = useState(false);
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => setForm((f) => ({ ...f, [key]: value }));
 
   const save = useAction(
@@ -60,6 +63,7 @@ export function CustomerForm({ customer, open, onClose, onSaved }: { customer: C
         address: { line1: form.line1, line2: form.line2, city: form.city, province: form.province, postalCode: form.postalCode },
         notes: form.notes,
         tags: form.tags,
+        avatar: form.avatar || null,
       };
       return customer ? api.patch<Customer>(`/customers/${customer.id}`, body) : api.post<Customer>("/customers", body);
     },
@@ -87,7 +91,7 @@ export function CustomerForm({ customer, open, onClose, onSaved }: { customer: C
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={!valid} loading={save.isPending} onClick={() => save.mutate()}>
+          <Button disabled={!valid || uploading} loading={save.isPending} onClick={() => save.mutate()}>
             {customer ? "Save changes" : "Add customer"}
           </Button>
         </>
@@ -100,6 +104,15 @@ export function CustomerForm({ customer, open, onClose, onSaved }: { customer: C
           if (valid) save.mutate();
         }}
       >
+        <ImageUpload
+          label="Photo (optional)"
+          shape="round"
+          hint="A square photo of the face works best."
+          value={form.avatar}
+          onChange={(url) => set("avatar", url)}
+          onUploadingChange={setUploading}
+          className="sm:col-span-2"
+        />
         <Field label="Full name">
           <Input value={form.name} onChange={(e) => set("name", e.target.value)} autoFocus />
         </Field>

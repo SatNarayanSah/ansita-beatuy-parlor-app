@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { MultiChipSelect } from '@/components/admin/Pickers';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
+import { ImagePickerField } from '@/components/form/ImagePickerField';
 import { Button, DatePickerField, QueryState, Screen, SegmentedControl, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -34,6 +35,7 @@ const schema = z.object({
   postalCode: postalCodeSchema,
   notes: z.string().trim().max(300, { error: 'Keep notes under 300 characters' }),
   tags: z.array(z.enum(['vip', 'regular', 'new', 'bridal', 'student', 'inactive'])),
+  avatar: z.string().nullable(),
 });
 
 type Values = z.input<typeof schema>;
@@ -47,7 +49,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
 
   const { control, handleSubmit, reset, formState } = useForm<Values, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', phone: '', email: '', gender: 'female', dob: null, line1: '', city: 'Janakpur', postalCode: '', notes: '', tags: ['new'] },
+    defaultValues: { name: '', phone: '', email: '', gender: 'female', dob: null, line1: '', city: 'Janakpur', postalCode: '', notes: '', tags: ['new'], avatar: null },
     mode: 'onTouched',
   });
   const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
@@ -66,6 +68,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
         postalCode: c.address.postalCode,
         notes: c.notes,
         tags: c.tags,
+        avatar: c.avatar,
       });
     }
   }, [query.data, reset]);
@@ -80,7 +83,7 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
       dob: values.dob,
       notes: values.notes,
       tags: values.tags,
-      avatar: existing?.avatar ?? null,
+      avatar: values.avatar,
       address: { line1: values.line1, line2: existing?.address.line2 ?? '', city: values.city, province: existing?.address.province || 'Madhesh', postalCode: values.postalCode },
     };
     try {
@@ -105,6 +108,11 @@ export const CustomerFormScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {() => (
           <View style={{ gap: spacing.lg }}>
+            <Controller
+              control={control}
+              name="avatar"
+              render={({ field }) => <ImagePickerField label="Photo" variant="avatar" name={query.data?.name ?? ''} value={field.value} onChange={field.onChange} />}
+            />
             <FormInput control={control} name="name" label="Full name" required leftIcon="person-outline" />
             <FormPhoneInput control={control} name="phone" required />
             <FormInput control={control} name="email" label="Email" leftIcon="mail-outline" keyboardType="email-address" autoCapitalize="none" />

@@ -406,3 +406,12 @@ def test_redeem_loyalty_points(client, admin):
     # The minimum is a setting.
     assert client.patch("/settings/loyalty", json={"minRedeemPoints": 2000}, headers=admin).json()["loyalty"]["minRedeemPoints"] == 2000
     client.patch("/settings/loyalty", json={"minRedeemPoints": 500}, headers=admin)
+
+
+def test_photo_fields_need_uploaded_links(client, admin):
+    local = "file:///data/user/0/cache/photo.jpg"
+    assert client.patch("/staff/stf_rojina", json={"avatar": local}, headers=admin).status_code == 422
+    assert client.patch("/services/svc_pedicure", json={"image": local}, headers=admin).status_code == 422
+    uploaded = client.post("/uploads", content=b"\xff\xd8\xff\xe0" + b"\x00" * 32, headers={**admin, "Content-Type": "image/jpeg"}).json()["url"]
+    assert client.patch("/services/svc_pedicure", json={"image": uploaded}, headers=admin).json()["image"] == uploaded
+    assert client.patch("/services/svc_pedicure", json={"image": None}, headers=admin).json()["image"] is None

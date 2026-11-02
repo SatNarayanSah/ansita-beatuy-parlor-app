@@ -1,7 +1,7 @@
 import { useCourseStore } from '@/store/courseStore';
 import type { Batch, Course, ID, SyllabusModule } from '@/types';
 
-import { api } from './client';
+import { api, withUploadedImage } from './client';
 
 /** Syllabus modules may omit an id when created; the server assigns one. */
 export type SyllabusModuleInput = Omit<SyllabusModule, 'id'> & { id?: ID };
@@ -55,10 +55,10 @@ export const courseService = {
     api<BatchAvailability[]>('GET', `/courses/${courseId}/batches/availability`),
 
   createCourse: async (input: CourseInput): Promise<Course> =>
-    cacheCourse(await api<Course>('POST', '/courses', { body: input })),
+    cacheCourse(await api<Course>('POST', '/courses', { body: await withUploadedImage(input, 'image') })),
 
   updateCourse: async (id: ID, input: Partial<CourseInput>): Promise<Course> =>
-    cacheCourse(await api<Course>('PATCH', `/courses/${id}`, { body: input })),
+    cacheCourse(await api<Course>('PATCH', `/courses/${id}`, { body: await withUploadedImage(input, 'image') })),
 
   setCourseActive: async (id: ID, isActive: boolean): Promise<Course> =>
     cacheCourse(await api<Course>('POST', `/courses/${id}/active`, { body: { isActive } })),

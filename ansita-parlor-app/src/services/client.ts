@@ -1,3 +1,5 @@
+import { File } from 'expo-file-system';
+
 import { useAuthStore } from '@/store/authStore';
 
 import { API_URL, REQUEST_TIMEOUT_MS, setOffline } from './config';
@@ -127,40 +129,72 @@ export const ensureFound = <T>(value: T | undefined | null, entityName: string):
   return value;
 };
 
+/** The server's limit for one image. */
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const imageTypeOf = (bytes: Uint8Array): string | null => {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'image/png';
+  if (String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP') return 'image/webp';
+  if (String.fromCharCode(...bytes.slice(0, 3)) === 'GIF') return 'image/gif';
+  return null;
+};
+
 /**
  * Uploads a photo picked on this phone (a local file:// URI) and returns its public URL,
  * which is what gets saved on the record so the website and other phones can show it too.
- * Sent as raw bytes; fetch can't send a local file in React Native, so this uses XMLHttpRequest.
+ *
+ * The file is read with expo-file-system and sent as raw bytes. (Reading it through
+ * `fetch(uri).blob()` gives a Blob React Native's uploader can't send, so the server
+ * received junk and refused it as "not an image".)
  */
 export const uploadImage = async (localUri: string): Promise<string> => {
-  let file: Blob;
+  let buffer: ArrayBuffer;
   try {
-    file = await (await fetch(localUri)).blob();
+    buffer = await new File(localUri).arrayBuffer();
   } catch {
     throw new ApiError('VALIDATION', 'Couldn’t read that photo. Please choose another one.');
   }
+  const bytes = new Uint8Array(buffer);
+  if (bytes.byteLength === 0) throw new ApiError('VALIDATION', 'That photo is empty. Please choose another one.');
+  if (bytes.byteLength > MAX_IMAGE_BYTES) throw new ApiError('VALIDATION', 'That photo is larger than 5 MB. Please choose a smaller one.');
+  const contentType = imageTypeOf(bytes);
+  if (!contentType) throw new ApiError('VALIDATION', 'Use a JPG, PNG, WebP or GIF photo.');
+
   const token = useAuthStore.getState().token;
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${API_URL}/uploads`);
-    xhr.setRequestHeader('Accept', 'application/json');
-    xhr.setRequestHeader('Content-Type', file.type || 'image/jpeg');
-    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.timeout = REQUEST_TIMEOUT_MS * 3;
-    xhr.onerror = xhr.ontimeout = () => {
-      setOffline(true);
-      reject(new ApiError('NETWORK'));
-    };
-    xhr.onload = () => {
-      setOffline(false);
-      const data = parseBody(xhr.responseText) as { url?: string; message?: string } | null;
-      if (xhr.status >= 200 && xhr.status < 300 && typeof data?.url === 'string') return resolve(data.url);
-      if (xhr.status >= 500) return reject(new ApiError('NETWORK', 'The server had a problem. Please try again in a moment.'));
-      const message = typeof data?.message === 'string' && data.message.length > 0 ? data.message : undefined;
-      reject(new ApiError(STATUS_TO_CODE[xhr.status] ?? 'VALIDATION', message ?? (xhr.status === 413 ? 'That photo is too large.' : undefined)));
-    };
-    xhr.send(file);
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS * 3);
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/uploads`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': contentType, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      // A plain ArrayBuffer is the body type both Expo's and React Native's fetch send as-is.
+      body: buffer,
+      signal: controller.signal,
+    });
+  } catch {
+    setOffline(true);
+    throw new ApiError('NETWORK');
+  } finally {
+    clearTimeout(timer);
+  }
+  setOffline(false);
+
+  const data = parseBody(await response.text()) as { url?: string; message?: string } | null;
+  if (response.ok && typeof data?.url === 'string') return data.url;
+  if (response.status >= 500) throw new ApiError('NETWORK', 'The server had a problem. Please try again in a moment.');
+  const message = typeof data?.message === 'string' && data.message.length > 0 ? data.message : undefined;
+  throw new ApiError(STATUS_TO_CODE[response.status] ?? 'VALIDATION', message ?? (response.status === 413 ? 'That photo is too large.' : undefined));
+};
+
+/**
+ * Before saving a record: if its photo field holds a photo picked on this phone, upload it
+ * and put the public URL in its place. Other values (a URL, null, absent) pass through.
+ */
+export const withUploadedImage = async <T extends object, K extends keyof T>(input: T, key: K): Promise<T> => {
+  const value = input[key];
+  return typeof value === 'string' && isLocalImageUri(value) ? { ...input, [key]: await uploadImage(value) } : input;
 };
 
 /** Device-only file paths, from before photos were uploaded; nobody else can open them. */

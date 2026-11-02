@@ -6,6 +6,7 @@ import type { z } from 'zod';
 
 import { ChipSelect, MultiChipSelect, TimeStepper } from '@/components/admin/Pickers';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
+import { ImagePickerField } from '@/components/form/ImagePickerField';
 import { Button, Card, Divider, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -45,6 +46,7 @@ export const StaffFormScreen = ({ navigation, route }: Props) => {
       email: '',
       specialties: [],
       workingHours: DAYS.map((day) => ({ day, isOff: false, start: business.openTime, end: business.closeTime })),
+      avatar: null,
     },
     mode: 'onTouched',
   });
@@ -61,6 +63,7 @@ export const StaffFormScreen = ({ navigation, route }: Props) => {
       specialties: m.specialties,
       // Editor rows are always Sun..Sat whatever order the record stores.
       workingHours: DAYS.map((day) => m.workingHours.find((h) => h.day === day) ?? { day, isOff: true, start: business.openTime, end: business.closeTime }),
+      avatar: m.avatar,
     });
   }, [query.data, reset, business.openTime, business.closeTime]);
 
@@ -73,7 +76,7 @@ export const StaffFormScreen = ({ navigation, route }: Props) => {
         allowLeave();
         navigation.goBack();
       } else {
-        const created = await staffService.createStaff({ ...input, avatar: null, isActive: true });
+        const created = await staffService.createStaff({ ...input, isActive: true });
         toast.success(`${created.name} added`);
         allowLeave();
         navigation.replace('StaffDetail', { staffId: created.id });
@@ -100,6 +103,13 @@ export const StaffFormScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ categories }) => (
           <View style={{ gap: spacing.lg }}>
+            <Controller
+              control={control}
+              name="avatar"
+              render={({ field }) => (
+                <ImagePickerField label="Photo" variant="avatar" name={getValues('name')} value={field.value} onChange={field.onChange} helperText="Customers see it when choosing a stylist." />
+              )}
+            />
             <FormInput control={control} name="name" label="Full name" required leftIcon="person-outline" />
             <Controller
               control={control}

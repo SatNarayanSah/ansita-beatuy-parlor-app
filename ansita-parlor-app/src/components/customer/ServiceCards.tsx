@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -36,6 +37,25 @@ export const CategoryIcon = ({ category, size = 48 }: { category: ServiceCategor
   );
 };
 
+/** Uploaded pictures only; anything else (old device paths) falls back to the icon. */
+const isWebImage = (uri: string | null | undefined): uri is string => typeof uri === 'string' && /^https?:\/\//.test(uri);
+
+/** The service's photo when it has one, otherwise its category icon. */
+export const ServiceThumb = ({ service, category, size = 48 }: { service: Service; category: ServiceCategory | undefined; size?: number }) => {
+  const { radius } = useTheme();
+  if (!isWebImage(service.image)) return <CategoryIcon category={category} size={size} />;
+  return (
+    <Image
+      source={{ uri: service.image }}
+      style={{ width: size, height: size, borderRadius: radius.md }}
+      contentFit="cover"
+      transition={150}
+      cachePolicy="disk"
+      accessibilityIgnoresInvertColors
+    />
+  );
+};
+
 interface ServiceRowProps {
   service: Service;
   category: ServiceCategory | undefined;
@@ -68,7 +88,7 @@ const ServiceRowBase = ({ service, category, rating, onPress, selected }: Servic
         pressed && styles.pressed,
       ]}
     >
-      <CategoryIcon category={category} />
+      <ServiceThumb service={service} category={category} />
       <View style={styles.body}>
         <Text variant="h4" numberOfLines={1}>
           {service.name}
@@ -120,7 +140,7 @@ export const ServiceTile = ({ service, category, rating, onPress }: ServiceTileP
   return (
     <Card onPress={onPress} accessibilityLabel={service.name} style={styles.tile} padding="md">
       <View style={{ gap: spacing.sm }}>
-        <CategoryIcon category={category} size={40} />
+        <ServiceThumb service={service} category={category} size={40} />
         <Text variant="label" numberOfLines={2} style={styles.tileTitle}>
           {service.name}
         </Text>

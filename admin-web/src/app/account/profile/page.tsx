@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Crown, KeyRound, LogOut, MapPin, Save, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Avatar, Button, Card, Dropdown, ErrorState, Field, Input, PageHeader, Skeleton } from "@/components/ui";
+import { Avatar, Button, Card, Dropdown, ErrorState, Field, ImageUpload, Input, PageHeader, Skeleton } from "@/components/ui";
 import { api, tokenStore } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDate } from "@/lib/format";
@@ -26,6 +26,25 @@ function Section({ icon, title, subtitle, children, delay = 0 }: { icon: React.R
   );
 }
 
+/** Profile photo: uploads straight away and saves it to the account (the app shows the same photo). */
+function PhotoForm({ user }: { user: User }) {
+  const { setUser } = useAuth();
+  const save = useAction((avatar: string | null) => api.patch<User>("/auth/me", { avatar }), {
+    invalidate: ["customers"],
+    success: (_, avatar) => (avatar ? "Profile photo updated" : "Photo removed"),
+    onSuccess: (updated) => setUser(updated),
+  });
+  return (
+    <ImageUpload
+      label="Profile photo"
+      shape="round"
+      hint="A square photo of your face works best. It also shows in the app."
+      value={user.avatar && /^https?:\/\//.test(user.avatar) ? user.avatar : ""}
+      onChange={(url) => save.mutate(url || null)}
+    />
+  );
+}
+
 function AccountForm({ user }: { user: User }) {
   const { setUser } = useAuth();
   const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone });
@@ -43,6 +62,9 @@ function AccountForm({ user }: { user: User }) {
       }}
       className="grid gap-4 sm:grid-cols-2"
     >
+      <div className="sm:col-span-2">
+        <PhotoForm user={user} />
+      </div>
       <Field label="Full name" className="sm:col-span-2">
         <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required minLength={2} />
       </Field>

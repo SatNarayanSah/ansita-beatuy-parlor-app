@@ -1,8 +1,8 @@
 """Request bodies. Field names are camelCase on the wire (same as the app's service inputs)."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 PaymentMethod = Literal["cash", "esewa", "khalti", "fonepay", "card"]
@@ -20,6 +20,19 @@ DiscountType = Literal["percent", "flat"]
 
 DateStr = str  # yyyy-MM-dd, validated in the routes for friendly messages
 TimeStr = str  # HH:mm
+
+
+def _web_image(value: str | None) -> str | None:
+    """A photo must be a web link (from `POST /uploads`). A path on a phone (file://...)
+    only ever opens on that phone, so the website and other devices would show nothing."""
+    if value is None or not value.strip():
+        return None
+    if not value.startswith(("http://", "https://")):
+        raise ValueError("Upload the photo first (POST /uploads) and save its URL.")
+    return value
+
+
+ImageUrl = Annotated[str | None, Field(max_length=2048), AfterValidator(_web_image)]
 
 
 class CamelModel(BaseModel):
@@ -58,15 +71,7 @@ class ProfileInput(CamelModel):
     name: str | None = Field(default=None, min_length=2, max_length=120)
     email: str | None = Field(default=None, min_length=3, max_length=254)
     phone: str | None = None
-    avatar: str | None = Field(default=None, max_length=2048)
-
-    @field_validator("avatar")
-    @classmethod
-    def _avatar_is_web_url(cls, value: str | None) -> str | None:
-        # A path on the phone (file://...) can't be opened by the website or other devices.
-        if value is not None and not value.startswith(("http://", "https://")):
-            raise ValueError("Upload the photo first (POST /uploads) and save its URL.")
-        return value
+    avatar: ImageUrl = None
 
 
 class ChangePasswordInput(CamelModel):
@@ -128,7 +133,7 @@ class ServiceInput(CamelModel):
     duration: int = Field(gt=0, le=24 * 60)
     price: int = Field(ge=0)
     description: str = ""
-    image: str | None = None
+    image: ImageUrl = None
     is_active: bool = True
 
 
@@ -138,7 +143,7 @@ class ServiceUpdate(CamelModel):
     duration: int | None = Field(default=None, gt=0, le=24 * 60)
     price: int | None = Field(default=None, ge=0)
     description: str | None = None
-    image: str | None = None
+    image: ImageUrl = None
     is_active: bool | None = None
 
 
@@ -175,7 +180,7 @@ class StaffInput(CamelModel):
     email: str = ""
     specialties: list[str]
     working_hours: list[WorkingHours]
-    avatar: str | None = None
+    avatar: ImageUrl = None
     is_active: bool = True
 
 
@@ -186,7 +191,7 @@ class StaffUpdate(CamelModel):
     email: str | None = None
     specialties: list[str] | None = None
     working_hours: list[WorkingHours] | None = None
-    avatar: str | None = None
+    avatar: ImageUrl = None
     is_active: bool | None = None
 
 
@@ -209,7 +214,7 @@ class CustomerInput(CamelModel):
     dob: DateStr | None = None
     address: Address = Field(default_factory=Address)
     notes: str = ""
-    avatar: str | None = None
+    avatar: ImageUrl = None
     tags: list[CustomerTag] = Field(default_factory=list)
 
 
@@ -221,7 +226,7 @@ class CustomerUpdate(CamelModel):
     dob: DateStr | None = None
     address: Address | None = None
     notes: str | None = None
-    avatar: str | None = None
+    avatar: ImageUrl = None
     tags: list[CustomerTag] | None = None
 
 
@@ -244,7 +249,7 @@ class CourseInput(CamelModel):
     level: CourseLevel
     instructor: str
     seats: int = Field(ge=1)
-    image: str | None = None
+    image: ImageUrl = None
     certificate: bool = True
     is_active: bool = True
     syllabus: list[SyllabusModuleInput] = Field(default_factory=list)
@@ -259,7 +264,7 @@ class CourseUpdate(CamelModel):
     level: CourseLevel | None = None
     instructor: str | None = None
     seats: int | None = Field(default=None, ge=1)
-    image: str | None = None
+    image: ImageUrl = None
     certificate: bool | None = None
     is_active: bool | None = None
     syllabus: list[SyllabusModuleInput] | None = None
@@ -349,7 +354,7 @@ class OfferInput(CamelModel):
     valid_from: DateStr
     valid_to: DateStr
     terms: list[str] = Field(default_factory=list)
-    image: str | None = None
+    image: ImageUrl = None
     is_active: bool = True
 
 
@@ -365,7 +370,7 @@ class OfferUpdate(CamelModel):
     valid_from: DateStr | None = None
     valid_to: DateStr | None = None
     terms: list[str] | None = None
-    image: str | None = None
+    image: ImageUrl = None
     is_active: bool | None = None
 
 

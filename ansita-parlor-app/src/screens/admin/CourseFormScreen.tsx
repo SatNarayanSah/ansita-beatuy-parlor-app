@@ -6,6 +6,7 @@ import type { z } from 'zod';
 
 import { ChipSelect } from '@/components/admin/Pickers';
 import { FormInput } from '@/components/form/FormFields';
+import { ImagePickerField } from '@/components/form/ImagePickerField';
 import { Button, Card, IconButton, ListItem, QueryState, Screen, SectionHeader, SkeletonCard, Text, useToast } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
@@ -56,6 +57,7 @@ export const CourseFormScreen = ({ navigation, route }: Props) => {
       certificate: true,
       isActive: true,
       syllabus: [EMPTY_MODULE],
+      image: null,
     },
     mode: 'onTouched',
   });
@@ -78,13 +80,13 @@ export const CourseFormScreen = ({ navigation, route }: Props) => {
       certificate: c.certificate,
       isActive: c.isActive,
       syllabus: c.syllabus.map((m) => ({ id: m.id, title: m.title, hours: String(m.hours), topics: m.topics.join(', ') })),
+      image: c.image,
     });
   }, [query.data, reset]);
 
   const save = handleSubmit(async (values) => {
     const input = {
       ...values,
-      image: query.data?.course?.image ?? null,
       syllabus: values.syllabus.map((m) => ({
         ...(m.id ? { id: m.id } : {}),
         title: m.title,
@@ -116,6 +118,11 @@ export const CourseFormScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ staff }) => (
           <View style={{ gap: spacing.lg }}>
+            <Controller
+              control={control}
+              name="image"
+              render={({ field }) => <ImagePickerField label="Course photo" value={field.value} onChange={field.onChange} helperText="Shown on the academy page of the website." />}
+            />
             <FormInput control={control} name="title" label="Course title" required />
             <Controller
               control={control}

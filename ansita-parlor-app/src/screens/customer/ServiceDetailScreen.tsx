@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CategoryIcon } from '@/components/customer/ServiceCards';
+import { ServiceThumb } from '@/components/customer/ServiceCards';
 import {
   Avatar,
   Badge,
@@ -92,7 +92,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
           return (
             <View style={{ gap: spacing.xl }}>
               <View style={[styles.hero, { backgroundColor: `${category?.color ?? colors.primary}18`, borderRadius: radius.xl, padding: spacing.xl }]}>
-                <CategoryIcon category={category} size={72} />
+                <ServiceThumb service={service} category={category} size={service.image ? 120 : 72} />
                 <View style={{ gap: spacing.xs }}>
                   {category ? <Badge label={category.name} tone="primary" size="sm" /> : null}
                   <Text variant="h1">{service.name}</Text>

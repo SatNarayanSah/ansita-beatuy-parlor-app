@@ -56,7 +56,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | # | Steps | Expected | ✓ |
 |---|---|---|---|
 | D5 | Profile → Edit profile: clear the name, invalid email; then valid changes. Back out without saving. | Field errors; leaving with edits asks “Discard changes?”. After saving, Home greets the new name. | ☐ |
-| D6 | Profile photo: gallery, camera (deny permission once), remove. | Photo updates everywhere; denied camera shows a helpful toast. | ☐ |
+| D6 | Profile photo: gallery, then camera (deny permission once), then remove. | Each saves without a format error; the photo also shows on the website (admin Customers and the customer's Profile page); denied camera shows a helpful toast. | ☐ |
 | D7 | Preferences: favourite stylist, payment method, reminders, offer alerts. | Saved instantly; a new booking preselects the favourite stylist and payment method. | ☐ |
 | D8 | Loyalty history. | Tier card (Silver/Gold/Platinum), progress to next tier, points per completed visit. | ☐ |
 | D9 | Language → नेपाली, then back. | Tab labels, titles and main buttons switch language; content stays English. | ☐ |
@@ -103,6 +103,7 @@ Automated checks cover the business rules below the UI. Run `npm run verify` fir
 | F8 | Staff → a stylist: change days in the schedule; set a day off on a weekday that has bookings. | Refused: “N upcoming bookings fall outside the new hours…”. | ☐ |
 | F9 | Try to drag a shift's end before its start; then make a valid change. | The steppers stop at the other end (end can't precede start); the valid change saves and the customer calendar reflects it. | ☐ |
 | F10 | Deactivate a stylist with upcoming bookings. | Refused with a count. | ☐ |
+| F11 | Admin app: add a photo to a service, a staff member, a course and a customer (gallery and camera). | Each saves; service photos show on Home, Services and the service page; staff photos in booking; all also show on the website. |
 
 ## 7. Admin – training centre
 

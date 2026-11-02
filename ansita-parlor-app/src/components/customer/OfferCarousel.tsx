@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, useWindowDimensions, View, type ListRenderItem } from 'react-native';
 
@@ -71,9 +72,13 @@ export const OfferCarousel = ({ offers, onPressOffer }: OfferCarouselProps) => {
             {item.code ? `Code ${item.code} · ` : ''}Till {formatShortDate(item.validTo)}
           </Text>
         </View>
-        <View style={[styles.bubble, { backgroundColor: palette.fg }]}>
-          <Icon name="gift" size={26} color={palette.bg} />
-        </View>
+        {item.image && /^https?:\/\//.test(item.image) ? (
+          <Image source={{ uri: item.image }} style={[styles.photo, { borderRadius: radius.lg }]} contentFit="cover" transition={150} cachePolicy="disk" />
+        ) : (
+          <View style={[styles.bubble, { backgroundColor: palette.fg }]}>
+            <Icon name="gift" size={26} color={palette.bg} />
+          </View>
+        )}
       </Pressable>
     );
   };
@@ -114,6 +119,7 @@ const styles = StyleSheet.create({
   bannerText: { flex: 1, gap: 4 },
   dim: { opacity: 0.9 },
   bubble: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  photo: { width: 84, height: 84 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5 },
   dot: { height: 6, borderRadius: 3 },
 });

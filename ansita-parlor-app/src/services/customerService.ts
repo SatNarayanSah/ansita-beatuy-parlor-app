@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useCustomerStore, type CustomerFilter } from '@/store/customerStore';
 import type { Customer, ID, ISODate, User } from '@/types';
 
-import { api } from './client';
+import { api, withUploadedImage } from './client';
 
 export type CustomerInput = Pick<
   Customer,
@@ -35,11 +35,11 @@ export const customerService = {
   getCustomer: async (id: ID): Promise<Customer> => cacheCustomer(await api<Customer>('GET', `/customers/${id}`)),
 
   createCustomer: async (input: CustomerInput): Promise<Customer> =>
-    cacheCustomer(await api<Customer>('POST', '/customers', { body: input })),
+    cacheCustomer(await api<Customer>('POST', '/customers', { body: await withUploadedImage(input, 'avatar') })),
 
   /** Admins can edit anyone; customers their own profile (tags/notes are admin-only on the server). */
   updateCustomer: async (id: ID, input: Partial<CustomerInput>): Promise<Customer> => {
-    const customer = cacheCustomer(await api<Customer>('PATCH', `/customers/${id}`, { body: input }));
+    const customer = cacheCustomer(await api<Customer>('PATCH', `/customers/${id}`, { body: await withUploadedImage(input, 'avatar') }));
     // The server keeps the linked account in sync; mirror that for the signed-in customer.
     const { user } = useAuthStore.getState();
     if (user?.customerId === id) {

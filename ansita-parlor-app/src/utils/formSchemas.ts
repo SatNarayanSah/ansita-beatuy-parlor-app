@@ -52,6 +52,8 @@ export const staffSchema = z.object({
   email: optionalEmailSchema,
   specialties: z.array(z.string()).min(1, { error: 'Choose at least one specialty' }),
   workingHours: z.array(workingDaySchema).refine((days) => days.some((day) => !day.isOff), { error: 'Set at least one working day' }),
+  /** Saved URL, a photo just picked on the phone, or none. */
+  avatar: z.string().nullable(),
 });
 
 // ---------- Course & batch ----------
@@ -75,6 +77,7 @@ export const courseSchema = z.object({
   certificate: z.boolean(),
   isActive: z.boolean(),
   syllabus: z.array(syllabusModuleSchema).min(1, { error: 'Add at least one module' }),
+  image: z.string().nullable(),
 });
 
 export const batchSchema = z
