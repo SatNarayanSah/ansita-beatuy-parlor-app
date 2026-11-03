@@ -74,15 +74,26 @@ def _strip_upload_hosts() -> None:
             for id_, value in rows:
                 conn.execute(text(f"UPDATE {table} SET {column} = :value WHERE id = :id"), {"value": to_stored(value), "id": id_})
     _add_appointment_points()
+    _fix_discount_only_status()
+
+
+def _fix_discount_only_status() -> None:
+    """Bills with a discount but no money paid used to show as "partial"; they are "unpaid"."""
+    with engine.begin() as conn:
+        conn.execute(text("UPDATE appointments SET payment_status = 'unpaid' "
+                          "WHERE payment_status = 'partial' AND amount_paid = 0"))
 
 
 def _add_appointment_points() -> None:
     """Adds the loyalty redemption columns to databases created before redemption existed."""
     existing = {column["name"] for column in inspect(engine).get_columns("appointments")}
     with engine.begin() as conn:
-        for column in ("points_redeemed", "points_discount"):
+        for column in ("points_redeemed", "points_discount", "offer_discount"):
             if column not in existing:
                 conn.execute(text(f"ALTER TABLE appointments ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0"))
+        for column, size in (("offer_id", 64), ("offer_code", 40), ("offer_title", 160)):
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE appointments ADD COLUMN {column} VARCHAR({size})"))
 
 
 def _add_appointment_payments() -> None:

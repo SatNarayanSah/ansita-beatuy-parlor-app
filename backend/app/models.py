@@ -125,6 +125,12 @@ class Appointment(EntityMixin, Base):
     # Loyalty points the customer spent on this bill, and the rupees they took off it.
     points_redeemed: Mapped[int] = mapped_column(Integer, default=0)
     points_discount: Mapped[int] = mapped_column(Integer, default=0)
+    # The offer on this bill (promo code or automatic), with its title/code kept as they were
+    # when applied, and the rupees it takes off. See offer_pricing.py.
+    offer_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    offer_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    offer_title: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    offer_discount: Mapped[int] = mapped_column(Integer, default=0)
     # Each payment with the day it was received; revenue is counted on that day.
     payments: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     payment_status: Mapped[str] = mapped_column(String(16), default="unpaid")

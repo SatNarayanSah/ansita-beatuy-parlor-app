@@ -11,8 +11,24 @@ UNPAYABLE_APPOINTMENT = ("cancelled", "no_show")
 
 
 def appointment_due(appointment: Appointment) -> int:
-    """What is still owed: the bill minus money paid and any loyalty discount."""
-    return max(0, appointment.total_price - appointment.amount_paid - appointment.points_discount)
+    """What is still owed: the bill minus money paid, the offer discount and loyalty points."""
+    return max(0, appointment.total_price - settled_amount(appointment))
+
+
+def settled_amount(appointment: Appointment) -> int:
+    """Money paid plus discounts: what no longer has to be paid."""
+    return appointment.amount_paid + appointment.points_discount + (appointment.offer_discount or 0)
+
+
+def refresh_payment_status(appointment: Appointment) -> None:
+    """paid: nothing left to pay (money plus discounts cover it). partial: some money paid.
+    unpaid: no money yet; a discount alone doesn't make a bill "partly paid"."""
+    if settled_amount(appointment) >= appointment.total_price:
+        appointment.payment_status = "paid"
+    elif appointment.amount_paid > 0:
+        appointment.payment_status = "partial"
+    else:
+        appointment.payment_status = "unpaid"
 
 
 def enrollment_due(enrollment: Enrollment) -> int:
@@ -40,8 +56,7 @@ def add_appointment_payment(appointment: Appointment, amount: int, method: str, 
     appointment.amount_paid += amount
     appointment.payments = [*(appointment.payments or []), entry]
     appointment.payment_method = method
-    settled = appointment.amount_paid + appointment.points_discount
-    appointment.payment_status = "unpaid" if settled <= 0 else "paid" if settled >= appointment.total_price else "partial"
+    refresh_payment_status(appointment)
     return entry
 
 

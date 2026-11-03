@@ -33,6 +33,14 @@ export interface Appointment extends BaseEntity {
   /** Loyalty points used on this bill, and the NPR they took off it (0 when none). */
   pointsRedeemed: number;
   pointsDiscount: number;
+  /**
+   * Offer on this bill (a promo code entered, or an automatic offer) and the NPR it took off.
+   * `offerCode` is null for automatic offers; all null and 0 when none applies.
+   */
+  offerId: ID | null;
+  offerCode: string | null;
+  offerTitle: string | null;
+  offerDiscount: number;
   /** Every payment with the day it was received; adds up to `amountPaid`. */
   payments: AppointmentPayment[];
   paymentStatus: PaymentStatus;

@@ -5,13 +5,14 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Card, Icon, RatingStars, StatusPill, Text } from '@/components/ui';
 import { firstName, serviceNames } from '@/hooks/useCatalog';
 import { useT } from '@/i18n';
-import { selectAmountDue } from '@/store';
+import { selectAmountDue, selectDiscountTotal } from '@/store';
 import { useTheme } from '@/theme';
 import type { Appointment, ID, PaymentRequest, Review, Service, Staff } from '@/types';
 import { formatTimeRange, parseISODate } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 import { sameDataProps } from '@/utils/memo';
 
+import { appointmentOfferLabel } from './OfferCarousel';
 import { PaymentRequestStatus } from './PaymentRequestStatus';
 
 interface AppointmentCardProps {
@@ -48,6 +49,7 @@ const AppointmentCardBase = ({
   const date = parseISODate(appointment.date);
   const stylist = firstName(staff.get(appointment.staffId)?.name);
   const due = selectAmountDue(appointment);
+  const discounted = selectDiscountTotal(appointment) > 0;
 
   const actions = [
     onPaid ? <Button key="p" title={t('appointments.paid')} size="sm" variant="secondary" leftIcon="checkmark-circle-outline" onPress={onPaid} /> : null,
@@ -96,18 +98,25 @@ const AppointmentCardBase = ({
       <View style={[styles.footer, { borderTopColor: colors.border, paddingTop: spacing.md }]}>
         <View style={styles.flex}>
           <Text variant="label">{formatCurrency(appointment.totalPrice)}</Text>
-          {appointment.pointsDiscount > 0 && appointment.status !== 'cancelled' ? (
-            <Text variant="caption" tone="accent">
-              {formatCurrency(appointment.pointsDiscount)} off with points
+          {appointment.offerDiscount > 0 && appointment.status !== 'cancelled' ? (
+            <Text variant="caption" tone="success" numberOfLines={1}>
+              {appointmentOfferLabel(t, appointment)} −{formatCurrency(appointment.offerDiscount)}
             </Text>
           ) : null}
-          {appointment.status !== 'cancelled' && appointment.amountPaid > 0 && due > 0 ? (
-            <Text variant="caption" tone="warning">
-              {formatCurrency(appointment.amountPaid)} paid · {formatCurrency(due)} due
+          {appointment.pointsDiscount > 0 && appointment.status !== 'cancelled' ? (
+            <Text variant="caption" tone="accent">
+              {t('bill.pointsOff', { amount: formatCurrency(appointment.pointsDiscount) })}
+            </Text>
+          ) : null}
+          {appointment.status !== 'cancelled' && (appointment.amountPaid > 0 || discounted) && due > 0 ? (
+            <Text variant="caption" tone={appointment.amountPaid > 0 ? 'warning' : 'secondary'}>
+              {appointment.amountPaid > 0
+                ? t('bill.paidDue', { paid: formatCurrency(appointment.amountPaid), due: formatCurrency(due) })
+                : `${t('bill.toPay')}: ${formatCurrency(due)}`}
             </Text>
           ) : appointment.paymentStatus === 'paid' ? (
             <Text variant="caption" tone="success">
-              Paid
+              {t('bill.paid')}
             </Text>
           ) : null}
         </View>

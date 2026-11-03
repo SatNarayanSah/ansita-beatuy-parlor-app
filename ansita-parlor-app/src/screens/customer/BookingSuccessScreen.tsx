@@ -11,12 +11,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { appointmentOfferLabel } from '@/components/customer/OfferCarousel';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import { Button, Card, Icon, QueryState, Skeleton, StatusPill, Text, useToast } from '@/components/ui';
 import { serviceNames, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService } from '@/services';
+import { selectDiscountTotal } from '@/store';
 import { useTheme } from '@/theme';
 import { formatDisplayDate, formatTimeRange } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
@@ -43,6 +46,7 @@ const Sparkle = ({ angle, burst }: { angle: number; burst: SharedValue<number> }
 export const BookingSuccessScreen = ({ navigation, route }: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
+  const t = useT();
   const services = useServiceMap();
   const staff = useStaffMap();
   const [addedToCalendar, setAddedToCalendar] = useState(false);
@@ -103,9 +107,12 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
                   { icon: 'calendar-outline' as const, text: formatDisplayDate(appointment.date) },
                   { icon: 'time-outline' as const, text: formatTimeRange(appointment.startTime, appointment.endTime) },
                   { icon: 'person-outline' as const, text: staff.get(appointment.staffId)?.name ?? '' },
+                  ...(appointment.offerDiscount > 0
+                    ? [{ icon: 'pricetag-outline' as const, text: `${appointmentOfferLabel(t, appointment)} −${formatCurrency(appointment.offerDiscount)}` }]
+                    : []),
                   {
                     icon: 'wallet-outline' as const,
-                    text: `${formatCurrency(appointment.totalPrice)}${appointment.preferredPaymentMethod ? ` · pay by ${PAYMENT_METHOD_META[appointment.preferredPaymentMethod].label}` : ''}`,
+                    text: `${formatCurrency(Math.max(0, appointment.totalPrice - selectDiscountTotal(appointment)))}${appointment.preferredPaymentMethod ? ` · pay by ${PAYMENT_METHOD_META[appointment.preferredPaymentMethod].label}` : ''}`,
                   },
                 ].map((item) => (
                   <View key={item.icon} style={styles.row}>

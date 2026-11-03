@@ -2,7 +2,7 @@
 
 import { PaymentRequestsFor } from "@/components/payments/payment-requests";
 import { AnimatePresence, motion } from "motion/react";
-import { CalendarClock, CheckCircle2, CircleSlash, Crown, Trash2, Undo2, Wallet, XCircle, Check } from "lucide-react";
+import { BadgePercent, CalendarClock, CheckCircle2, CircleSlash, Crown, Trash2, Undo2, Wallet, XCircle, Check } from "lucide-react";
 import { useState } from "react";
 import {
   Avatar,
@@ -18,7 +18,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { api } from "@/lib/api";
-import { formatDate, label, money, NEXT_STATUSES, time12, todayISO } from "@/lib/format";
+import { balanceDue, billTotal, formatDate, label, money, NEXT_STATUSES, time12, todayISO } from "@/lib/format";
 import { useAction, useLookups, useSettings } from "@/lib/queries";
 import type { Appointment, AppointmentStatus, LoyaltyRules, PaymentMethod } from "@/lib/types";
 import { SlotPicker, StaffChooser, useAvailableStaff } from "./_booking";
@@ -172,6 +172,9 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
+  const [offerCodeOpen, setOfferCodeOpen] = useState(false);
+  const [offerCodeText, setOfferCodeText] = useState("");
+  const [removingOffer, setRemovingOffer] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
   const [unredeeming, setUnredeeming] = useState(false);
   const loyalty = useSettings().data?.loyalty;
@@ -201,6 +204,19 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
     success: "Points returned to the customer",
     onSuccess: () => setUnredeeming(false),
   });
+  const applyCode = useAction((code: string) => api.post<Appointment>(`/appointments/${appointment?.id}/offer`, { code }), {
+    invalidate: INVALIDATE,
+    success: (result) => (result.offerDiscount ? `${result.offerTitle}: ${money(result.offerDiscount)} off` : "Code applied"),
+    onSuccess: () => {
+      setOfferCodeOpen(false);
+      setOfferCodeText("");
+    },
+  });
+  const removeOfferAction = useAction(() => api.del<Appointment>(`/appointments/${appointment?.id}/offer`), {
+    invalidate: INVALIDATE,
+    success: "Offer removed from the bill",
+    onSuccess: () => setRemovingOffer(false),
+  });
   const remove = useAction(() => api.del(`/appointments/${appointment?.id}`), {
     invalidate: INVALIDATE,
     success: "Appointment deleted",
@@ -213,7 +229,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
   const a = appointment;
   const customer = a ? lookups.customer.get(a.customerId) : undefined;
   const member = a ? lookups.staff.get(a.staffId) : undefined;
-  const due = a ? Math.max(0, a.totalPrice - a.amountPaid - (a.pointsDiscount ?? 0)) : 0;
+  const due = a ? balanceDue(a) : 0;
   const canPay = a && due > 0 && a.status !== "cancelled" && a.status !== "no_show";
   const points = customer?.loyaltyPoints ?? 0;
   // Points go on a bill with money still due, once the customer has the minimum.
@@ -346,7 +362,42 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                   <StatusBadge status={a.paymentStatus} />
                   {a.preferredPaymentMethod && <span className="text-xs text-muted">Prefers {label(a.preferredPaymentMethod)}</span>}
                 </div>
-                <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} />
+                <PaymentProgress paid={a.amountPaid} total={billTotal(a)} />
+                {a.offerDiscount > 0 ? (
+                  <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-success-soft/70 px-3 py-2 text-xs">
+                    <span className="flex min-w-0 items-center gap-1.5 text-success">
+                      <BadgePercent className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">
+                        {a.offerTitle}
+                        {a.offerCode ? ` · ${a.offerCode}` : " · automatic"}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-3">
+                      <span className="font-semibold text-success">−{money(a.offerDiscount)}</span>
+                      {a.status !== "cancelled" && a.status !== "no_show" && (
+                        <button
+                          type="button"
+                          onClick={() => setRemovingOffer(true)}
+                          className="flex cursor-pointer items-center gap-1 text-muted transition hover:text-danger"
+                        >
+                          <Undo2 className="h-3.5 w-3.5" /> Remove
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                ) : (
+                  a.status !== "cancelled" &&
+                  a.status !== "no_show" &&
+                  due > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setOfferCodeOpen(true)}
+                      className="mt-3 flex cursor-pointer items-center gap-1.5 text-xs font-medium text-primary transition-colors hover:text-primary-dark"
+                    >
+                      <BadgePercent className="h-3.5 w-3.5" /> Apply a promo code
+                    </button>
+                  )
+                )}
                 {a.pointsRedeemed > 0 && (
                   <div className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-gold-soft/60 px-3 py-2 text-xs">
                     <span className="flex items-center gap-1.5 text-gold-text">
@@ -455,6 +506,42 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
             confirmLabel="Remove discount"
           />
           {rescheduling && <RescheduleModal key={a.id} appointment={a} open={rescheduling} onClose={() => setRescheduling(false)} />}
+          <Modal
+            open={offerCodeOpen}
+            onClose={() => setOfferCodeOpen(false)}
+            title="Apply a promo code"
+            description="The offer is checked against these services and the visit date."
+            footer={
+              <>
+                <Button variant="ghost" onClick={() => setOfferCodeOpen(false)}>
+                  Cancel
+                </Button>
+                <Button loading={applyCode.isPending} disabled={!offerCodeText.trim()} onClick={() => applyCode.mutate(offerCodeText.trim())}>
+                  Apply code
+                </Button>
+              </>
+            }
+          >
+            <Field label="Promo code">
+              <Input
+                value={offerCodeText}
+                onChange={(e) => setOfferCodeText(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && offerCodeText.trim() && applyCode.mutate(offerCodeText.trim())}
+                className="font-mono tracking-widest uppercase"
+                maxLength={40}
+                autoFocus
+              />
+            </Field>
+          </Modal>
+          <ConfirmDialog
+            open={removingOffer}
+            onClose={() => setRemovingOffer(false)}
+            onConfirm={() => removeOfferAction.mutate()}
+            loading={removeOfferAction.isPending}
+            title="Remove the offer?"
+            message={`${money(a.offerDiscount)} (${a.offerTitle ?? "offer"}) is added back to the bill.`}
+            confirmLabel="Remove offer"
+          />
         </>
       )}
     </>

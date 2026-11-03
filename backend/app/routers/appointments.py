@@ -7,7 +7,8 @@ from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Appointment, Customer, Staff, User
 from ..notify import link, notify_admins, notify_customer
-from ..payments import add_appointment_payment
+from .. import offer_pricing
+from ..payments import add_appointment_payment, refresh_payment_status, settled_amount
 from ..queries import (
     ACTIVE_STATUSES,
     parse_id_list,
@@ -17,7 +18,7 @@ from ..queries import (
     upcoming_appointments,
     working_hours_on,
 )
-from ..schemas import AppointmentInput, AppointmentUpdate, PaymentInput, RedeemPointsInput, StatusInput
+from ..schemas import AppointmentInput, AppointmentUpdate, OfferCodeInput, PaymentInput, RedeemPointsInput, StatusInput
 from ..security import assert_customer_access, get_current_user, require_admin
 from ..serializers import to_dict, to_list
 from ..utils import (
@@ -64,12 +65,12 @@ def _payment_status(amount_paid: int, total: int) -> str:
 
 
 def _settled(appointment: Appointment) -> int:
-    """Money paid plus the loyalty discount: what no longer has to be paid."""
-    return appointment.amount_paid + appointment.points_discount
+    """Money paid plus discounts (offer and loyalty): what no longer has to be paid."""
+    return settled_amount(appointment)
 
 
 def _refresh_payment_status(appointment: Appointment) -> None:
-    appointment.payment_status = _payment_status(_settled(appointment), appointment.total_price)
+    refresh_payment_status(appointment)
 
 
 def _refund_points(db: Session, appointment: Appointment) -> int:
@@ -147,6 +148,21 @@ def _validate_booking(db: Session, data: dict, exclude_id: str | None = None) ->
     if customer_clash:
         raise ApiError("CONFLICT", "This customer already has another appointment at that time.")
     return end, price
+
+
+def _reprice_offer(db: Session, appointment: Appointment, new_code: str | None) -> None:
+    """After services/date change: a newly entered code must be valid (else the change is
+    refused); the booking's own code is kept if it still applies, otherwise the best automatic
+    offer takes its place."""
+    services = resolve_services(db, appointment.service_ids)
+    if new_code is not None:
+        offer_pricing.apply(appointment, offer_pricing.resolve(db, new_code, services, appointment.date))
+        return
+    try:
+        result = offer_pricing.resolve(db, appointment.offer_code, services, appointment.date)
+    except ApiError:
+        result = offer_pricing.best_automatic(db, services, appointment.date)
+    offer_pricing.apply(appointment, result)
 
 
 def _get_accessible(db: Session, id_: str, user: User) -> Appointment:
@@ -279,7 +295,10 @@ def create_appointment(body: AppointmentInput, user: User = Depends(get_current_
         payment_method=None,
         preferred_payment_method=body.preferred_payment_method,
         cancellation_reason=None,
+        offer_discount=0,
     )
+    offer_pricing.apply(appointment, offer_pricing.resolve(db, body.offer_code, resolve_services(db, body.service_ids), body.date))
+    _refresh_payment_status(appointment)
     db.add(appointment)
     db.flush()
 
@@ -325,6 +344,7 @@ def update_appointment(id_: str, body: AppointmentUpdate, user: User = Depends(g
     appointment.notes = data["notes"].strip()
     appointment.end_time = end
     appointment.total_price = total
+    _reprice_offer(db, appointment, body.offer_code)
     if user.role != "admin":
         appointment.status = "pending"
     _refresh_payment_status(appointment)
@@ -375,7 +395,7 @@ def update_status(id_: str, body: StatusInput, user: User = Depends(get_current_
     lnk = link("appointment", id_)
     if status == "completed":
         # Earned on what the customer pays, not on the part covered by points.
-        points = points_for(get_business(db), appointment.total_price - appointment.points_discount)
+        points = points_for(get_business(db), appointment.total_price - appointment.points_discount - (appointment.offer_discount or 0))
         if points > 0:
             customer = db.get(Customer, appointment.customer_id)
             if customer is not None:
@@ -467,6 +487,41 @@ def remove_points_discount(id_: str, _: User = Depends(require_admin), db: Sessi
     _refresh_payment_status(appointment)
     notify_customer(db, appointment.customer_id, "system", "Points returned",
                     f"{refunded} loyalty points are back in your account.", link("appointment", id_))
+    db.commit()
+    return to_dict(appointment)
+
+
+@router.post("/appointments/{id_}/offer")
+def apply_offer_code(id_: str, body: OfferCodeInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Puts a promo code on an existing booking (replacing its current offer)."""
+    appointment = _get_accessible(db, id_, user)
+    if appointment.status in ("cancelled", "no_show"):
+        raise ApiError("VALIDATION", "Offers can't be added to this appointment.")
+    if appointment.status == "completed" and user.role != "admin":
+        raise ApiError("VALIDATION", "Ask the parlour to add a code to a finished visit.")
+    services = resolve_services(db, appointment.service_ids)
+    result = offer_pricing.resolve(db, body.code, services, appointment.date)
+    room = appointment.total_price - appointment.amount_paid - appointment.points_discount
+    if result and room <= 0:
+        raise ApiError("VALIDATION", "This bill is already fully paid.")
+    offer_pricing.apply(appointment, result)
+    _refresh_payment_status(appointment)
+    if user.role == "admin" and result:
+        notify_customer(db, appointment.customer_id, "system", "Offer applied",
+                        f"{result.offer.title}: {format_currency(appointment.offer_discount)} off {_describe(db, appointment)}.",
+                        link("appointment", id_))
+    db.commit()
+    return to_dict(appointment)
+
+
+@router.delete("/appointments/{id_}/offer")
+def remove_offer(id_: str, _: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Takes the offer discount off this bill."""
+    appointment = ensure_found(db.get(Appointment, id_, with_for_update=True), "Appointment")
+    if not appointment.offer_discount and not appointment.offer_id:
+        raise ApiError("VALIDATION", "No offer is applied to this booking.")
+    offer_pricing.apply(appointment, None)
+    _refresh_payment_status(appointment)
     db.commit()
     return to_dict(appointment)
 

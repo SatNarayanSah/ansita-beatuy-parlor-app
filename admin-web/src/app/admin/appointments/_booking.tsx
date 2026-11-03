@@ -4,10 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Check, Clock } from "lucide-react";
 import { useLayoutEffect, useMemo, useState } from "react";
+import { PromoCode } from "@/components/payments/promo-code";
 import { Avatar, Button, EmptyState, Field, Input, Modal, SearchInput, Skeleton, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, minutesLabel, money, PAYMENT_METHODS, time12, todayISO } from "@/lib/format";
-import { useAction, useCategories, useCustomers, useServices } from "@/lib/queries";
+import { type OfferQuote, useAction, useCategories, useCustomers, useServices } from "@/lib/queries";
 import type { Appointment, PaymentMethod, Staff, TimeSlot } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +139,8 @@ export function BookingWizard({ open, onClose }: { open: boolean; onClose: () =>
   const [startTime, setStartTime] = useState("");
   const [notes, setNotes] = useState("");
   const [method, setMethod] = useState<PaymentMethod | "">("");
+  const [offerCode, setOfferCode] = useState<string | null>(null);
+  const [quote, setQuote] = useState<OfferQuote | null>(null);
 
   const customers = useCustomers();
   const services = useServices();
@@ -184,6 +187,7 @@ export function BookingWizard({ open, onClose }: { open: boolean; onClose: () =>
         startTime,
         notes,
         preferredPaymentMethod: method || null,
+        offerCode,
       }),
     {
       invalidate: ["appointments", "customers", "notifications", "availability"],
@@ -428,12 +432,27 @@ export function BookingWizard({ open, onClose }: { open: boolean; onClose: () =>
                         <span>{money(s.price)}</span>
                       </div>
                     ))}
+                    {quote?.offer && quote.discount > 0 && (
+                      <div className="flex justify-between py-0.5 font-medium text-success">
+                        <span className="truncate">Offer · {quote.offer.title}</span>
+                        <span className="shrink-0">−{money(quote.discount)}</span>
+                      </div>
+                    )}
                     <div className="mt-2 flex justify-between border-t border-dashed border-line pt-2 font-semibold text-ink">
                       <span>Total</span>
-                      <span className="font-display text-lg text-primary-dark">{money(total)}</span>
+                      <span className="font-display text-lg text-primary-dark">{money(total - (quote?.discount ?? 0))}</span>
                     </div>
                   </div>
                 </dl>
+                <PromoCode
+                  className="mt-4"
+                  serviceIds={serviceIds}
+                  date={date}
+                  onChange={(code, q) => {
+                    setOfferCode(code);
+                    setQuote(q);
+                  }}
+                />
               </div>
             )}
           </motion.div>

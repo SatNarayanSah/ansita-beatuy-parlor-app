@@ -241,7 +241,10 @@ export const HomeScreen = ({ navigation }: Props) => {
   const bookFromOffer = (offer: Offer): void => {
     setOpenOffer(null);
     const [categoryId] = offer.categoryIds;
-    navigation.navigate('Book', offer.categoryIds.length === 1 && categoryId ? { categoryId } : undefined);
+    const category = offer.categoryIds.length === 1 && categoryId ? { categoryId } : {};
+    // Code offers go straight to booking with the code filled in; automatic ones apply by themselves.
+    if (offer.code) navigation.navigate('Booking', { offerCode: offer.code, ...category });
+    else navigation.navigate('Book', offer.categoryIds.length === 1 ? category : undefined);
   };
 
   return (

@@ -41,7 +41,7 @@ export const ListScreen = <T,>({ query, items, keyExtractor, renderItem, header,
   const render = useCallback<ListRenderItem<T>>(({ item, index }) => <Appear index={index}>{renderItem(item, index)}</Appear>, [renderItem]);
 
   const listHeader = (
-    <View style={{ gap: spacing.lg, paddingBottom: spacing.md }}>
+    <View style={{ gap: spacing.md, paddingBottom: spacing.sm }}>
       {header}
       {loaded && query.error ? <StaleDataBanner message={query.error} onRetry={() => void query.refetch()} /> : null}
       {!loaded && !failed ? skeleton : null}
@@ -68,7 +68,7 @@ export const ListScreen = <T,>({ query, items, keyExtractor, renderItem, header,
         ListEmptyComponent={loaded ? <EmptyState {...empty} /> : undefined}
         ItemSeparatorComponent={Separator}
         getItemLayout={itemHeight ? (_, index) => ({ length: itemHeight, offset: itemHeight * index, index }) : undefined}
-        contentContainerStyle={[styles.content, { padding: spacing.lg, paddingBottom: spacing.huge * 2 }]}
+        contentContainerStyle={[styles.content, { padding: spacing.md, paddingBottom: overlay ? spacing.huge * 2 : spacing.xxl }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         initialNumToRender={10}
@@ -89,5 +89,5 @@ const Separator = () => <View style={styles.separator} />;
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center' },
-  separator: { height: 10 },
+  separator: { height: 8 },
 });

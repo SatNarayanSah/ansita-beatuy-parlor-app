@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DateCalendar } from '@/components/customer/DateCalendar';
 import { CUSTOMER_PAYMENT_METHODS, PaymentMethodPicker } from '@/components/customer/PaymentMethodPicker';
+import { PromoCodeCard, usePromoQuote } from '@/components/customer/PromoCodeCard';
 import { ServiceRow } from '@/components/customer/ServiceCards';
 import {
   Avatar,
@@ -26,6 +27,7 @@ import {
   type FilterOption,
 } from '@/components/ui';
 import { isIconName } from '@/components/ui/Icon';
+import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { ANY_STAFF, useFreeSlots, useIsDayOff, useQualifiedStaff, type FreeSlot, type StaffChoice } from '@/hooks/useBookingAvailability';
 import { useCategoryMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
@@ -127,7 +129,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const [payment, setPayment] = useState<PaymentMethod>(
     CUSTOMER_PAYMENT_METHODS.includes(preferences.paymentMethod) ? preferences.paymentMethod : 'cash',
   );
-  const [categoryFilter, setCategoryFilter] = useState<ID | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<ID | null>(route.params?.categoryId ?? null);
   const [bookedId, setBookedId] = useState<ID | null>(null);
 
   const catalog = useServiceQuery(() => catalogService.listServices({ activeOnly: true }), [], { refetchOn: [useServiceStore] });
@@ -147,6 +149,12 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   );
   const slotStaff = slot ? qualified.find((member) => member.id === slot.staffId) : undefined;
 
+  // Promo code (prefilled from an offer) and the automatic offer, previewed on the review step.
+  const promo = usePromoQuote({ serviceIds, date, enabled: step === LAST_STEP && slot !== null, initialCode: route.params?.offerCode });
+  useAdoptParam(route.params?.offerCode, promo.adopt);
+  const discount = promo.quote?.offer ? promo.quote.discount : 0;
+  const payable = Math.max(0, totals.price - discount);
+
   // Back steps backwards through the flow instead of leaving it.
   usePreventRemove(step > 0 && bookedId === null, () => setStep((current) => Math.max(0, current - 1)));
 
@@ -162,7 +170,8 @@ export const BookingScreen = ({ navigation, route }: Props) => {
     staffChoice !== null,
     date !== null,
     slot !== null,
-    true,
+    // Wait for the offer preview so the total shown is what gets booked.
+    !promo.pending,
   ][step];
 
   const confirm = async (): Promise<void> => {
@@ -177,6 +186,8 @@ export const BookingScreen = ({ navigation, route }: Props) => {
         startTime: slot.time,
         notes,
         preferredPaymentMethod: payment,
+        // Empty lets the server apply the best automatic offer.
+        offerCode: promo.codeToSend,
       });
       setBookedId(appointment.id);
     } catch (error) {
@@ -205,6 +216,14 @@ export const BookingScreen = ({ navigation, route }: Props) => {
       <Text variant="bodySmall" tone="secondary">
         Pick one or more services for the same visit.
       </Text>
+      {promo.code ? (
+        <View style={styles.inline}>
+          <Icon name="pricetag-outline" size={16} color={colors.primary} />
+          <Text variant="caption" tone="secondary" style={styles.flex}>
+            {t('promo.ready', { code: promo.code })}
+          </Text>
+        </View>
+      ) : null}
       <FilterChips options={categoryOptions} value={categoryFilter} onChange={setCategoryFilter} allLabel={t('services.all')} />
       <QueryState
         query={catalog}
@@ -331,15 +350,39 @@ export const BookingScreen = ({ navigation, route }: Props) => {
           </View>
         ))}
         <Divider />
+        {discount > 0 && promo.quote?.offer ? (
+          <>
+            <View style={styles.lineItem}>
+              <Text variant="bodyMedium" tone="secondary" style={styles.flex}>
+                {t('bill.subtotal')}
+              </Text>
+              <Text variant="bodyMedium" tone="secondary">
+                {formatCurrency(totals.price)}
+              </Text>
+            </View>
+            <View style={styles.lineItem}>
+              <Text variant="bodyMedium" tone="success" style={styles.flex}>
+                {promo.codeToSend
+                  ? t('bill.offerWithCode', { title: promo.quote.offer.title, code: promo.codeToSend })
+                  : t('bill.offer', { title: promo.quote.offer.title })}
+              </Text>
+              <Text variant="bodyMedium" tone="success">
+                −{formatCurrency(discount)}
+              </Text>
+            </View>
+          </>
+        ) : null}
         <View style={styles.lineItem}>
           <Text variant="h4" style={styles.flex}>
-            Total
+            {t('bill.total')}
           </Text>
           <Text variant="h3" tone="primary">
-            {formatCurrency(totals.price)}
+            {formatCurrency(payable)}
           </Text>
         </View>
       </Card>
+
+      <PromoCodeCard state={promo} />
 
       <Card padding="sm">
         <View style={[styles.summaryRow, { padding: spacing.sm }]}>

@@ -108,7 +108,8 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
     return reviews.length ? roundRating(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length) : 0;
   }, [query.data]);
 
-  const book = (): void => navigation.navigate('Booking', { serviceIds: [serviceId] });
+  const book = (offerCode?: string): void =>
+    navigation.navigate('Booking', offerCode ? { serviceIds: [serviceId], offerCode } : { serviceIds: [serviceId] });
 
   const bookButton = query.data?.service.isActive ? (
     <View style={[styles.sticky, shadows.lg, { backgroundColor: colors.surface, paddingBottom: insets.bottom + spacing.md, padding: spacing.lg }]}>
@@ -120,7 +121,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
           {formatCurrency(query.data.service.price)}
         </Text>
       </View>
-      <Button title={t('services.bookThisService')} rightIcon="arrow-forward" size="lg" onPress={book} />
+      <Button title={t('services.bookThisService')} rightIcon="arrow-forward" size="lg" onPress={() => book()} />
     </View>
   ) : null;
 
@@ -291,9 +292,9 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
         onClose={() => setOpenOffer(null)}
         onBook={
           query.data?.service.isActive
-            ? () => {
+            ? (offer) => {
                 setOpenOffer(null);
-                book();
+                book(offer.code ?? undefined);
               }
             : undefined
         }

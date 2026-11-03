@@ -23,3 +23,17 @@ export interface Offer extends BaseEntity {
   image: ImageUri | null;
   isActive: boolean;
 }
+
+/** What an offer takes off a booking before it is made (`POST /offers/quote`). */
+export interface OfferQuote {
+  /** The offer that applies; null when none does. */
+  offer: Offer | null;
+  /** NPR off the bill. */
+  discount: number;
+  /** Bill before the discount. */
+  total: number;
+  /** Bill after the discount. */
+  payable: number;
+  /** True when no code was needed (an automatic offer). */
+  automatic: boolean;
+}

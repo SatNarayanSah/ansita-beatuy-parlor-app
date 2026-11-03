@@ -380,7 +380,7 @@ def test_redeem_loyalty_points(client, admin):
     used = client.post(f"/appointments/{first}/redeem-points", json={"points": 500}, headers=admin)
     assert used.status_code == 200, used.text
     assert used.json()["pointsRedeemed"] == 500 and used.json()["pointsDiscount"] == 500
-    assert used.json()["paymentStatus"] == "partial" and points() == 1500
+    assert used.json()["paymentStatus"] == "unpaid" and points() == 1500  # a discount alone is not a payment
     assert client.post(f"/appointments/{first}/redeem-points", json={"points": 10}, headers=admin).status_code == 409
     # Only the rest is left to pay; the visit earns points on that part only.
     assert client.post(f"/appointments/{first}/payments", json={"amount": 1181, "method": "cash"}, headers=admin).status_code == 422
@@ -592,3 +592,69 @@ def test_starter_service_photos(client, admin):
         assert attach_starter_photos(db) == 0  # e.g. the next deploy's seed
         db.commit()
     assert client.get("/services/svc_deep_bleach").json()["image"] is None
+
+
+def test_offer_codes_discount_bookings(client, admin):
+    """Codes are checked and taken off the bill; automatic offers apply by themselves."""
+    user, customer = register(client, "Offer Kumari", "offer.k@example.com", "9812000041")
+    day = (now_local().date() + timedelta(days=6)).isoformat()
+    later = (now_local().date() + timedelta(days=40)).isoformat()
+    today = now_local().date().isoformat()
+
+    def offer(**kw):
+        body = {"title": "Test", "description": "", "code": None, "discountType": "percent", "discountValue": 10,
+                "maxDiscount": None, "minSpend": 0, "categoryIds": [], "validFrom": today, "validTo": day,
+                "terms": [], "image": None, "isActive": True, **kw}
+        r = client.post("/offers", json=body, headers=admin)
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    offer(title="Pedi 20", code="PEDI20", discountValue=20, maxDiscount=300, categoryIds=["cat_nails"])
+    offer(title="Big bill", code="BIG500", discountType="flat", discountValue=500, minSpend=3000)
+
+    def slot(service_ids, date):
+        staff = client.get(f"/availability/staff?date={date}&serviceIds={','.join(service_ids)}", headers=customer).json()
+        for member in staff:
+            slots = client.get(f"/availability/slots?date={date}&staffId={member['id']}&serviceIds={','.join(service_ids)}", headers=customer).json()
+            free = next((s for s in slots if s["available"]), None)
+            if free:
+                return member["id"], free["time"]
+        raise AssertionError("no free slot")
+
+    # Preview: pedicure is 1680 → 20% = 336, capped at 300. Hair service isn't covered.
+    q = client.post("/offers/quote", json={"code": "pedi20", "serviceIds": ["svc_pedicure"], "date": day}).json()
+    assert q["discount"] == 300 and q["payable"] == 1380 and q["offer"]["code"] == "PEDI20"
+    bad = client.post("/offers/quote", json={"code": "PEDI20", "serviceIds": ["svc_cap_highlights"], "date": day}).json()
+    assert bad["code"] == "VALIDATION" and "doesn't cover" in bad["message"]
+    assert "doesn't exist" in client.post("/offers/quote", json={"code": "NOPE", "serviceIds": ["svc_pedicure"], "date": day}).json()["message"]
+    assert "before your visit" in client.post("/offers/quote", json={"code": "PEDI20", "serviceIds": ["svc_pedicure"], "date": later}).json()["message"]
+    assert "at least" in client.post("/offers/quote", json={"code": "BIG500", "serviceIds": ["svc_pedicure"], "date": day}).json()["message"]
+
+    # Book with the code: discount on the bill, due and status follow it.
+    staff_id, start = slot(["svc_pedicure"], day)
+    booked = client.post("/appointments", json={"customerId": user["customerId"], "serviceIds": ["svc_pedicure"], "staffId": staff_id,
+                                                "date": day, "startTime": start, "offerCode": " pedi20 "}, headers=customer)
+    assert booked.status_code == 201, booked.text
+    apt = booked.json()
+    assert apt["offerDiscount"] == 300 and apt["offerCode"] == "PEDI20" and apt["offerTitle"] == "Pedi 20"
+    assert apt["paymentStatus"] == "unpaid"  # a discount alone isn't a payment
+    # Paying the discounted balance settles the bill.
+    paid = client.post(f"/appointments/{apt['id']}/payments", json={"amount": 1380, "method": "cash"}, headers=admin).json()
+    assert paid["paymentStatus"] == "paid"
+    assert client.post(f"/appointments/{apt['id']}/payments", json={"amount": 1, "method": "cash"}, headers=admin).json()["code"] == "VALIDATION"
+    # A wrong code at booking is refused (nothing booked). (Second customer: no time clash.)
+    user, customer = register(client, "Offer Didi", "offer.d@example.com", "9812000042")
+    staff_id2, start2 = slot(["svc_cap_highlights"], day)
+    refused = client.post("/appointments", json={"customerId": user["customerId"], "serviceIds": ["svc_cap_highlights"], "staffId": staff_id2,
+                                                 "date": day, "startTime": start2, "offerCode": "PEDI20"}, headers=customer)
+    assert refused.json()["code"] == "VALIDATION"
+
+    # Automatic offer (no code) applies by itself; the desk can swap in a code or remove it.
+    offer(title="Hair week", discountType="flat", discountValue=100, categoryIds=["cat_hair"])
+    auto = client.post("/appointments", json={"customerId": user["customerId"], "serviceIds": ["svc_cap_highlights"], "staffId": staff_id2,
+                                              "date": day, "startTime": start2}, headers=customer).json()
+    assert auto["offerTitle"] == "Hair week" and auto["offerDiscount"] == 100 and auto["offerCode"] is None
+    assert client.delete(f"/appointments/{auto['id']}/offer", headers=customer).status_code == 403
+    cleared = client.delete(f"/appointments/{auto['id']}/offer", headers=admin).json()
+    assert cleared["offerDiscount"] == 0 and cleared["offerId"] is None
+    assert client.post(f"/appointments/{auto['id']}/offer", json={"code": "PEDI20"}, headers=admin).json()["code"] == "VALIDATION"

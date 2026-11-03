@@ -102,6 +102,8 @@ class AppointmentInput(CamelModel):
     start_time: TimeStr
     notes: str = ""
     preferred_payment_method: PaymentMethod | None = None
+    # Promo code entered at booking. Empty: the best automatic offer (if any) is applied.
+    offer_code: str | None = Field(default=None, max_length=40)
 
 
 class AppointmentUpdate(CamelModel):
@@ -110,6 +112,20 @@ class AppointmentUpdate(CamelModel):
     date: DateStr | None = None
     start_time: TimeStr | None = None
     notes: str | None = None
+    # Omit to keep the current offer (re-checked against the new services/date); "" to drop the code.
+    offer_code: str | None = Field(default=None, max_length=40)
+
+
+class OfferCodeInput(CamelModel):
+    code: str = Field(min_length=1, max_length=40)
+
+
+class OfferQuoteInput(CamelModel):
+    """Preview: what an offer would take off this booking, before it is made."""
+
+    code: str | None = Field(default=None, max_length=40)
+    service_ids: list[str]
+    date: DateStr
 
 
 class StatusInput(CamelModel):

@@ -68,9 +68,14 @@ export const selectPointsFor = (loyalty: LoyaltyRules, amount: number): number =
 /** NPR off the bill for `points`, in whole rupees (the server rounds the same way). */
 export const selectPointsWorth = (loyalty: LoyaltyRules, points: number): number => Math.floor(points * loyalty.pointValue);
 
-/** Balance still to pay: the total less money received and any loyalty discount. */
-export const selectAmountDue = (appointment: Pick<Appointment, 'totalPrice' | 'amountPaid' | 'pointsDiscount'>): number =>
-  Math.max(0, appointment.totalPrice - appointment.amountPaid - (appointment.pointsDiscount ?? 0));
+/** NPR taken off the bill by discounts: loyalty points plus any offer. */
+export const selectDiscountTotal = (appointment: Pick<Appointment, 'pointsDiscount' | 'offerDiscount'>): number =>
+  (appointment.pointsDiscount ?? 0) + (appointment.offerDiscount ?? 0);
+
+/** Balance still to pay: the total less money received, the loyalty discount and any offer discount. */
+export const selectAmountDue = (
+  appointment: Pick<Appointment, 'totalPrice' | 'amountPaid' | 'pointsDiscount' | 'offerDiscount'>,
+): number => Math.max(0, appointment.totalPrice - appointment.amountPaid - selectDiscountTotal(appointment));
 
 /**
  * Methods customers can pay by and then send "I've paid" for; empty while requests are off.

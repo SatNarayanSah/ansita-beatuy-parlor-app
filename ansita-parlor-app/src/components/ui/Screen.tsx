@@ -31,8 +31,8 @@ export const Screen = ({
   children,
   scroll = true,
   edges = ['left', 'right'],
-  padding = 'lg',
-  gap = 'lg',
+  padding = 'md',
+  gap = 'md',
   refreshing = false,
   onRefresh,
   overlay,
@@ -54,7 +54,7 @@ export const Screen = ({
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           // Scrolls the focused input above the keyboard on iOS.
           automaticallyAdjustKeyboardInsets
-          contentContainerStyle={[inner, styles.capped, { paddingBottom: spacing.huge * 2 }, contentStyle]}
+          contentContainerStyle={[inner, styles.capped, { paddingBottom: overlay ? spacing.huge * 2 : spacing.xxl }, contentStyle]}
           refreshControl={
             onRefresh ? (
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />

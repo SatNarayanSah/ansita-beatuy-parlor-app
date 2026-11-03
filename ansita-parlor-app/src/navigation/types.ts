@@ -21,8 +21,11 @@ export type RootStackParamList = {
   UIKitShowcase: undefined;
   // Customer
   ServiceDetail: { serviceId: ID };
-  /** Prefills for "Book this", "Rebook" and favourites. */
-  Booking: { serviceIds?: ID[]; staffId?: ID } | undefined;
+  /**
+   * Prefills for "Book this", "Rebook", favourites and offers. `offerCode` fills the promo code
+   * (checked on the review step); `categoryId` preselects the service category filter.
+   */
+  Booking: { serviceIds?: ID[]; staffId?: ID; offerCode?: string; categoryId?: ID } | undefined;
   BookingSuccess: { appointmentId: ID };
   Reschedule: { appointmentId: ID };
   EditProfile: undefined;

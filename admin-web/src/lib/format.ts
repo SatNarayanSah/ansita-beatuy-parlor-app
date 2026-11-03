@@ -1,6 +1,16 @@
 import { differenceInCalendarDays, format, formatDistanceToNowStrict, parseISO } from "date-fns";
 import type { AppointmentStatus, EnrollmentStatus, OnlineMethod, PaymentMethod, Weekday } from "./types";
 
+/** What the customer pays for a booking after the offer and loyalty discounts. */
+export function billTotal(a: { totalPrice: number; pointsDiscount?: number; offerDiscount?: number }): number {
+  return Math.max(0, a.totalPrice - (a.pointsDiscount ?? 0) - (a.offerDiscount ?? 0));
+}
+
+/** Still owed on a booking: the bill after discounts minus payments (never below 0). */
+export function balanceDue(a: { totalPrice: number; amountPaid: number; pointsDiscount?: number; offerDiscount?: number }): number {
+  return Math.max(0, billTotal(a) - a.amountPaid);
+}
+
 /** "Rs. 1,500" — same as the app. */
 export function money(value: number | null | undefined): string {
   const amount = Math.round(Number(value) || 0);

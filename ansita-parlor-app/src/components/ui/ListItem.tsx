@@ -66,7 +66,7 @@ export const ListItem = ({
       disabled={disabled || (!onPress && !onLongPress)}
       style={({ pressed }) => [
         styles.row,
-        { paddingVertical: compact ? spacing.sm : spacing.md, gap: spacing.md },
+        { paddingVertical: compact ? spacing.xs + 2 : spacing.sm + 2, gap: spacing.md },
         pressed && { backgroundColor: colors.surfaceAlt },
         disabled && styles.disabled,
         style,
@@ -101,7 +101,7 @@ export const ListItem = ({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
-  iconBox: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconBox: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, gap: 1 },
   disabled: { opacity: 0.45 },
 });

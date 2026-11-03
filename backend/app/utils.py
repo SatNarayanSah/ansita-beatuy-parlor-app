@@ -99,6 +99,12 @@ def format_time12(value: str) -> str:
     return f"{hours % 12 or 12}:{minutes:02d} {suffix}"
 
 
+def formatted_date(value: str) -> str:
+    """`2026-11-04` -> `4 Nov 2026`."""
+    day = date.fromisoformat(value)
+    return f"{day.day} {day.strftime('%b %Y')}"
+
+
 def format_relative_day(value: str) -> str:
     """"Today", "Tomorrow", "Yesterday" or "Mon, 3 Nov"."""
     day = date.fromisoformat(value)

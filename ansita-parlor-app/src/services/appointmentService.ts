@@ -27,6 +27,11 @@ export interface AppointmentInput {
   startTime: TimeString;
   notes: string;
   preferredPaymentMethod?: PaymentMethod | null;
+  /**
+   * Promo code. On create, empty/omitted applies the best automatic offer. On update, omit to
+   * keep the booking's offer (the server re-checks it), or send "" to drop the code.
+   */
+  offerCode?: string;
 }
 
 export interface SlotQuery {
@@ -132,6 +137,17 @@ export const appointmentService = {
     await refreshCustomer(appointment.customerId);
     return appointment;
   },
+
+  /**
+   * Puts a promo code on the bill, replacing its current offer. Customers can do this on their
+   * own pending/confirmed bookings, admins on any booking that isn't cancelled. The server
+   * explains why a code can't be used (422).
+   */
+  applyOfferCode: async (id: ID, code: string): Promise<Appointment> =>
+    saved(await api<Appointment>('POST', `/appointments/${id}/offer`, { body: { code } })),
+
+  /** Takes the offer discount off this bill (admin only). */
+  removeOffer: async (id: ID): Promise<Appointment> => saved(await api<Appointment>('DELETE', `/appointments/${id}/offer`)),
 
   /** Hard delete, for removing bookings entered by mistake. */
   deleteAppointment: async (id: ID): Promise<void> => {

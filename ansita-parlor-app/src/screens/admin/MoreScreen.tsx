@@ -63,7 +63,7 @@ export const MoreScreen = ({ navigation }: Props) => {
   );
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       {section('Manage', MANAGE)}
       {section(
         'App',

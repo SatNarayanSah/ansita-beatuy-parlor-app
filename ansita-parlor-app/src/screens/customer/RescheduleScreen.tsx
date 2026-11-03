@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { DateCalendar } from '@/components/customer/DateCalendar';
+import { appointmentOfferLabel } from '@/components/customer/OfferCarousel';
 import { Button, Card, EmptyState, Icon, QueryState, Screen, SectionHeader, Skeleton, Text, TimeSlotGrid, useToast } from '@/components/ui';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
 import { useFreeSlots, useIsDayOff, useQualifiedStaff } from '@/hooks/useBookingAvailability';
 import { serviceNames, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService } from '@/services';
 import { useTheme } from '@/theme';
 import type { ISODate, TimeString } from '@/types';
 import { formatDisplayDate, formatRelativeDay, formatTimeRange } from '@/utils/date';
+import { formatCurrency } from '@/utils/format';
 
 type Props = RootStackScreenProps<'Reschedule'>;
 
@@ -19,6 +22,7 @@ type Props = RootStackScreenProps<'Reschedule'>;
 export const RescheduleScreen = ({ navigation, route }: Props) => {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const t = useT();
   const services = useServiceMap();
   const staff = useStaffMap();
   const { appointmentId } = route.params;
@@ -37,9 +41,19 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
 
   const save = async (): Promise<void> => {
     if (!date || !time) return;
+    const before = appointment;
     const updated = await update.run(appointmentId, { date, startTime: time });
     if (updated) {
-      toast.success('Reschedule requested. We will confirm the new time shortly.');
+      // The server re-checks the offer for the new date; say so when the discount changed.
+      const offerChanged = before && (updated.offerId !== before.offerId || updated.offerDiscount !== before.offerDiscount);
+      const offerNote = !offerChanged
+        ? ''
+        : updated.offerDiscount > 0
+          ? t('reschedule.offerNow', { title: updated.offerTitle ?? '', amount: formatCurrency(updated.offerDiscount) })
+          : before.offerTitle
+            ? t('reschedule.offerLost', { title: before.offerTitle })
+            : '';
+      toast.success(`Reschedule requested. We will confirm the new time shortly.${offerNote ? ` ${offerNote}` : ''}`);
       navigation.goBack();
     }
   };
@@ -57,6 +71,11 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
               <Text variant="bodySmall" tone="secondary">
                 {formatRelativeDay(current.date)} · {formatTimeRange(current.startTime, current.endTime)} · {staff.get(current.staffId)?.name}
               </Text>
+              {current.offerDiscount > 0 ? (
+                <Text variant="caption" tone="success">
+                  {appointmentOfferLabel(t, current)} −{formatCurrency(current.offerDiscount)}
+                </Text>
+              ) : null}
             </Card>
 
             <View style={{ gap: spacing.md }}>

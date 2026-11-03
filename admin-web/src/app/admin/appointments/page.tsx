@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Columns3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Avatar, Button, Card, DataTable, Dropdown, EmptyState, ErrorState, Input, PageHeader, PaymentProgress, SearchInput, Skeleton, StatusBadge, Tabs } from "@/components/ui";
-import { addDaysISO, APPOINTMENT_STATUSES, formatDate, label, money, relativeDay, time12, timeToMinutes, todayISO } from "@/lib/format";
+import { addDaysISO, APPOINTMENT_STATUSES, billTotal, formatDate, label, money, relativeDay, time12, timeToMinutes, todayISO } from "@/lib/format";
 import { useAppointments, useLookups, useSettings } from "@/lib/queries";
 import type { Appointment } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -251,7 +251,7 @@ function ListView({ onOpen }: { onOpen: (id: string) => void }) {
               ),
             },
             { header: "Total", cell: (a) => <span className="font-semibold text-ink">{money(a.totalPrice)}</span> },
-            { header: "Paid", className: "w-[150px]", cell: (a) => <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} /> },
+            { header: "Paid", className: "w-[150px]", cell: (a) => <PaymentProgress paid={a.amountPaid} total={billTotal(a)} /> },
             { header: "Status", cell: (a) => <StatusBadge status={a.status} /> },
           ]}
         />

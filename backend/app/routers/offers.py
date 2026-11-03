@@ -4,10 +4,12 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .. import offer_pricing
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..models import Offer, User
-from ..schemas import ActiveInput, OfferInput, OfferUpdate
+from ..queries import resolve_services
+from ..schemas import ActiveInput, OfferInput, OfferQuoteInput, OfferUpdate
 from ..security import get_optional_user, require_admin
 from ..serializers import apply, changes, to_dict, to_list
 from ..utils import generate_id, is_valid_iso_date, today_iso
@@ -53,6 +55,19 @@ def list_offers(user: User | None = Depends(get_optional_user), db: Session = De
     else:
         stmt = select(Offer).order_by(Offer.valid_from.desc())
     return to_list(list(db.scalars(stmt)))
+
+
+@router.post("/quote")
+def quote_offer(body: OfferQuoteInput, db: Session = Depends(get_db)):
+    """What a booking would get: the entered code (an error explains why it can't be used),
+    or the best automatic offer. `offer` is null when nothing applies."""
+    services = resolve_services(db, body.service_ids)
+    total = sum(s.price for s in services)
+    result = offer_pricing.resolve(db, body.code, services, body.date)
+    if result is None:
+        return {"offer": None, "discount": 0, "total": total, "payable": total, "automatic": False}
+    return {"offer": to_dict(result.offer), "discount": result.discount, "total": total,
+            "payable": total - result.discount, "automatic": not result.offer.code}
 
 
 @router.get("/{id_}")

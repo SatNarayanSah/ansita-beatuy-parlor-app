@@ -1,5 +1,5 @@
 import { useOfferStore } from '@/store/offerStore';
-import type { ID, Offer } from '@/types';
+import type { ID, ISODate, Offer, OfferQuote } from '@/types';
 
 import { api } from './client';
 
@@ -17,6 +17,13 @@ export const offerService = {
     useOfferStore.getState().setOffers(list);
     return list;
   },
+
+  /**
+   * Previews the discount for a booking before it is made: the entered code (422 with the
+   * reason when it can't be used) or, without a code, the best automatic offer.
+   */
+  quoteOffer: (input: { code?: string; serviceIds: ID[]; date: ISODate }): Promise<OfferQuote> =>
+    api<OfferQuote>('POST', '/offers/quote', { body: input }),
 
   getOffer: async (id: ID): Promise<Offer> => cacheOffer(await api<Offer>('GET', `/offers/${id}`)),
 

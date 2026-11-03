@@ -23,7 +23,7 @@ export const radius = {
 } as const;
 
 /** Standard horizontal padding for screen content. */
-export const screenPadding = spacing.lg;
+export const screenPadding = spacing.md;
 
 /** Minimum touch target (Android/iOS accessibility guidelines). */
 export const minTouchSize = 44;

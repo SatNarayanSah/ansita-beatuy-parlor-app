@@ -5,7 +5,7 @@ import { serviceNames, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, customerService } from '@/services';
-import { selectCurrentUser, selectPointsFor, useAppointmentStore, useAuthStore, useBusinessStore, useCustomerStore } from '@/store';
+import { selectCurrentUser, selectDiscountTotal, selectPointsFor, useAppointmentStore, useAuthStore, useBusinessStore, useCustomerStore } from '@/store';
 import { useTheme } from '@/theme';
 import { formatShortDate } from '@/utils/date';
 import { formatCurrency, formatNumber } from '@/utils/format';
@@ -44,7 +44,7 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
           ? [{ key: `${appointment.id}-used`, appointment, points: -appointment.pointsRedeemed }]
           : []),
         ...(appointment.status === 'completed'
-          ? [{ key: appointment.id, appointment, points: selectPointsFor(loyalty, appointment.totalPrice - appointment.pointsDiscount) }]
+          ? [{ key: appointment.id, appointment, points: selectPointsFor(loyalty, appointment.totalPrice - selectDiscountTotal(appointment)) }]
           : []),
       ]);
       const netHere = entries.reduce((sum, entry) => sum + entry.points, 0);

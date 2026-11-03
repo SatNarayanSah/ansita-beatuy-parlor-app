@@ -50,7 +50,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Preferences" compact />
         <Card style={{ gap: spacing.md }}>

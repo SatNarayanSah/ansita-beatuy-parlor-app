@@ -25,7 +25,7 @@ export const PreferencesScreen = (_props: Props) => {
   const staff = useMemo(() => selectActiveStaff(allStaff), [allStaff]);
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Favourite stylist" subtitle="Pre-selected when you book, if they offer the service." compact />
         <Card padding="sm">

@@ -7,7 +7,7 @@ import { BottomSheet, Button, Icon, Text } from '@/components/ui';
 import { useCategoryMap } from '@/hooks/useCatalog';
 import { useT, type Translate } from '@/i18n';
 import { palette, useTheme } from '@/theme';
-import type { ID, ISODate, Offer } from '@/types';
+import type { Appointment, ID, ISODate, Offer } from '@/types';
 import { formatDisplayDate, formatShortDate, parseISODate, todayISO } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 
@@ -49,6 +49,12 @@ export const offerValidityLabel = (t: Translate, offer: Offer, today: ISODate = 
   if (days <= 7) return t('offers.endsInDays', { count: days });
   return t('offers.validTill', { date: formatShortDate(offer.validTo) });
 };
+
+/** Bill line for the offer on a booking: "Offer · Hair week" or "Offer · Pedi 20 (PEDI20)". */
+export const appointmentOfferLabel = (t: Translate, appointment: Pick<Appointment, 'offerTitle' | 'offerCode'>): string =>
+  appointment.offerCode
+    ? t('bill.offerWithCode', { title: appointment.offerTitle ?? appointment.offerCode, code: appointment.offerCode })
+    : t('bill.offer', { title: appointment.offerTitle ?? '' });
 
 /** Live offers that apply to a category (offers with no categories apply to everything). */
 export const offersForCategory = (offers: readonly Offer[], categoryId: ID, today: ISODate = todayISO()): Offer[] =>
@@ -320,7 +326,7 @@ const Separator = () => <View style={{ width: CARD_GAP }} />;
 interface OfferDetailSheetProps {
   offer: Offer | null;
   onClose: () => void;
-  /** Main action, e.g. start a booking. */
+  /** Main action: start a booking (with the offer's code filled in, when it has one). */
   onBook?: (offer: Offer) => void;
 }
 
@@ -346,7 +352,14 @@ export const OfferDetailSheet = ({ offer, onClose, onBook }: OfferDetailSheetPro
       title={shown?.title}
       footer={
         shown && onBook ? (
-          <Button title={t('offers.bookNow')} rightIcon="arrow-forward" onPress={() => onBook(shown)} style={styles.flex} fullWidth />
+          <Button
+            title={shown.code ? t('offers.useCode', { code: shown.code }) : t('offers.bookNow')}
+            leftIcon={shown.code ? 'pricetag-outline' : undefined}
+            rightIcon="arrow-forward"
+            onPress={() => onBook(shown)}
+            style={styles.flex}
+            fullWidth
+          />
         ) : undefined
       }
     >

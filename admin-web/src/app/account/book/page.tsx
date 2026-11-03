@@ -4,16 +4,24 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, CalendarCheck, Check, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { OpenFromUrl } from "@/components/layout/open-from-url";
+import { PromoCode } from "@/components/payments/promo-code";
 import { Avatar, Button, Card, EmptyState, ErrorState, Field, PageHeader, Skeleton, Stars, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { addDaysISO, formatDate, label, minutesLabel, money, PAYMENT_METHODS, time12, todayISO } from "@/lib/format";
-import { useAction, useCategories, useServices, useSettings } from "@/lib/queries";
+import { type OfferQuote, useAction, useCategories, useServices, useSettings } from "@/lib/queries";
 import type { Appointment, PaymentMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SlotGrid, useAvailableStaff } from "../_parts";
 
 const STEPS = ["Services", "Date & time", "Details", "Confirm"];
+
+/** ?code=TIHAR25 from an offer card's "Book now". */
+function readCode(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("code") ?? "";
+}
 
 function readPreselected(): string[] {
   if (typeof window === "undefined") return [];
@@ -97,6 +105,10 @@ export default function BookPage() {
   const [notes, setNotes] = useState("");
   const [method, setMethod] = useState<PaymentMethod | null>("cash");
   const [booked, setBooked] = useState<Appointment | null>(null);
+  const [initialCode] = useState(readCode);
+  const [presetCode, setPresetCode] = useState<string | null>(null);
+  const [offerCode, setOfferCode] = useState<string | null>(null);
+  const [quote, setQuote] = useState<OfferQuote | null>(null);
 
   const today = todayISO();
   const days = useMemo(() => Array.from({ length: 30 }, (_, i) => addDaysISO(today, i)), [today]);
@@ -126,6 +138,7 @@ export default function BookPage() {
         startTime: time,
         notes: notes.trim(),
         preferredPaymentMethod: method,
+        offerCode,
       }),
     {
       invalidate: ["appointments", "customers", "notifications", "availability"],
@@ -155,6 +168,7 @@ export default function BookPage() {
 
   return (
     <div>
+      <OpenFromUrl param="code" onOpen={setPresetCode} />
       <PageHeader eyebrow="Book online" title="Book a visit" subtitle="Choose your treatments, then a stylist and a time that suits you." />
 
       {/* progress */}
@@ -393,6 +407,7 @@ export default function BookPage() {
                       ["Stylist", member?.name ?? "—"],
                       ["Duration", minutesLabel(duration)],
                       ["Pay by", method ? label(method) : "Decide later"],
+                      ...(quote?.offer && quote.discount > 0 ? [["Offer", `${quote.offer.title} · −${money(quote.discount)}`]] : []),
                     ].map(([k, v], i) => (
                       <motion.div key={k} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-2xl border border-line bg-bg/50 p-3">
                         <dt className="text-[11px] tracking-wider text-muted uppercase">{k}</dt>
@@ -426,12 +441,50 @@ export default function BookPage() {
                 </AnimatePresence>
               </ul>
             )}
+            {chosen.length > 0 && (
+              <PromoCode
+                className="mt-4 border-t border-line pt-4"
+                serviceIds={serviceIds}
+                date={date || todayISO()}
+                initialCode={initialCode}
+                presetCode={presetCode}
+                onChange={(code, q) => {
+                  setOfferCode(code);
+                  setQuote(q);
+                }}
+              />
+            )}
+            <AnimatePresence initial={false}>
+              {quote?.offer && quote.discount > 0 && chosen.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-3 flex flex-col gap-1 overflow-hidden text-sm"
+                >
+                  <div className="flex justify-between text-ink-2">
+                    <span>Subtotal</span>
+                    <span>{money(total)}</span>
+                  </div>
+                  <div className="flex justify-between font-medium text-success">
+                    <span className="truncate">Offer · {quote.offer.title}</span>
+                    <span className="shrink-0">−{money(quote.discount)}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="mt-4 flex items-end justify-between border-t border-line pt-4">
               <div>
-                <p className="text-xs text-muted">Total · {minutesLabel(duration || 0)}</p>
-                <motion.p key={total} initial={{ scale: 1.15, color: "var(--primary)" }} animate={{ scale: 1, color: "var(--text)" }} className="font-display text-2xl font-semibold">
-                  {money(total)}
+                <p className="text-xs text-muted">{quote?.discount ? "To pay" : "Total"} · {minutesLabel(duration || 0)}</p>
+                <motion.p
+                  key={total - (quote?.discount ?? 0)}
+                  initial={{ scale: 1.15, color: "var(--primary)" }}
+                  animate={{ scale: 1, color: "var(--text)" }}
+                  className="font-display text-2xl font-semibold"
+                >
+                  {money(total - (quote?.discount ?? 0))}
                 </motion.p>
+                {!!quote?.discount && <p className="text-xs text-muted line-through">{money(total)}</p>}
               </div>
             </div>
             <div className="mt-5 flex gap-2">

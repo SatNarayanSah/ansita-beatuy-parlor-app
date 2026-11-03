@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 
+import { OfferCodeSheet } from '@/components/admin/OfferCodeSheet';
 import { PendingPaymentRequests } from '@/components/admin/PaymentRequestReview';
 import { PaymentSheet } from '@/components/admin/PaymentSheet';
 import { maxRedeemablePoints, RedeemPointsSheet } from '@/components/admin/RedeemPointsSheet';
 import { ADMIN_CANCEL_REASONS, CancelAppointmentSheet } from '@/components/customer/AppointmentSheets';
+import { appointmentOfferLabel } from '@/components/customer/OfferCarousel';
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
 import {
   Avatar,
@@ -26,10 +28,12 @@ import {
 } from '@/components/ui';
 import { serviceNames, useCustomerMap, useServiceMap, useStaffMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, getErrorMessage } from '@/services';
 import {
   selectAmountDue,
+  selectDiscountTotal,
   selectPointsFor,
   selectReviewForAppointment,
   useAppointmentStore,
@@ -47,6 +51,7 @@ type Props = RootStackScreenProps<'AppointmentDetail'>;
 export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
   const { colors, spacing } = useTheme();
   const toast = useToast();
+  const t = useT();
   const { appointmentId } = route.params;
   const services = useServiceMap();
   const staff = useStaffMap();
@@ -65,6 +70,9 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [redeemError, setRedeemError] = useState<string | null>(null);
   const [removePointsOpen, setRemovePointsOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [removeOfferOpen, setRemoveOfferOpen] = useState(false);
 
   const run = async (key: string, action: () => Promise<unknown>, success: string): Promise<boolean> => {
     setBusy(key);
@@ -112,6 +120,20 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
     }
   };
 
+  const applyOffer = async (code: string): Promise<void> => {
+    setOfferError(null);
+    setBusy('offer');
+    try {
+      const updated = await appointmentService.applyOfferCode(appointmentId, code);
+      toast.success(t('admin.offer.applied', { title: updated.offerTitle ?? code, amount: formatCurrency(updated.offerDiscount) }));
+      setOfferOpen(false);
+    } catch (error) {
+      setOfferError(getErrorMessage(error));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   /** With a balance due, completing goes through the payment sheet. */
   const complete = (due: number): void => {
     if (due > 0) setPaymentMode('complete');
@@ -134,6 +156,9 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
           const billOpen = appointment.status === 'confirmed' || appointment.status === 'completed';
           const canOfferPoints = loyalty.enabled && billOpen && appointment.pointsRedeemed === 0 && due > 0;
           const canRedeem = canOfferPoints && points >= loyalty.minRedeemPoints && maxRedeemablePoints(points, due, loyalty) > 0;
+          // Promo codes go on any booking that isn't cancelled (the server checks the bill has room).
+          const offerEditable = appointment.status !== 'cancelled' && appointment.status !== 'no_show';
+          const hasOffer = appointment.offerDiscount > 0 || appointment.offerId !== null;
           const started = isPastDateTime(appointment.date, appointment.startTime);
           const active = appointment.status === 'pending' || appointment.status === 'confirmed';
           const summary = `${serviceNames(appointment.serviceIds, services)} · ${formatRelativeDay(appointment.date)} at ${formatTime12(appointment.startTime)}`;
@@ -207,6 +232,16 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                     {formatCurrency(appointment.amountPaid)}
                   </Text>
                 </View>
+                {appointment.offerDiscount > 0 ? (
+                  <View style={styles.line}>
+                    <Text variant="bodySmall" tone="secondary" style={styles.flex}>
+                      {appointmentOfferLabel(t, appointment)}
+                    </Text>
+                    <Text variant="bodySmall" tone="success">
+                      − {formatCurrency(appointment.offerDiscount)}
+                    </Text>
+                  </View>
+                ) : null}
                 {appointment.pointsDiscount > 0 ? (
                   <View style={styles.line}>
                     <Text variant="bodySmall" tone="secondary" style={styles.flex}>
@@ -234,7 +269,7 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                 ) : null}
                 {appointment.status === 'confirmed' && loyalty.enabled ? (
                   <Text variant="caption" tone="muted">
-                    Earns {selectPointsFor(loyalty, appointment.totalPrice - appointment.pointsDiscount)} loyalty points on completion
+                    Earns {selectPointsFor(loyalty, appointment.totalPrice - selectDiscountTotal(appointment))} loyalty points on completion
                   </Text>
                 ) : null}
                 {canRedeem ? (
@@ -272,6 +307,33 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                     onPress={() => setRemovePointsOpen(true)}
                     style={styles.center}
                   />
+                ) : null}
+                {offerEditable ? (
+                  <View style={styles.row}>
+                    <Button
+                      title={hasOffer ? t('admin.offer.change') : t('admin.offer.apply')}
+                      variant="ghost"
+                      size="sm"
+                      leftIcon="pricetag-outline"
+                      onPress={() => {
+                        setOfferError(null);
+                        setOfferOpen(true);
+                      }}
+                      style={styles.flex}
+                      fullWidth
+                    />
+                    {hasOffer ? (
+                      <Button
+                        title={t('admin.offer.remove')}
+                        variant="ghost"
+                        size="sm"
+                        loading={busy === 'removeOffer'}
+                        onPress={() => setRemoveOfferOpen(true)}
+                        style={styles.flex}
+                        fullWidth
+                      />
+                    ) : null}
+                  </View>
                 ) : null}
               </Card>
 
@@ -409,6 +471,27 @@ export const AppointmentDetailScreen = ({ navigation, route }: Props) => {
                   void run('removePoints', () => appointmentService.removePointsDiscount(appointmentId), 'Points returned to the customer');
                 }}
                 onCancel={() => setRemovePointsOpen(false)}
+              />
+              <OfferCodeSheet
+                visible={offerOpen}
+                subtitle={summary}
+                current={hasOffer ? { title: appointment.offerTitle ?? '', discount: appointment.offerDiscount } : null}
+                loading={busy === 'offer'}
+                error={offerError}
+                onSubmit={(code) => void applyOffer(code)}
+                onClose={() => setOfferOpen(false)}
+              />
+              <ConfirmDialog
+                visible={removeOfferOpen}
+                icon="pricetag-outline"
+                title={t('admin.offer.removeTitle')}
+                message={t('admin.offer.removeMessage', { amount: formatCurrency(appointment.offerDiscount), title: appointment.offerTitle ?? '' })}
+                confirmLabel={t('admin.offer.remove')}
+                onConfirm={() => {
+                  setRemoveOfferOpen(false);
+                  void run('removeOffer', () => appointmentService.removeOffer(appointmentId), t('admin.offer.removed'));
+                }}
+                onCancel={() => setRemoveOfferOpen(false)}
               />
               <CancelAppointmentSheet
                 appointment={cancelOpen ? appointment : null}

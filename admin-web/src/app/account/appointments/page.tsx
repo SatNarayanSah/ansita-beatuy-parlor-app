@@ -24,7 +24,7 @@ import {
 } from "@/components/ui";
 import { PayOnline } from "@/components/payments/payment-requests";
 import { api } from "@/lib/api";
-import { formatDate, label, minutesLabel, money, relativeDay, time12 } from "@/lib/format";
+import { balanceDue, billTotal, formatDate, label, minutesLabel, money, relativeDay, time12 } from "@/lib/format";
 import { useAction, useAppointments, useReviewFor } from "@/lib/queries";
 import type { Appointment } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -200,7 +200,16 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
               <h3 className="mb-2 flex items-center justify-between text-[11px] font-semibold tracking-wider text-muted uppercase">
                 Payment <StatusBadge status={a.paymentStatus} />
               </h3>
-              <PaymentProgress paid={a.amountPaid} total={a.totalPrice - (a.pointsDiscount ?? 0)} />
+              <PaymentProgress paid={a.amountPaid} total={billTotal(a)} />
+              {a.offerDiscount > 0 && (
+                <p className="mt-2 flex items-center justify-between gap-2 rounded-xl bg-success-soft/70 px-3 py-2 text-xs text-success">
+                  <span className="truncate">
+                    Offer · {a.offerTitle}
+                    {a.offerCode ? ` (${a.offerCode})` : ""}
+                  </span>
+                  <span className="shrink-0 font-semibold">−{money(a.offerDiscount)}</span>
+                </p>
+              )}
               {a.payments?.length > 0 && (
                 <ul className="mt-3 flex flex-col gap-1.5">
                   {a.payments.map((p) => (
@@ -221,7 +230,7 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
                 target={{
                   type: "appointment",
                   id: a.id,
-                  due: a.totalPrice - a.amountPaid - (a.pointsDiscount ?? 0),
+                  due: balanceDue(a),
                   payable: a.status !== "cancelled" && a.status !== "no_show",
                 }}
               />

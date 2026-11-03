@@ -54,7 +54,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
   if (!user) return null;
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       <Card style={[styles.profile, { gap: spacing.md }]}>
         <Avatar name={user.name} uri={user.avatar} size="xl" ring editable onPress={() => setPhotoOpen(true)} />
         <View style={styles.center}>

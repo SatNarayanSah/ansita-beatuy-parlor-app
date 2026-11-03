@@ -49,8 +49,8 @@ const variantColors = ({ colors }: Theme, variant: ButtonVariant): VariantColors
 
 const SIZES: Record<ButtonSize, { height: number; paddingHorizontal: number; iconSize: number }> = {
   sm: { height: 36, paddingHorizontal: 14, iconSize: 16 },
-  md: { height: 48, paddingHorizontal: 20, iconSize: 18 },
-  lg: { height: 56, paddingHorizontal: 24, iconSize: 20 },
+  md: { height: 44, paddingHorizontal: 16, iconSize: 18 },
+  lg: { height: 50, paddingHorizontal: 20, iconSize: 20 },
 };
 
 export const Button = ({
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fullWidth: { alignSelf: 'stretch' },
-  content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  content: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   hidden: { opacity: 0 },
   disabled: { opacity: 0.45 },
 });

@@ -18,7 +18,7 @@ export interface CardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const Card = ({ children, variant = 'elevated', padding = 'lg', onPress, accessibilityLabel, style }: CardProps) => {
+export const Card = ({ children, variant = 'elevated', padding = 'md', onPress, accessibilityLabel, style }: CardProps) => {
   const { colors, radius, shadows, spacing } = useTheme();
   const { animatedStyle, onPressIn, onPressOut } = usePressScale(0.98);
 

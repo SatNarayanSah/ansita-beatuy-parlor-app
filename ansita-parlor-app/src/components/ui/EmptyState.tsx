@@ -51,12 +51,12 @@ export const EmptyState = ({
 }: EmptyStateProps) => {
   const { colors, spacing } = useTheme();
   const tones = getToneColors(colors, tone);
-  const outer = compact ? 96 : 140;
-  const inner = compact ? 64 : 92;
+  const outer = compact ? 80 : 112;
+  const inner = compact ? 56 : 76;
 
   return (
-    <Animated.View entering={FadeIn.duration(250)} style={[styles.container, { padding: spacing.xxl, gap: spacing.md }, style]}>
-      <View style={[styles.illustration, { width: outer + 24, height: outer + 24 }]}>
+    <Animated.View entering={FadeIn.duration(250)} style={[styles.container, { padding: compact ? spacing.md : spacing.xl, gap: spacing.sm }, style]}>
+      <View style={[styles.illustration, { width: outer + 16, height: outer + 16 }]}>
         <View style={[styles.circle, { width: outer, height: outer, borderRadius: outer / 2, backgroundColor: tones.bg }]}>
           <View
             style={[
@@ -64,7 +64,7 @@ export const EmptyState = ({
               { width: inner, height: inner, borderRadius: inner / 2, backgroundColor: colors.surface, borderColor: tones.bg },
             ]}
           >
-            <Icon name={icon} size={compact ? 28 : 40} color={tones.fg} />
+            <Icon name={icon} size={compact ? 24 : 34} color={tones.fg} />
           </View>
         </View>
         <Sparkle size={compact ? 14 : 18} color={colors.highlight} style={{ top: 6, right: 10 }} />
@@ -83,7 +83,7 @@ export const EmptyState = ({
       ) : null}
 
       {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} style={{ marginTop: spacing.sm, alignSelf: 'center' }} />
+        <Button title={actionLabel} onPress={onAction} style={{ marginTop: spacing.xs, alignSelf: 'center' }} />
       ) : null}
       {secondaryActionLabel && onSecondaryAction ? (
         <Button title={secondaryActionLabel} onPress={onSecondaryAction} variant="ghost" size="sm" style={styles.center} />

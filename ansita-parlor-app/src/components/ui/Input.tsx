@@ -84,7 +84,7 @@ export const Input = ({
             borderColor,
             borderRadius: radius.md,
             backgroundColor: disabled ? colors.surfaceAlt : colors.surface,
-            minHeight: multiline ? 100 : 50,
+            minHeight: multiline ? 88 : 46,
             paddingHorizontal: spacing.md,
             borderWidth: focused || error ? 1.5 : 1,
           },
@@ -120,7 +120,7 @@ export const Input = ({
             styles.input,
             typography.body,
             { color: disabled ? colors.textSecondary : colors.text },
-            multiline && { paddingTop: spacing.md },
+            multiline && { paddingTop: spacing.sm },
           ]}
         />
         {isPassword ? (
@@ -151,5 +151,5 @@ export const Input = ({
 const styles = StyleSheet.create({
   field: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   multilineField: { alignItems: 'flex-start', paddingVertical: 4 },
-  input: { flex: 1, paddingVertical: 12, minHeight: 44 },
+  input: { flex: 1, paddingVertical: 10, minHeight: 44 },
 });

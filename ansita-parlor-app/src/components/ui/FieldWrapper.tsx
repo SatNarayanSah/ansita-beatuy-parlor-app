@@ -22,7 +22,7 @@ export const FieldWrapper = ({ label, required, error, helperText, counter, chil
   const message = error ?? helperText;
 
   return (
-    <View style={[{ gap: spacing.xs + 2 }, style]}>
+    <View style={[{ gap: spacing.xs }, style]}>
       {label ? (
         <Text variant="label" tone="secondary">
           {label}

@@ -67,7 +67,7 @@ export const HelpContactScreen = (_props: Props) => {
   };
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       <Card style={{ gap: spacing.md }}>
         <Text variant="h3">We’re here to help</Text>
         <Text variant="bodySmall" tone="secondary">

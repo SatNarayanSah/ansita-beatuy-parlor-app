@@ -95,7 +95,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
   const upcoming = holidays.filter((h) => h.date >= todayISO());
 
   return (
-    <Screen gap="xl">
+    <Screen gap="lg">
       <View style={{ gap: spacing.md }}>
         <SectionHeader title="Business profile" subtitle="Shown to customers under Help & contact" compact />
         <Card style={{ gap: spacing.md }}>

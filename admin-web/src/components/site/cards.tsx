@@ -256,10 +256,10 @@ export function OfferBanner({
           <span className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur-md">Applied automatically</span>
         )}
         <Link
-          href="/account/book"
+          href={offer.code ? `/account/book?code=${encodeURIComponent(offer.code)}` : "/account/book"}
           className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs font-bold text-primary-dark shadow-lg transition-transform hover:scale-105"
         >
-          <CalendarPlus className="h-3.5 w-3.5" /> Book now
+          <CalendarPlus className="h-3.5 w-3.5" /> {offer.code ? "Use code & book" : "Book now"}
         </Link>
         {offer.terms.length > 0 && (
           <button type="button" onClick={() => setShowTerms((v) => !v)} className="cursor-pointer text-xs text-white/75 underline-offset-2 hover:text-white hover:underline">

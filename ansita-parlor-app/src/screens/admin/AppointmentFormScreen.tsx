@@ -3,6 +3,8 @@ import { StyleSheet, View } from 'react-native';
 
 import { ChipSelect, MultiChipSelect, SelectSheet } from '@/components/admin/Pickers';
 import { QuickCustomerForm } from '@/components/admin/QuickCustomerForm';
+import { appointmentOfferLabel } from '@/components/customer/OfferCarousel';
+import { normalizeOfferCode } from '@/components/customer/PromoCodeCard';
 import {
   Avatar,
   Button,
@@ -27,6 +29,7 @@ import { useQualifiedStaff } from '@/hooks/useBookingAvailability';
 import { useCategoryMap, useCustomerMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, getErrorMessage } from '@/services';
 import {
@@ -50,6 +53,7 @@ type Props = RootStackScreenProps<'AppointmentForm'>;
 export const AppointmentFormScreen = ({ navigation, route }: Props) => {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const t = useT();
   const params = route.params ?? {};
   const editingId = params.appointmentId;
   const services = useServiceMap();
@@ -71,6 +75,7 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
   const [date, setDate] = useState<ISODate | null>(params.date ?? todayISO());
   const [time, setTime] = useState<TimeString | null>(params.time ?? null);
   const [notes, setNotes] = useState('');
+  const [offerCode, setOfferCode] = useState('');
   const [category, setCategory] = useState<ID | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState(false);
@@ -85,13 +90,16 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
     setDate(a.date);
     setTime(a.startTime);
     setNotes(a.notes);
+    setOfferCode(a.offerCode ?? '');
   });
 
   // Dirty when anything differs from how the form started (prefill or the booking being edited).
   const original = existing.data;
+  const code = normalizeOfferCode(offerCode);
+  const codeChanged = code !== (original?.offerCode ?? '');
   const dirty = original
-    ? serviceIds.join(',') !== original.serviceIds.join(',') || staffId !== original.staffId || date !== original.date || time !== original.startTime || notes !== original.notes
-    : serviceIds.length > 0 || notes.trim() !== '' || (customerId !== null && customerId !== (params.customerId ?? null));
+    ? serviceIds.join(',') !== original.serviceIds.join(',') || staffId !== original.staffId || date !== original.date || time !== original.startTime || notes !== original.notes || codeChanged
+    : serviceIds.length > 0 || notes.trim() !== '' || code !== '' || (customerId !== null && customerId !== (params.customerId ?? null));
   const { dialog, allowLeave } = useUnsavedChangesGuard(dirty && !saving);
 
   const qualified = useQualifiedStaff(serviceIds);
@@ -144,12 +152,28 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
     setServerError(null);
     try {
       if (editingId) {
-        await appointmentService.updateAppointment(editingId, { serviceIds, staffId, date, startTime: time, notes });
+        // Unchanged code: omit it so the server re-checks the current offer; cleared: "" drops it.
+        await appointmentService.updateAppointment(editingId, {
+          serviceIds,
+          staffId,
+          date,
+          startTime: time,
+          notes,
+          ...(codeChanged ? { offerCode: code } : {}),
+        });
         toast.success('Appointment updated. The customer has been notified.');
         allowLeave();
         navigation.goBack();
       } else {
-        const created = await appointmentService.createAppointment({ customerId, serviceIds, staffId, date, startTime: time, notes });
+        const created = await appointmentService.createAppointment({
+          customerId,
+          serviceIds,
+          staffId,
+          date,
+          startTime: time,
+          notes,
+          offerCode: code || undefined,
+        });
         toast.success('Appointment booked and confirmed');
         allowLeave();
         navigation.replace('AppointmentDetail', { appointmentId: created.id });
@@ -260,6 +284,22 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
             ) : null}
 
             <Input label="Notes" placeholder="Allergies, references, phone booking details…" value={notes} onChangeText={setNotes} multiline maxLength={200} showCount />
+
+            <Input
+              label={t('promo.label')}
+              placeholder={t('promo.placeholder')}
+              value={offerCode}
+              onChangeText={setOfferCode}
+              leftIcon="pricetag-outline"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={40}
+              helperText={
+                editingId
+                  ? `${original && original.offerDiscount > 0 ? `${appointmentOfferLabel(t, original)} −${formatCurrency(original.offerDiscount)}. ` : ''}${t('admin.offer.formHintEdit')}`
+                  : t('admin.offer.formHint')
+              }
+            />
 
             {time && endTime && canSave ? (
               <Card variant="filled" style={{ gap: 2 }}>

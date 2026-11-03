@@ -131,6 +131,30 @@ export const useUnreadCount = () =>
 export const useSettings = () =>
   useQuery({ queryKey: keys.settings, queryFn: () => api.get<BusinessSettings>("/settings") });
 
+// ---------- Offer codes ----------
+
+export interface OfferQuote {
+  offer: Offer | null;
+  discount: number;
+  total: number;
+  payable: number;
+  /** True when the offer applies by itself (it has no code). */
+  automatic: boolean;
+}
+
+/**
+ * What a booking would get: the entered code, or (without one) the best automatic offer.
+ * Errors carry the server's reason ("doesn't cover these services", "valid until …").
+ */
+export const useOfferQuote = (input: { code: string | null; serviceIds: string[]; date: string }) =>
+  useQuery({
+    queryKey: ["offer-quote", input.code ?? "", [...input.serviceIds].sort().join(","), input.date],
+    queryFn: () => api.post<OfferQuote>("/offers/quote", { code: input.code || null, serviceIds: input.serviceIds, date: input.date }),
+    enabled: input.serviceIds.length > 0 && !!input.date,
+    retry: false,
+    staleTime: 30_000,
+  });
+
 // ---------- "I've paid" requests ----------
 
 export interface PaymentRequestFilters {
