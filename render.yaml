@@ -4,6 +4,7 @@ services:
     name: ansita-api
     runtime: python
     plan: free
+    region: singapore # same region as the Neon database (ap-southeast-1)
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     # The seed is idempotent: it only adds rows that don't exist yet.
