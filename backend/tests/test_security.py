@@ -441,3 +441,34 @@ def test_customer_upload_limit_and_types(client, monkeypatch):
     for _ in range(2):
         assert client.post("/uploads", content=b"\xff\xd8\xff\xe0" + b"\x00" * 32, headers=jpg).status_code == 201
     assert client.post("/uploads", content=b"\xff\xd8\xff\xe0" + b"\x00" * 32, headers=jpg).status_code == 409
+
+
+def test_cors_origins_tolerate_trailing_slash():
+    """CORS_ORIGINS pasted with a trailing slash still matches the browser's Origin."""
+    import importlib
+    import os
+
+    from fastapi.testclient import TestClient
+
+    import app.config as config
+    import app.main as main
+
+    old = os.environ.get("CORS_ORIGINS")
+    os.environ["CORS_ORIGINS"] = " https://ansita.vercel.app/ , https://www.ansita.com "
+    try:
+        config.get_settings.cache_clear()
+        config.settings = config.get_settings()
+        importlib.reload(main)
+        with TestClient(main.app) as c:
+            ok = c.options("/auth/register", headers={"Origin": "https://ansita.vercel.app", "Access-Control-Request-Method": "POST"})
+            assert ok.status_code == 200 and ok.headers["access-control-allow-origin"] == "https://ansita.vercel.app"
+            bad = c.options("/auth/register", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"})
+            assert bad.status_code == 400
+    finally:
+        if old is None:
+            os.environ.pop("CORS_ORIGINS", None)
+        else:
+            os.environ["CORS_ORIGINS"] = old
+        config.get_settings.cache_clear()
+        config.settings = config.get_settings()
+        importlib.reload(main)

@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     # Comma-separated list of allowed browser origins ("*" for any). Native apps ignore CORS.
     cors_origins: str = "*"
+    # Optional regular expression for more allowed origins (e.g. every Vercel preview URL).
+    cors_origin_regex: str = ""
 
     # Public base URL of this API (e.g. https://ansita-api.onrender.com), used for uploaded image
     # links. Empty: taken from the request, which needs the proxy's forwarded headers to be trusted.
@@ -43,7 +45,7 @@ class Settings(BaseSettings):
     admin_name: str = "Ansita Shrestha"
     admin_phone: str = "+9779841500100"
 
-    @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", mode="before")
+    @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", "cors_origin_regex", mode="before")
     @classmethod
     def _strip(cls, value):
         # Values pasted into a dashboard often carry a stray space or newline.

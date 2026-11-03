@@ -138,7 +138,7 @@ npx eas-cli@latest build --platform ios --profile preview
 
 **Settings → App → Server** shows which server the app is using and whether it can reach it. A banner appears at the top whenever the server can't be reached; tap it to retry.
 
-Builds made with EAS take the server address from `EXPO_PUBLIC_API_URL` in [`eas.json`](eas.json). It is set to `https://ansita-api.onrender.com`, the address Render gives the service in `render.yaml`. **Check it matches your Render URL before building.**
+Builds made with EAS take the server address from `EXPO_PUBLIC_API_URL` in [`eas.json`](eas.json). It is set to `https://ansita-beatuy-parlor-app.onrender.com`, the live Render service. **Check it matches your Render URL before building.**
 
 ---
 

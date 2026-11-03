@@ -13,7 +13,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ansita-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://ansita-beatuy-parlor-app.onrender.com"
       }
     },
     "device": {
@@ -22,7 +22,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ansita-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://ansita-beatuy-parlor-app.onrender.com"
       }
     },
     "production": {
@@ -31,7 +31,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://ansita-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://ansita-beatuy-parlor-app.onrender.com"
       }
     }
   },

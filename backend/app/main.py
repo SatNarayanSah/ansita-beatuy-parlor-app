@@ -47,10 +47,14 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Ansita Beauty Parlour API", version="1.0.0", lifespan=lifespan)
 
-origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+# Browsers send the origin as scheme://host[:port] with no path, so a pasted
+# "https://site.vercel.app/" (trailing slash) or stray spaces would never match.
+origins = [origin.strip().rstrip("/") for origin in settings.cors_origins.split(",") if origin.strip().rstrip("/")]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins or ["*"],
+    # Optional, e.g. Vercel preview deployments: ^https://ansita-[a-z0-9-]+\.vercel\.app$
+    allow_origin_regex=settings.cors_origin_regex or None,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
