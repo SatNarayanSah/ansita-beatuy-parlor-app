@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ..business import accepts_online, get_business
+from ..business import accepts_online, get_business, payment_settings
 from ..db import get_db
 from ..errors import ApiError, ensure_found
 from ..image_urls import to_stored
@@ -36,7 +36,14 @@ router = APIRouter(prefix="/payment-requests", tags=["payment requests"])
 
 MAX_PENDING_PER_BILL = 3
 MAX_DAYS_BACK = 60
-METHOD_LABELS = {"esewa": "eSewa", "khalti": "Khalti", "fonepay": "Fonepay", "bank": "bank transfer"}
+METHOD_LABELS = {"esewa": "eSewa", "khalti": "Khalti", "fonepay": "Fonepay", "bank": "bank transfer", "cash": "cash"}
+
+
+def _with_reference(request_or_method, reference: str) -> str:
+    """" (ID 0ABC12)" for online payments, " (receipt 123)" for cash, or nothing."""
+    if not reference:
+        return ""
+    return f" (receipt {reference})" if request_or_method == "cash" else f" (ID {reference})"
 
 
 # ---------- Helpers ----------
@@ -114,7 +121,11 @@ def create_request(body: PaymentRequestInput, user: User = Depends(get_current_u
     if user.role != "customer" or not user.customer_id:
         raise ApiError("FORBIDDEN", "Only customers send payment requests. Admins record payments directly.")
     row = get_business(db)
-    if not accepts_online(row, body.method):
+    # Cash needs no account: only the master switch. Online methods must be set up in Settings.
+    if body.method == "cash":
+        if not payment_settings(row)["requests"]:
+            raise ApiError("VALIDATION", "The parlour isn't taking payment requests right now.")
+    elif not accepts_online(row, body.method):
         raise ApiError("VALIDATION", f"The parlour doesn't take {METHOD_LABELS[body.method]} payments right now.")
 
     target = _target(db, body.target_type, body.target_id, lock=True)
@@ -125,6 +136,8 @@ def create_request(body: PaymentRequestInput, user: User = Depends(get_current_u
                        else "This enrollment was dropped.")
 
     reference = " ".join(body.reference.split()).upper()
+    if body.method != "cash" and len(reference) < 4:
+        raise ApiError("VALIDATION", "Enter the transaction ID from your payment receipt (at least 4 characters).")
     if not is_valid_iso_date(body.paid_on):
         raise ApiError("VALIDATION", "Choose the date you paid.")
     if body.paid_on > today_iso():
@@ -145,10 +158,12 @@ def create_request(body: PaymentRequestInput, user: User = Depends(get_current_u
         raise ApiError("VALIDATION", f"That's more than the {format_currency(room)} left to pay"
                        + (" after your pending payments." if pending else "."))
 
-    duplicate = db.scalar(select(PaymentRequest.id).where(
+    duplicate = reference and db.scalar(select(PaymentRequest.id).where(
         PaymentRequest.method == body.method, PaymentRequest.reference == reference,
         PaymentRequest.status.in_(("pending", "approved")),
     ))
+    if duplicate and body.method == "cash":
+        raise ApiError("CONFLICT", "This receipt number has already been sent.")
     if duplicate:
         raise ApiError("CONFLICT", "This transaction ID has already been sent. Check the ID, or wait for the parlour to confirm it.")
 
@@ -166,7 +181,7 @@ def create_request(body: PaymentRequestInput, user: User = Depends(get_current_u
     notify_admins(
         db, "payment", "Payment to verify",
         f"{customer.name if customer else 'A customer'} says they paid {format_currency(body.amount)} by "
-        f"{METHOD_LABELS[body.method]} (ID {reference}) for {_label(db, target)}.",
+        f"{METHOD_LABELS[body.method]}{_with_reference(body.method, reference)} for {_label(db, target)}.",
         _link(request),
     )
     db.commit()
@@ -275,7 +290,7 @@ def reject_request(id_: str, body: PaymentRejectInput, admin: User = Depends(req
     notify_customer(
         db, request.customer_id, "payment", "Payment not confirmed",
         f"We couldn't confirm your {METHOD_LABELS[request.method]} payment of "
-        f"{format_currency(request.amount)} (ID {request.reference}): {request.review_note}",
+        f"{format_currency(request.amount)}{_with_reference(request.method, request.reference)}: {request.review_note}",
         _link(request),
     )
     db.commit()

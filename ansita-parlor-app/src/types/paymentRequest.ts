@@ -1,4 +1,4 @@
-import type { BaseEntity, ID, ImageUri, ISODate, ISODateTime, OnlinePaymentMethod } from './common';
+import type { BaseEntity, ID, ImageUri, ISODate, ISODateTime, PaymentRequestMethod } from './common';
 
 export type PaymentRequestTarget = 'appointment' | 'enrollment';
 
@@ -6,7 +6,7 @@ export type PaymentRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancel
 
 /**
  * A customer's "I've paid": they paid the parlour's eSewa/Khalti/Fonepay/bank account outside
- * the app and ask the parlour to verify it. Nothing changes on the bill until an admin approves.
+ * the app (or paid cash at the parlour that isn't on the bill yet) and ask the parlour to verify it. Nothing changes on the bill until an admin approves.
  */
 export interface PaymentRequest extends BaseEntity {
   targetType: PaymentRequestTarget;
@@ -14,8 +14,8 @@ export interface PaymentRequest extends BaseEntity {
   customerId: ID;
   /** What the customer says they paid. */
   amount: number;
-  method: OnlinePaymentMethod;
-  /** Transaction ID, normalised to upper case by the server. */
+  method: PaymentRequestMethod;
+  /** Transaction ID (online) or receipt no. / who took the money (cash, may be empty); upper-cased by the server. */
   reference: string;
   paidOn: ISODate;
   note: string;
@@ -43,8 +43,8 @@ export interface PaymentRequestInput {
   targetType: PaymentRequestTarget;
   targetId: ID;
   amount: number;
-  method: OnlinePaymentMethod;
-  /** 4-64 characters. */
+  method: PaymentRequestMethod;
+  /** 4-64 characters for online methods; optional (up to 64) for cash. */
   reference: string;
   paidOn: ISODate;
   note?: string;

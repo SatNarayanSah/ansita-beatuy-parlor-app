@@ -172,16 +172,13 @@ export const paymentSchema = (due: number) =>
 /** Customer's "I've paid": `max` is what's due less their pending requests on that bill. */
 export const paymentRequestSchema = (max: number, earliest: string, latest: string) =>
   z.object({
-    method: z.enum(['esewa', 'khalti', 'fonepay', 'bank']),
+    method: z.enum(['esewa', 'khalti', 'fonepay', 'bank', 'cash']),
     amount: wholeNumberText(
       z.number().min(1, { error: 'Enter the amount you paid' }).max(max, { error: `That’s more than the Rs. ${max.toLocaleString('en-IN')} left to pay` }),
       'the amount you paid',
     ),
-    reference: z
-      .string()
-      .trim()
-      .min(4, { error: 'Enter the transaction ID from your payment app or bank (at least 4 characters)' })
-      .max(64, { error: 'Keep it under 64 characters' }),
+    /** Transaction ID (at least 4 characters) for online methods; optional for cash (checked below). */
+    reference: z.string().trim().max(64, { error: 'Keep it under 64 characters' }),
     paidOn: z
       .string()
       .min(1, { error: 'Choose the date you paid' })
@@ -190,6 +187,15 @@ export const paymentRequestSchema = (max: number, earliest: string, latest: stri
     /** A screenshot picked on this phone (uploaded when sending), or none. */
     proof: z.string().nullable(),
     note: z.string().trim().max(300, { error: 'Keep it under 300 characters' }),
+  })
+  .superRefine((values, ctx) => {
+    if (values.method !== 'cash' && values.reference.length < 4) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['reference'],
+        message: 'Enter the transaction ID from your payment app or bank (at least 4 characters)',
+      });
+    }
   });
 
 /** Admin approving a request: what actually arrived, at most the balance due now. */

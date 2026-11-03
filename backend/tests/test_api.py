@@ -474,7 +474,7 @@ def test_payment_requests(client, admin):
 
     # Only the owner, only online methods, only up to what's due, not in the future.
     assert client.post("/payment-requests", json=claim, headers=stranger).status_code == 403
-    assert client.post("/payment-requests", json={**claim, "method": "cash"}, headers=customer).status_code == 422
+    assert client.post("/payment-requests", json={**claim, "method": "card"}, headers=customer).status_code == 422
     assert client.post("/payment-requests", json={**claim, "amount": 2500}, headers=customer).json()["code"] == "VALIDATION"
     future = (now_local().date() + timedelta(days=1)).isoformat()
     assert client.post("/payment-requests", json={**claim, "paidOn": future}, headers=customer).json()["code"] == "VALIDATION"
@@ -658,3 +658,38 @@ def test_offer_codes_discount_bookings(client, admin):
     cleared = client.delete(f"/appointments/{auto['id']}/offer", headers=admin).json()
     assert cleared["offerDiscount"] == 0 and cleared["offerId"] is None
     assert client.post(f"/appointments/{auto['id']}/offer", json={"code": "PEDI20"}, headers=admin).json()["code"] == "VALIDATION"
+
+
+
+def test_cash_payment_request(client, admin):
+    """A customer who paid cash at the parlour (not on the bill yet) can say so; the admin confirms."""
+    user, customer = register(client, "Cash Didi", "cash.didi@example.com", "9812000051")
+    day = (now_local().date() + timedelta(days=4)).isoformat()
+    today = now_local().date().isoformat()
+    with SessionLocal() as db:
+        appointment = Appointment(
+            id=generate_id("apt"), customer_id=user["customerId"], service_ids=["svc_face_bleach"], staff_id="stf_puja",
+            date=day, start_time="13:00", end_time="13:20", status="confirmed", notes="",
+            total_price=420, amount_paid=0, payment_status="unpaid", payments=[],
+        )
+        db.add(appointment)
+        db.commit()
+        apt_id = appointment.id
+    base = {"targetType": "appointment", "targetId": apt_id, "amount": 420, "method": "cash", "paidOn": today}
+    # Online methods still need a transaction ID; cash doesn't.
+    assert client.post("/payment-requests", json={**base, "method": "esewa"}, headers=customer).json()["code"] == "VALIDATION"
+    sent = client.post("/payment-requests", json={**base, "note": "Paid Puja at the counter"}, headers=customer)
+    assert sent.status_code == 201, sent.text
+    assert sent.json()["method"] == "cash" and sent.json()["reference"] == ""
+    assert client.get(f"/appointments/{apt_id}", headers=customer).json()["amountPaid"] == 0  # not until confirmed
+    note = client.get("/notifications", headers=admin).json()[0]
+    assert note["title"] == "Payment to verify" and "by cash for" in note["message"]
+    approved = client.post(f"/payment-requests/{sent.json()['id']}/approve", json={}, headers=admin).json()
+    assert approved["status"] == "approved"
+    bill = client.get(f"/appointments/{apt_id}", headers=customer).json()
+    assert bill["paymentStatus"] == "paid" and bill["payments"][-1]["method"] == "cash"
+    # Switched off in Settings: no requests at all, cash included.
+    client.patch("/settings/payments", json={"requests": False}, headers=admin)
+    off = client.post("/payment-requests", json={**base, "amount": 1}, headers=customer)
+    assert off.json()["code"] == "VALIDATION"
+    client.patch("/settings/payments", json={"requests": True}, headers=admin)

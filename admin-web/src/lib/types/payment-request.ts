@@ -1,5 +1,7 @@
 import type { BaseEntity, ID, ISODate, OnlineMethod } from './common';
 
+export type RequestMethod = OnlineMethod | 'cash';
+
 export type PaymentRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 /** A customer's "I've paid" message. Nothing changes on the bill until an admin approves it. */
@@ -8,7 +10,8 @@ export interface PaymentRequest extends BaseEntity {
   targetId: ID;
   customerId: ID;
   amount: number;
-  method: OnlineMethod;
+  /** Online methods, or cash handed over at the parlour that isn't on the bill yet. */
+  method: RequestMethod;
   /** Transaction ID from eSewa/Khalti/Fonepay or the bank, upper-cased. */
   reference: string;
   paidOn: ISODate;

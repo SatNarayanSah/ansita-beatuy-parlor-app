@@ -159,7 +159,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                 <Card padding="sm">
                   <ListItem
                     title="Payments to verify"
-                    subtitle={`${paymentsToVerify} customer${paymentsToVerify === 1 ? ' says they have' : 's say they have'} paid online`}
+                    subtitle={`${paymentsToVerify} customer${paymentsToVerify === 1 ? ' says they have' : 's say they have'} paid`}
                     leftIcon="wallet-outline"
                     leftIconTone="warning"
                     right={<CountBadge count={paymentsToVerify} />}

@@ -71,7 +71,7 @@ export default function PaymentsPage() {
       <PageHeader
         eyebrow="Money"
         title="Payments to verify"
-        subtitle="Customers who paid by eSewa, Khalti, Fonepay or bank transfer. Check each one in your statement, then approve or reject."
+        subtitle="Customers who say they paid: by eSewa, Khalti, Fonepay, bank transfer or cash at the parlour. Check each one, then approve or reject."
         actions={
           <Link href="/admin/settings?tab=payments">
             <Button variant="outline" icon={<Settings2 className="h-4 w-4" />}>

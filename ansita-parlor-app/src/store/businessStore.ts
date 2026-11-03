@@ -10,6 +10,7 @@ import type {
   NotificationType,
   OnlinePaymentMethod,
   PaymentAccount,
+  PaymentRequestMethod,
   PaymentSettings,
 } from '@/types';
 
@@ -86,6 +87,13 @@ export const selectOnlineMethods = (payments: PaymentSettings): OnlinePaymentMet
   const enabled = ONLINE_PAYMENT_METHODS.filter((method) => payments[method].enabled);
   return enabled.length > 0 ? enabled : [...ONLINE_PAYMENT_METHODS];
 };
+
+/**
+ * Methods offered in "I've paid": the online ones above, then cash (paid at the parlour but not
+ * on the bill yet), which needs no account set up. Empty while requests are off.
+ */
+export const selectPaymentRequestMethods = (payments: PaymentSettings): PaymentRequestMethod[] =>
+  payments.requests ? [...selectOnlineMethods(payments), 'cash'] : [];
 
 /** Admin alert switch governing a notification type; untoggled types always send. */
 export const selectAlertEnabled = (alerts: AdminAlerts, type: NotificationType): boolean => {

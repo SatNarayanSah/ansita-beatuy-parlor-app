@@ -11,14 +11,14 @@
  */
 
 import { AnimatePresence, motion } from "motion/react";
-import { Check, CheckCircle2, Clock, Copy, ExternalLink, Hourglass, Landmark, QrCode, Send, Smartphone, Undo2, XCircle } from "lucide-react";
+import { Banknote, Check, CheckCircle2, Clock, Copy, ExternalLink, Hourglass, Landmark, QrCode, Send, Smartphone, Undo2, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge, Button, ConfirmDialog, Field, ImageUpload, Input, Modal, Textarea } from "@/components/ui";
 import { api } from "@/lib/api";
 import { formatDate, label, money, ONLINE_METHODS, timeAgo, todayISO } from "@/lib/format";
 import { PAYMENT_KEYS, useAction, usePaymentRequests, useSettings } from "@/lib/queries";
-import type { OnlineMethod, PaymentAccount, PaymentRequest, PaymentRequestStatus } from "@/lib/types";
+import type { OnlineMethod, PaymentAccount, PaymentRequest, PaymentRequestStatus, RequestMethod } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const STATUS: Record<PaymentRequestStatus, { text: string; tone: "amber" | "green" | "red" | "gray" }> = {
@@ -28,7 +28,8 @@ const STATUS: Record<PaymentRequestStatus, { text: string; tone: "amber" | "gree
   cancelled: { text: "Withdrawn", tone: "gray" },
 };
 
-const METHOD_ICON: Record<OnlineMethod, React.ReactNode> = {
+const METHOD_ICON: Record<RequestMethod, React.ReactNode> = {
+  cash: <Banknote className="h-4 w-4" />,
   esewa: <Smartphone className="h-4 w-4" />,
   khalti: <Smartphone className="h-4 w-4" />,
   fonepay: <QrCode className="h-4 w-4" />,
@@ -54,7 +55,9 @@ export function PayOnline({ target }: { target: Target }) {
   const payments = settings.data?.payments;
   // Until the parlour sets up any account, every method is offered (same rule as the server).
   const enabled = payments?.requests ? ONLINE_METHODS.filter((m) => payments[m].enabled) : [];
-  const methods = payments?.requests && enabled.length === 0 ? [...ONLINE_METHODS] : enabled;
+  const online = payments?.requests && enabled.length === 0 ? [...ONLINE_METHODS] : enabled;
+  // Cash paid at the parlour can always be reported while requests are on (no account needed).
+  const methods: RequestMethod[] = payments?.requests ? [...online, "cash"] : [];
   const list = requests.data ?? [];
   const pendingTotal = list.filter((r) => r.status === "pending").reduce((sum, r) => sum + r.amount, 0);
   const room = target.due - pendingTotal;
@@ -74,7 +77,7 @@ export function PayOnline({ target }: { target: Target }) {
       </AnimatePresence>
       {canSend && (
         <Button variant="secondary" className="w-full" icon={<Send className="h-4 w-4" />} onClick={() => setOpen(true)}>
-          I&apos;ve paid online
+          I&apos;ve paid
         </Button>
       )}
       {target.payable && room > 0 && pendingTotal > 0 && (
@@ -177,11 +180,12 @@ function PaidDialog({
 }: {
   target: Target;
   room: number;
-  methods: OnlineMethod[];
+  methods: RequestMethod[];
   accounts: Record<OnlineMethod, PaymentAccount>;
   onClose: () => void;
 }) {
-  const [method, setMethod] = useState<OnlineMethod>(methods[0]);
+  const [method, setMethod] = useState<RequestMethod>(methods[0]);
+  const cash = method === "cash";
   const [amount, setAmount] = useState(String(room));
   const [reference, setReference] = useState("");
   const [paidOn, setPaidOn] = useState(todayISO());
@@ -191,8 +195,8 @@ function PaidDialog({
 
   const value = Number(amount);
   const amountError = amount && !(value > 0) ? "Enter the amount you paid" : value > room ? `At most ${money(room)}` : undefined;
-  const refError = reference && reference.trim().length < 4 ? "At least 4 characters" : undefined;
-  const valid = value > 0 && value <= room && reference.trim().length >= 4 && !!paidOn && paidOn <= todayISO();
+  const refError = !cash && reference && reference.trim().length < 4 ? "At least 4 characters" : undefined;
+  const valid = value > 0 && value <= room && (cash || reference.trim().length >= 4) && !!paidOn && paidOn <= todayISO();
 
   const send = useAction(
     () =>
@@ -213,8 +217,12 @@ function PaidDialog({
     <Modal
       open
       onClose={onClose}
-      title="I've paid online"
-      description={`Pay the parlour first, then send the details so they can confirm it. Left to pay: ${money(room)}.`}
+      title="I've paid"
+      description={
+        cash
+          ? `Tell the parlour about cash you've already paid there. Left to pay: ${money(room)}.`
+          : `Pay the parlour first, then send the details so they can confirm it. Left to pay: ${money(room)}.`
+      }
       className="sm:max-w-xl"
       footer={
         <>
@@ -230,7 +238,7 @@ function PaidDialog({
       <div className="flex flex-col gap-4">
         <div>
           <p className="mb-2 text-xs font-medium text-ink-2">1 · How did you pay?</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className={cn("grid grid-cols-2 gap-2", methods.length > 4 ? "sm:grid-cols-5" : "sm:grid-cols-4")}>
             {methods.map((m) => (
               <button
                 key={m}
@@ -252,9 +260,23 @@ function PaidDialog({
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-medium text-ink-2">2 · Pay to</p>
+          <p className="mb-2 text-xs font-medium text-ink-2">{cash ? "2 · Paid at the parlour" : "2 · Pay to"}</p>
           <AnimatePresence mode="wait">
-            <AccountDetails key={method} method={method} account={accounts[method]} />
+            {cash ? (
+              <motion.div
+                key="cash"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-3 rounded-2xl border border-line bg-surface-alt/60 p-4 text-sm text-ink-2"
+              >
+                <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                <p>
+                  Paid cash at the parlour but it isn&apos;t on your bill yet? Tell us how much and when, and the parlour will add it once they&apos;ve checked.
+                </p>
+              </motion.div>
+            ) : (
+              <AccountDetails key={method} method={method} account={accounts[method]} />
+            )}
           </AnimatePresence>
         </div>
 
@@ -267,18 +289,23 @@ function PaidDialog({
             <Field label="Date paid">
               <Input type="date" max={todayISO()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
             </Field>
-            <Field label="Transaction ID" hint="From your payment app's receipt or bank slip." error={refError} className="sm:col-span-2">
+            <Field
+              label={cash ? "Receipt no. or who you paid (optional)" : "Transaction ID"}
+              hint={cash ? "Helps the parlour find your payment." : "From your payment app's receipt or bank slip."}
+              error={refError}
+              className="sm:col-span-2"
+            >
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                placeholder={method === "bank" ? "e.g. FT2611030042" : "e.g. 0ABC12X"}
-                className="font-mono tracking-wider uppercase"
+                placeholder={cash ? "e.g. Receipt 245 or Puja" : method === "bank" ? "e.g. FT2611030042" : "e.g. 0ABC12X"}
+                className={cn(!cash && "font-mono tracking-wider uppercase")}
                 maxLength={64}
                 autoComplete="off"
               />
             </Field>
             <ImageUpload
-              label="Screenshot of the payment (optional)"
+              label={cash ? "Photo of the receipt (optional)" : "Screenshot of the payment (optional)"}
               hint="Helps the parlour confirm it faster."
               value={proof}
               onChange={setProof}
@@ -347,7 +374,12 @@ export function RequestCard({
             </p>
           )}
           <p className="mt-1 text-xs text-muted">
-            ID <span className="font-mono font-semibold tracking-wide text-ink-2">{r.reference}</span> · paid {formatDate(r.paidOn)} · sent {timeAgo(r.createdAt)}
+            {r.reference && (
+              <>
+                {r.method === "cash" ? "Receipt" : "ID"} <span className="font-mono font-semibold tracking-wide text-ink-2">{r.reference}</span> ·{" "}
+              </>
+            )}
+            paid {formatDate(r.paidOn)} · sent {timeAgo(r.createdAt)}
           </p>
           {r.note && <p className="mt-1.5 text-xs text-ink-2">“{r.note}”</p>}
           {r.status === "approved" && r.approvedAmount !== null && r.approvedAmount !== r.amount && (
@@ -405,7 +437,10 @@ export function ReviewDialog({ request, action, onClose }: { request: PaymentReq
   const [text, setText] = useState("");
   const value = Number(amount);
   const approving = action === "approve";
-  const reasons = ["Transaction not found", "Amount doesn't match", "Wrong account", "Duplicate of another payment"];
+  const reasons =
+    request.method === "cash"
+      ? ["No cash received at the counter", "Amount doesn't match", "Already on the bill", "Duplicate of another payment"]
+      : ["Transaction not found", "Amount doesn't match", "Wrong account", "Duplicate of another payment"];
 
   const run = useAction(
     () =>
@@ -438,7 +473,7 @@ export function ReviewDialog({ request, action, onClose }: { request: PaymentReq
           {[
             ["Reported", money(request.amount)],
             ["Method", label(request.method)],
-            ["Transaction ID", request.reference],
+            [request.method === "cash" ? "Receipt / paid to" : "Transaction ID", request.reference || "—"],
             ["Paid on", formatDate(request.paidOn)],
           ].map(([k, v]) => (
             <div key={k} className="min-w-0">
@@ -450,7 +485,10 @@ export function ReviewDialog({ request, action, onClose }: { request: PaymentReq
         {approving ? (
           <>
             <p className="text-sm text-ink-2">
-              Check your {label(request.method)} statement for this transaction first. The payment is recorded on {formatDate(request.paidOn)}.
+              {request.method === "cash"
+                ? "Check the cash drawer or with the staff member who took it first."
+                : `Check your ${label(request.method)} statement for this transaction first.`}{" "}
+              The payment is recorded on {formatDate(request.paidOn)}.
             </p>
             <Field
               label="Amount received (NPR)"

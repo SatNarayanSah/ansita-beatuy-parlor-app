@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Card, ConfirmDialog, Icon, Text, useToast } from '@/components/ui';
+import { useT, type Translate } from '@/i18n';
 import { getErrorMessage, paymentRequestService } from '@/services';
 import { useTheme } from '@/theme';
-import type { PaymentRequest } from '@/types';
+import type { PaymentRequest, PaymentRequestMethod } from '@/types';
 import { formatShortDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 
@@ -21,6 +22,13 @@ export const visiblePaymentRequests = (requests: readonly PaymentRequest[]): Pay
   );
 };
 
+/**
+ * "ID 0ABC12" for online payments, "Receipt 123" for cash, or "" when there is none
+ * (cash requests may come without a receipt number).
+ */
+export const paymentReferenceText = (t: Translate, method: PaymentRequestMethod, reference: string): string =>
+  reference ? t(method === 'cash' ? 'payment.ref.receipt' : 'payment.ref.id', { ref: reference }) : '';
+
 interface PaymentRequestStatusProps {
   /** The customer's requests for one bill; only pending and recently rejected ones are shown. */
   requests: readonly PaymentRequest[];
@@ -29,6 +37,7 @@ interface PaymentRequestStatusProps {
 /** Customer view of their "I've paid" requests on a bill: waiting (with Withdraw) or not confirmed (with the reason). */
 export const PaymentRequestStatus = ({ requests }: PaymentRequestStatusProps) => {
   const { colors, spacing } = useTheme();
+  const t = useT();
   const toast = useToast();
   const [withdrawing, setWithdrawing] = useState<PaymentRequest | null>(null);
   const [busy, setBusy] = useState(false);
@@ -54,7 +63,8 @@ export const PaymentRequestStatus = ({ requests }: PaymentRequestStatusProps) =>
     <View style={{ gap: spacing.sm }}>
       {shown.map((request) => {
         const pending = request.status === 'pending';
-        const summary = `${formatCurrency(request.amount)} by ${PAYMENT_METHOD_META[request.method].label} · ID ${request.reference} · paid ${formatShortDate(request.paidOn)}`;
+        const reference = paymentReferenceText(t, request.method, request.reference);
+        const summary = `${formatCurrency(request.amount)} by ${PAYMENT_METHOD_META[request.method].label}${reference ? ` · ${reference}` : ''} · paid ${formatShortDate(request.paidOn)}`;
         return (
           <Card key={request.id} variant="filled" padding="sm" style={{ gap: spacing.xs }}>
             <View style={styles.row}>
@@ -81,7 +91,7 @@ export const PaymentRequestStatus = ({ requests }: PaymentRequestStatusProps) =>
         title="Withdraw this payment?"
         message={
           withdrawing
-            ? `The parlour won’t check your ${formatCurrency(withdrawing.amount)} ${PAYMENT_METHOD_META[withdrawing.method].label} payment (ID ${withdrawing.reference}). Only do this if you sent it by mistake.`
+            ? `The parlour won’t check your ${formatCurrency(withdrawing.amount)} ${PAYMENT_METHOD_META[withdrawing.method].label} payment${withdrawing.reference ? ` (${paymentReferenceText(t, withdrawing.method, withdrawing.reference)})` : ''}. Only do this if you sent it by mistake.`
             : undefined
         }
         confirmLabel="Withdraw"

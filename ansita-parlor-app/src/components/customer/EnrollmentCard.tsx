@@ -16,7 +16,7 @@ interface EnrollmentCardProps {
   onPress?: () => void;
   /** Customer view: their "I've paid" requests for this fee (pending / recently rejected are shown). */
   paymentRequests?: readonly PaymentRequest[];
-  /** "I've paid": shown when there's a fee balance the customer can pay online. */
+  /** "I've paid": shown when there's a fee balance the customer can report paying (online or cash). */
   onPaid?: () => void;
 }
 

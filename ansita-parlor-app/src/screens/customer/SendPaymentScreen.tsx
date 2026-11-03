@@ -28,12 +28,13 @@ import {
 import { serviceNames, useCourseMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, enrollmentService, getErrorMessage, paymentRequestService } from '@/services';
 import {
   selectAmountDue,
   selectFeeDue,
-  selectOnlineMethods,
+  selectPaymentRequestMethods,
   selectPendingTotal,
   useAppointmentStore,
   useBusinessStore,
@@ -41,7 +42,7 @@ import {
   usePaymentRequestStore,
 } from '@/store';
 import { useTheme } from '@/theme';
-import type { ID, OnlinePaymentMethod, PaymentAccount, PaymentRequestTarget } from '@/types';
+import type { ID, OnlinePaymentMethod, PaymentAccount, PaymentRequestMethod, PaymentRequestTarget } from '@/types';
 import { addDaysISO, formatRelativeDay, formatTime12, todayISO } from '@/utils/date';
 import { formatCurrency } from '@/utils/format';
 import { paymentRequestSchema } from '@/utils/formSchemas';
@@ -53,14 +54,17 @@ const MAX_DAYS_BACK = 60;
 /** QR codes need a light background to scan, in dark mode too. */
 const QR_BACKGROUND = '#FFFFFF';
 
-/** "I've paid": the customer paid the parlour's account outside the app and asks the parlour to confirm it. */
+/**
+ * "I've paid": the customer paid the parlour's account outside the app (or paid cash at the parlour
+ * that isn't on the bill yet) and asks the parlour to confirm it.
+ */
 export const SendPaymentScreen = ({ route }: Props) => {
   const { spacing } = useTheme();
   const { targetType, targetId } = route.params;
   const services = useServiceMap();
   const courses = useCourseMap();
   const payments = useBusinessStore((state) => state.payments);
-  const methods = useMemo(() => selectOnlineMethods(payments), [payments]);
+  const methods = useMemo(() => selectPaymentRequestMethods(payments), [payments]);
 
   const query = useServiceQuery(
     async () => {
@@ -138,8 +142,8 @@ export const SendPaymentScreen = ({ route }: Props) => {
                 <EmptyState
                   compact
                   icon="storefront-outline"
-                  title="Online payments are off"
-                  message="The parlour isn’t taking online payments right now. Please pay at the front desk."
+                  title="Payment requests are off"
+                  message="The parlour isn’t taking payment requests in the app right now. Please pay at the front desk."
                 />
               ) : (
                 <SendPaymentForm
@@ -166,23 +170,26 @@ interface SendPaymentFormProps {
   targetId: ID;
   /** Most the customer can claim: the balance due less their pending requests. */
   room: number;
-  methods: readonly OnlinePaymentMethod[];
+  /** Online methods first, then cash. */
+  methods: readonly PaymentRequestMethod[];
   accounts: Record<OnlinePaymentMethod, PaymentAccount>;
 }
 
 const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: SendPaymentFormProps) => {
   const { colors, radius, spacing } = useTheme();
+  const t = useT();
   const navigation = useNavigation();
   const toast = useToast();
   const today = todayISO();
   const earliest = addDaysISO(today, -MAX_DAYS_BACK);
   const schema = useMemo(() => paymentRequestSchema(room, earliest, today), [room, earliest, today]);
-  const { control, handleSubmit, formState } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
+  const { control, handleSubmit, formState, getFieldState, trigger } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { method: methods[0] ?? 'esewa', amount: String(room), reference: '', paidOn: today, proof: null, note: '' },
     mode: 'onTouched',
   });
   const method = useWatch({ control, name: 'method' });
+  const isCash = method === 'cash';
   const { dialog, allowLeave } = useUnsavedChangesGuard(formState.isDirty && !formState.isSubmitting);
 
   const submit = handleSubmit(async (values) => {
@@ -214,7 +221,11 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
                     accessibilityRole="radio"
                     accessibilityState={{ checked: selected }}
                     accessibilityLabel={`Paid by ${meta.label}`}
-                    onPress={() => field.onChange(item)}
+                    onPress={() => {
+                      field.onChange(item);
+                      // The transaction ID is required for online methods only: re-check a shown error.
+                      if (getFieldState('reference').error) void trigger('reference');
+                    }}
                     style={[
                       styles.method,
                       {
@@ -237,10 +248,22 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
         />
       </View>
 
-      <View style={{ gap: spacing.sm }}>
-        <SectionHeader title="2. Pay to" subtitle="Pay in your wallet or bank app first, then come back here" compact />
-        <PaymentAccountDetails method={method} account={accounts[method]} />
-      </View>
+      {method === 'cash' ? (
+        <View style={{ gap: spacing.sm }}>
+          <SectionHeader title={t('sendPayment.cashStep')} compact />
+          <Card variant="filled" padding="sm" style={[styles.line, { gap: spacing.sm }]}>
+            <Icon name="storefront-outline" size={20} color={colors.primary} />
+            <Text variant="bodySmall" tone="secondary" style={styles.flex}>
+              {t('sendPayment.cashHint')}
+            </Text>
+          </Card>
+        </View>
+      ) : (
+        <View style={{ gap: spacing.sm }}>
+          <SectionHeader title="2. Pay to" subtitle="Pay in your wallet or bank app first, then come back here" compact />
+          <PaymentAccountDetails method={method} account={accounts[method]} />
+        </View>
+      )}
 
       <View style={{ gap: spacing.sm }}>
         <SectionHeader title="3. Tell us about the payment" compact />
@@ -257,13 +280,13 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
           <FormInput
             control={control}
             name="reference"
-            label="Transaction ID"
-            required
-            autoCapitalize="characters"
+            label={isCash ? t('sendPayment.cashReference') : 'Transaction ID'}
+            required={!isCash}
+            autoCapitalize={isCash ? 'words' : 'characters'}
             autoCorrect={false}
-            leftIcon="receipt-outline"
+            leftIcon={isCash ? 'person-outline' : 'receipt-outline'}
             maxLength={64}
-            helperText="Shown on the receipt in your wallet app or on your bank statement"
+            helperText={isCash ? t('sendPayment.cashReferenceHelp') : 'Shown on the receipt in your wallet app or on your bank statement'}
           />
           <Controller
             control={control}
@@ -286,11 +309,11 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
             name="proof"
             render={({ field }) => (
               <ImagePickerField
-                label="Screenshot (optional)"
+                label={isCash ? t('sendPayment.cashProof') : 'Screenshot (optional)'}
                 value={field.value}
                 onChange={field.onChange}
                 variant="document"
-                helperText="A screenshot of the payment helps the parlour find it faster."
+                helperText={isCash ? t('sendPayment.cashProofHelp') : 'A screenshot of the payment helps the parlour find it faster.'}
               />
             )}
           />

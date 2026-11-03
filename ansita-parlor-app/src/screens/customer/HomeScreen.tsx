@@ -44,7 +44,7 @@ import {
   selectCurrentUser,
   selectFeeDue,
   selectLiveOffers,
-  selectOnlineMethods,
+  selectPaymentRequestMethods,
   selectPendingTotal,
   selectPointsWorth,
   selectUpcomingAppointments,
@@ -165,7 +165,8 @@ export const HomeScreen = ({ navigation }: Props) => {
   const courses = useCourseMap();
   const customerId = user?.customerId ?? '';
   const loyalty = useBusinessStore((state) => state.loyalty);
-  const canPayOnline = useBusinessStore((state) => selectOnlineMethods(state.payments).length > 0);
+  // Cash is always offered while requests are on, so this only needs the master switch.
+  const canSendPayment = useBusinessStore((state) => selectPaymentRequestMethods(state.payments).length > 0);
   const [openOffer, setOpenOffer] = useState<Offer | null>(null);
 
   // One parallel fetch so the whole screen has a single loading state. Extras that
@@ -394,7 +395,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                       />
                     ) : null}
                   </View>
-                  {canPayOnline && dues.claimable.length > 0 ? (
+                  {canSendPayment && dues.claimable.length > 0 ? (
                     <Button title={t('appointments.paid')} leftIcon="checkmark-done-outline" variant="outline" onPress={sendPayment} fullWidth />
                   ) : null}
                 </Card>

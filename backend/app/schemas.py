@@ -470,8 +470,10 @@ class PaymentRequestInput(CamelModel):
     target_type: Literal["appointment", "enrollment"]
     target_id: str = Field(min_length=1, max_length=64)
     amount: int
-    method: OnlineMethod
-    reference: str = Field(min_length=4, max_length=64)
+    # Online methods, or "cash" handed over at the parlour that isn't on the bill yet.
+    method: OnlineMethod | Literal["cash"]
+    # Transaction ID (required for online methods). For cash: optional receipt no. / who took it.
+    reference: str = Field(default="", max_length=64)
     paid_on: str
     note: str = Field(default="", max_length=300)
     proof: str | None = Field(default=None, max_length=500)

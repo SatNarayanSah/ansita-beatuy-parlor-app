@@ -212,6 +212,16 @@ const en = {
   'admin.offer.removed': 'Offer removed',
   'admin.offer.formHint': 'Optional. Leave empty to apply any automatic offer.',
   'admin.offer.formHintEdit': 'Clear the code to drop it. Unchanged, the current offer is re-checked against the new details.',
+  'sendPayment.cashStep': '2. Paid at the parlour',
+  'sendPayment.cashHint': 'Paid cash at the parlour? Tell us so we can add it to your bill.',
+  'sendPayment.cashReference': 'Receipt no. or who you paid (optional)',
+  'sendPayment.cashReferenceHelp': 'E.g. the number on your receipt, or the name of the person who took the money',
+  'sendPayment.cashProof': 'Photo of the receipt (optional)',
+  'sendPayment.cashProofHelp': 'If you got a receipt, a photo helps the parlour find it faster.',
+  'payment.ref.id': 'ID {ref}',
+  'payment.ref.receipt': 'Receipt {ref}',
+  'payment.ref.idLabel': 'Transaction ID',
+  'payment.ref.receiptLabel': 'Receipt',
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -421,6 +431,16 @@ const ne: Record<TranslationKey, string> = {
   'admin.offer.removed': 'अफर हटाइयो',
   'admin.offer.formHint': 'ऐच्छिक। खाली छोडे स्वतः लागू हुने अफर लाग्छ।',
   'admin.offer.formHintEdit': 'कोड हटाउन खाली गर्नुहोस्। नबदले हालको अफर नयाँ विवरणसँग फेरि जाँचिन्छ।',
+  'sendPayment.cashStep': '2. पार्लरमा तिरिएको',
+  'sendPayment.cashHint': 'पार्लरमा नगद तिर्नुभयो? हामीलाई बताउनुहोस्, हामी यसलाई तपाईंको बिलमा थप्छौं।',
+  'sendPayment.cashReference': 'रसिद नं. वा कसलाई तिर्नुभयो (ऐच्छिक)',
+  'sendPayment.cashReferenceHelp': 'जस्तै रसिदको नम्बर, वा पैसा लिने व्यक्तिको नाम',
+  'sendPayment.cashProof': 'रसिदको फोटो (ऐच्छिक)',
+  'sendPayment.cashProofHelp': 'रसिद पाउनुभएको छ भने, फोटोले पार्लरलाई छिटो पत्ता लगाउन मद्दत गर्छ।',
+  'payment.ref.id': 'ID {ref}',
+  'payment.ref.receipt': 'रसिद {ref}',
+  'payment.ref.idLabel': 'कारोबार ID',
+  'payment.ref.receiptLabel': 'रसिद',
 };
 
 const DICTIONARIES: Record<Language, Record<TranslationKey, string>> = { en, ne };

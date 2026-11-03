@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
+import { paymentReferenceText } from '@/components/customer/PaymentRequestStatus';
 import { Badge, Card, Icon, ListScreen, SegmentedControl, SkeletonCard, Text, type SegmentOption } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useT } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { paymentRequestService } from '@/services';
 import { useNotificationStore, usePaymentRequestStore } from '@/store';
@@ -78,7 +80,9 @@ export const PaymentRequestsScreen = ({ navigation }: Props) => {
 
 const PaymentRequestRow = ({ request, onPress }: { request: PaymentRequest; onPress: () => void }) => {
   const { colors, spacing } = useTheme();
+  const t = useT();
   const meta = PAYMENT_METHOD_META[request.method];
+  const reference = paymentReferenceText(t, request.method, request.reference);
   const status = STATUS_META[request.status];
   const received = request.status === 'approved' && request.approvedAmount !== null && request.approvedAmount !== request.amount;
 
@@ -97,7 +101,7 @@ const PaymentRequestRow = ({ request, onPress }: { request: PaymentRequest; onPr
         </Text>
       </View>
       <Text variant="caption" tone="muted">
-        {meta.label} · ID {request.reference} · paid {formatShortDate(request.paidOn)} · sent {formatTimeAgo(request.createdAt)}
+        {meta.label}{reference ? ` · ${reference}` : ''} · paid {formatShortDate(request.paidOn)} · sent {formatTimeAgo(request.createdAt)}
       </Text>
       <View style={styles.row}>
         <Badge label={status.label} tone={status.tone} size="sm" />

@@ -13,7 +13,7 @@ import { appointmentService, paymentRequestService, reviewService } from '@/serv
 import {
   selectAmountDue,
   selectCurrentUser,
-  selectOnlineMethods,
+  selectPaymentRequestMethods,
   selectPendingTotal,
   selectUpcomingAppointments,
   useAppointmentStore,
@@ -47,7 +47,8 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
 
   useAdoptParam(route.params?.tab, setTab);
 
-  const canPayOnline = useBusinessStore((state) => selectOnlineMethods(state.payments).length > 0);
+  // Cash is always offered while requests are on, so this only needs the master switch.
+  const canSendPayment = useBusinessStore((state) => selectPaymentRequestMethods(state.payments).length > 0);
 
   const query = useServiceQuery(
     async () => {
@@ -117,7 +118,7 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
               onRebook={isUpcoming ? undefined : rebook(appointment)}
               paymentRequests={requests}
               onPaid={
-                canPayOnline && payable && room > 0
+                canSendPayment && payable && room > 0
                   ? () => navigation.navigate('SendPayment', { targetType: 'appointment', targetId: appointment.id })
                   : undefined
               }

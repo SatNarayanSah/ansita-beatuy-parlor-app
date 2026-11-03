@@ -8,7 +8,7 @@ import type { RootStackScreenProps } from '@/navigation/types';
 import { enrollmentService, paymentRequestService } from '@/services';
 import {
   selectFeeDue,
-  selectOnlineMethods,
+  selectPaymentRequestMethods,
   selectPendingTotal,
   useBusinessStore,
   useCourseStore,
@@ -24,7 +24,8 @@ type Props = RootStackScreenProps<'MyCourses'>;
 export const MyCoursesScreen = ({ navigation }: Props) => {
   const { spacing } = useTheme();
   const courses = useCourseMap();
-  const canPayOnline = useBusinessStore((state) => selectOnlineMethods(state.payments).length > 0);
+  // Cash is always offered while requests are on, so this only needs the master switch.
+  const canSendPayment = useBusinessStore((state) => selectPaymentRequestMethods(state.payments).length > 0);
 
   const query = useServiceQuery(
     async () => {
@@ -58,7 +59,7 @@ export const MyCoursesScreen = ({ navigation }: Props) => {
             course={courses.get(enrollment.courseId)}
             paymentRequests={requests}
             onPaid={
-              canPayOnline && enrollment.status !== 'dropped' && room > 0
+              canSendPayment && enrollment.status !== 'dropped' && room > 0
                 ? () => navigation.navigate('SendPayment', { targetType: 'enrollment', targetId: enrollment.id })
                 : undefined
             }

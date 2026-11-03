@@ -27,7 +27,7 @@ interface AppointmentCardProps {
   onReview?: () => void;
   /** The customer's "I've paid" requests for this booking (pending / recently rejected are shown). */
   paymentRequests?: readonly PaymentRequest[];
-  /** "I've paid": shown when there's a balance the customer can pay online. */
+  /** "I've paid": shown when there's a balance the customer can report paying (online or cash). */
   onPaid?: () => void;
 }
 

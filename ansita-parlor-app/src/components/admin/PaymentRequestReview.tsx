@@ -6,10 +6,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { z } from 'zod';
 
 import { PAYMENT_METHOD_META } from '@/components/customer/PaymentMethodPicker';
+import { paymentReferenceText } from '@/components/customer/PaymentRequestStatus';
 import { FormInput } from '@/components/form/FormFields';
 import { Badge, BottomSheet, Button, Card, Chip, Icon, ImageViewer, Input, SectionHeader, Text, useToast } from '@/components/ui';
 import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
+import { useT, type Translate } from '@/i18n';
 import { getErrorMessage, paymentRequestService } from '@/services';
 import { useNotificationStore, usePaymentRequestStore } from '@/store';
 import { useTheme } from '@/theme';
@@ -25,6 +27,22 @@ const REJECT_REASONS: readonly string[] = [
   'Paid to the wrong account',
   'Other',
 ];
+
+const CASH_REJECT_REASONS: readonly string[] = [
+  'No cash received at the counter',
+  'Amount doesn’t match',
+  'Already on the bill',
+  'Other',
+];
+
+const reasonsFor = (request: PaymentRequest | null | undefined): readonly string[] =>
+  request?.method === 'cash' ? CASH_REJECT_REASONS : REJECT_REASONS;
+
+/** " · ID 0ABC12", " · Receipt 123" (cash), or "" when the customer gave none. */
+const referenceSuffix = (t: Translate, request: PaymentRequest): string => {
+  const text = paymentReferenceText(t, request.method, request.reference);
+  return text ? ` · ${text}` : '';
+};
 
 interface PendingPaymentRequestsProps {
   targetType: PaymentRequestTarget;
@@ -129,6 +147,7 @@ interface PaymentRequestCardProps {
 /** What the customer reported: amount, method, transaction ID, date, note and screenshot (tap to enlarge). */
 export const PaymentRequestCard = ({ request, due, onApprove, onReject }: PaymentRequestCardProps) => {
   const { colors, radius, spacing } = useTheme();
+  const t = useT();
   const [proofOpen, setProofOpen] = useState(false);
   const meta = PAYMENT_METHOD_META[request.method];
 
@@ -150,12 +169,14 @@ export const PaymentRequestCard = ({ request, due, onApprove, onReject }: Paymen
         </Text>
       </View>
       <View style={{ gap: 2 }}>
-        <Text variant="bodySmall">
-          <Text variant="label">Transaction ID: </Text>
-          <Text variant="bodySmall" selectable>
-            {request.reference}
+        {request.reference ? (
+          <Text variant="bodySmall">
+            <Text variant="label">{t(request.method === 'cash' ? 'payment.ref.receiptLabel' : 'payment.ref.idLabel')}: </Text>
+            <Text variant="bodySmall" selectable>
+              {request.reference}
+            </Text>
           </Text>
-        </Text>
+        ) : null}
         <Text variant="bodySmall" tone="secondary">
           Paid on {formatShortDate(request.paidOn)} · by {request.customerName}
         </Text>
@@ -214,6 +235,7 @@ interface ApprovePaymentSheetProps {
 
 const ApprovePaymentSheet = ({ request, due, loading, error, onSubmit, onClose }: ApprovePaymentSheetProps) => {
   const { spacing } = useTheme();
+  const t = useT();
   const max = Math.max(1, due);
   const schema = useMemo(() => approvePaymentSchema(max), [max]);
   const initial = String(Math.min(request?.amount ?? 0, max));
@@ -234,7 +256,7 @@ const ApprovePaymentSheet = ({ request, due, loading, error, onSubmit, onClose }
       visible={request !== null}
       onClose={onClose}
       title="Approve payment"
-      subtitle={request ? `${request.customerName} · ${PAYMENT_METHOD_META[request.method].label} · ID ${request.reference}` : undefined}
+      subtitle={request ? `${request.customerName} · ${PAYMENT_METHOD_META[request.method].label}${referenceSuffix(t, request)}` : undefined}
       footer={<Button title="Approve & record" leftIcon="checkmark-circle-outline" loading={loading} onPress={() => void submit()} style={styles.flex} fullWidth />}
     >
       <View style={{ gap: spacing.lg }}>
@@ -276,13 +298,15 @@ interface RejectPaymentSheetProps {
 
 const RejectPaymentSheet = ({ request, loading, error, onSubmit, onClose }: RejectPaymentSheetProps) => {
   const { spacing } = useTheme();
-  const [reason, setReason] = useState<string>(REJECT_REASONS[0] ?? 'Other');
+  const t = useT();
+  const reasons = reasonsFor(request);
+  const [reason, setReason] = useState<string>(reasons[0] ?? 'Other');
   const [details, setDetails] = useState('');
   const [missing, setMissing] = useState(false);
 
   // Fresh form each time the sheet opens for a request.
   useAdoptParam(request?.id, () => {
-    setReason(REJECT_REASONS[0] ?? 'Other');
+    setReason(reasonsFor(request)[0] ?? 'Other');
     setDetails('');
     setMissing(false);
   });
@@ -302,7 +326,7 @@ const RejectPaymentSheet = ({ request, loading, error, onSubmit, onClose }: Reje
       visible={request !== null}
       onClose={onClose}
       title="Reject payment?"
-      subtitle={request ? `${formatCurrency(request.amount)} · ${PAYMENT_METHOD_META[request.method].label} · ID ${request.reference}` : undefined}
+      subtitle={request ? `${formatCurrency(request.amount)} · ${PAYMENT_METHOD_META[request.method].label}${referenceSuffix(t, request)}` : undefined}
       footer={
         <>
           <Button title="Back" variant="outline" onPress={onClose} style={styles.flex} fullWidth />
@@ -315,7 +339,7 @@ const RejectPaymentSheet = ({ request, loading, error, onSubmit, onClose }: Reje
           Reason (the customer sees this)
         </Text>
         <View style={[styles.chips, { gap: spacing.sm }]}>
-          {REJECT_REASONS.map((item) => (
+          {reasons.map((item) => (
             <Chip key={item} label={item} selected={reason === item} onPress={() => setReason(item)} />
           ))}
         </View>
