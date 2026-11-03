@@ -69,8 +69,8 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
         {({ customer, entries, earlier }) => {
           const { current, next } = tierFor(customer.loyaltyPoints);
           return (
-            <View style={{ gap: spacing.xl }}>
-              <View style={[styles.hero, { backgroundColor: colors.accent, borderRadius: radius.xl, padding: spacing.xl, gap: spacing.sm }]}>
+            <View style={{ gap: spacing.lg }}>
+              <View style={[styles.hero, { backgroundColor: colors.accent, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.xs }]}>
                 <View style={styles.row}>
                   <Icon name="diamond" size={22} color={colors.highlight} />
                   <Text variant="overline" color={colors.onAccent}>
@@ -103,7 +103,7 @@ export const LoyaltyHistoryScreen = (_props: Props) => {
                 </Text>
               </Card>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Points history" compact />
                 <Card padding="md">
                   {entries.map(({ key, appointment, points }, index) => (

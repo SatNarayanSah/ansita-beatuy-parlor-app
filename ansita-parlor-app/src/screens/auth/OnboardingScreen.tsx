@@ -74,7 +74,7 @@ const SlideView = ({ slide, index, width, scrollX }: SlideViewProps) => {
       <Animated.View style={[styles.art, artStyle]}>
         <View style={[styles.artOuter, { backgroundColor: tone.bg }]}>
           <View style={[styles.artInner, { backgroundColor: colors.surface }]}>
-            <Icon name={slide.icon} size={64} color={tone.fg} />
+            <Icon name={slide.icon} size={54} color={tone.fg} />
           </View>
         </View>
         <View style={[styles.bubble, styles.bubbleTop, shadows.md, { backgroundColor: colors.surface }]}>
@@ -158,7 +158,7 @@ export const OnboardingScreen = () => {
         getItemLayout={(_, itemIndex) => ({ length: width, offset: width * itemIndex, index: itemIndex })}
       />
 
-      <View style={{ padding: spacing.xxl, gap: spacing.xxl }}>
+      <View style={{ padding: spacing.xl, gap: spacing.xl }}>
         <View style={styles.dots} accessibilityLabel={`Slide ${index + 1} of ${SLIDES.length}`}>
           {SLIDES.map((slide, dotIndex) => (
             <Dot key={slide.key} index={dotIndex} width={width} scrollX={scrollX} />
@@ -175,9 +175,9 @@ const styles = StyleSheet.create({
   topBar: { height: 48, alignItems: 'flex-end', justifyContent: 'center' },
   skipPlaceholder: { height: 36 },
   slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  art: { width: 240, height: 240, alignItems: 'center', justifyContent: 'center' },
-  artOuter: { width: 220, height: 220, borderRadius: 110, alignItems: 'center', justifyContent: 'center' },
-  artInner: { width: 140, height: 140, borderRadius: 70, alignItems: 'center', justifyContent: 'center' },
+  art: { width: 200, height: 200, alignItems: 'center', justifyContent: 'center' },
+  artOuter: { width: 184, height: 184, borderRadius: 92, alignItems: 'center', justifyContent: 'center' },
+  artInner: { width: 118, height: 118, borderRadius: 59, alignItems: 'center', justifyContent: 'center' },
   bubble: {
     position: 'absolute',
     width: 52,

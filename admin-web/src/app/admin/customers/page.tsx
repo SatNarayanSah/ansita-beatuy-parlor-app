@@ -20,7 +20,7 @@ import {
   Tabs,
 } from "@/components/ui";
 import { api } from "@/lib/api";
-import { formatDate, label, money, relativeDay, time12, timeAgo } from "@/lib/format";
+import { billTotal, formatDate, label, money, relativeDay, time12, timeAgo } from "@/lib/format";
 import { useAction, useAppointments, useCustomers, useCustomerStats, useLookups } from "@/lib/queries";
 import type { Customer, CustomerTag } from "@/lib/types";
 import { CUSTOMER_TAGS, CustomerForm } from "./_form";
@@ -97,7 +97,7 @@ function CustomerDrawer({ customer, onClose, onEdit }: { customer: Customer | nu
         }
       >
         {c && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <motion.div initial={{ scale: 0.6, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 260, damping: 16 }}>
                 <Avatar name={c.name} src={c.avatar} size={64} />
@@ -165,7 +165,7 @@ function CustomerDrawer({ customer, onClose, onEdit }: { customer: Customer | nu
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-ink">{a.serviceIds.map((id) => lookups.service.get(id)?.name).filter(Boolean).join(", ")}</p>
                         <p className="text-xs text-muted">
-                          {relativeDay(a.date)} · {time12(a.startTime)} · {money(a.totalPrice)}
+                          {relativeDay(a.date)} · {time12(a.startTime)} · {money(billTotal(a))}
                         </p>
                       </div>
                       <StatusBadge status={a.status} />
@@ -212,7 +212,7 @@ export default function CustomersPage() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <SearchInput value={query} onChange={setQuery} placeholder="Search name, phone or email" className="lg:w-80" />
         <Tabs
           value={tag}
@@ -250,7 +250,7 @@ export default function CustomersPage() {
                 animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: Math.min(i, 16) * 0.035, type: "spring", stiffness: 260, damping: 24 } }}
                 exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
                 onClick={() => setSelectedId(c.id)}
-                className="group hover-lift relative cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface p-5 text-left shadow-soft"
+                className="group hover-lift relative cursor-pointer overflow-hidden rounded-2xl border border-line bg-surface p-4 text-left shadow-soft"
               >
                 <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft opacity-70 transition-opacity group-hover:opacity-100" />
                 <div className="relative flex items-start justify-between">

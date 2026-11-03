@@ -13,8 +13,8 @@ import type { Customer, Gender, User } from "@/lib/types";
 
 function Section({ icon, title, subtitle, children, delay = 0 }: { icon: React.ReactNode; title: string; subtitle?: string; children: React.ReactNode; delay?: number }) {
   return (
-    <Card initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, type: "spring", stiffness: 220, damping: 24 }} className="p-5 sm:p-6">
-      <div className="mb-5 flex items-center gap-3">
+    <Card initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, type: "spring", stiffness: 220, damping: 24 }} className="p-4 sm:p-4">
+      <div className="mb-4 flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-soft to-plum-soft text-primary">{icon}</span>
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
@@ -190,9 +190,9 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-4xl">
       <PageHeader eyebrow="Account" title="Profile" subtitle="Keep your details up to date so we can reach you." />
 
-      <Card initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="relative mb-6 overflow-hidden p-6">
+      <Card initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="relative mb-4 overflow-hidden p-4">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary-soft/70 via-plum-soft/40 to-gold-soft/60" />
-        <div className="relative flex flex-wrap items-center gap-5">
+        <div className="relative flex flex-wrap items-center gap-4">
           <motion.div initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 220, damping: 14 }}>
             <Avatar name={user.name} src={user.avatar} size={76} />
           </motion.div>
@@ -222,7 +222,7 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <Section icon={<UserRound className="h-5 w-5" />} title="Account" subtitle="Used to sign in and for booking updates." delay={0.05}>
           <AccountForm key={`${user.name}|${user.email}|${user.phone}`} user={user} />
         </Section>

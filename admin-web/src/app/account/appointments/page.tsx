@@ -148,7 +148,7 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
         }
       >
         {a && (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-line bg-bg/50 p-3">
                 <p className="text-[11px] tracking-wider text-muted uppercase">Date</p>
@@ -191,7 +191,7 @@ function DetailDrawer({ appointment, names, onClose }: { appointment: Appointmen
                 })}
                 <li className="flex items-center justify-between px-4 py-2.5 text-sm font-semibold">
                   <span className="text-ink">Total</span>
-                  <span className="text-primary-dark">{money(a.totalPrice)}</span>
+                  <span className="text-primary-dark">{billTotal(a) < a.totalPrice && <span className="mr-1.5 text-xs font-normal text-muted line-through">{money(a.totalPrice)}</span>}{money(billTotal(a))}</span>
                 </li>
               </ul>
             </section>
@@ -305,7 +305,7 @@ export default function MyAppointmentsPage() {
       />
 
       <Tabs
-        className="mb-5"
+        className="mb-4"
         value={tab}
         onChange={setTab}
         options={[
@@ -372,7 +372,7 @@ export default function MyAppointmentsPage() {
                         {member && <Avatar name={member.name} src={member.avatar} size={22} />}
                         {member?.name}
                       </span>
-                      <span className="text-sm font-semibold text-primary-dark">{money(a.totalPrice)}</span>
+                      <span className="text-sm font-semibold text-primary-dark">{money(billTotal(a))}</span>
                     </div>
                   </div>
                 </motion.button>

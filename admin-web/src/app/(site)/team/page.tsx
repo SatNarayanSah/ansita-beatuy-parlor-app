@@ -72,7 +72,7 @@ function StaffDrawer({ member, onClose }: { member: Staff | null; onClose: () =>
       }
     >
       {member && (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Avatar name={member.name} src={member.avatar} size={72} />
             <div>
@@ -138,11 +138,11 @@ export default function TeamPage() {
         }
         subtitle="Tap anyone to see their working days and what clients say about them."
       />
-      <Container className="py-12">
+      <Container className="py-8">
         {staff.isError ? (
           <ErrorState error={staff.error} onRetry={() => staff.refetch()} />
         ) : staff.isLoading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-80" />
             ))}
@@ -150,7 +150,7 @@ export default function TeamPage() {
         ) : list.length === 0 ? (
           <EmptyState icon={<UserRound className="h-7 w-7" />} title="Team coming soon" />
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {list.map((member, i) => (
               <StaffCard key={member.id} member={member} categories={categoryMap} index={i} onClick={() => setSelected(member)} />
             ))}

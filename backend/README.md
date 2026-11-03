@@ -100,6 +100,13 @@ All endpoints except auth and public catalogue reads need `Authorization: Bearer
 
 Not on the server: the demo-only helpers `loginAsDemo`, `switchDemoRole`, `getDemoAccounts` and `demoService.resetDemoData`.
 
+## Security notes
+
+- **Forgotten admin password:** run `python -m app.set_password <admin email>` on the server (Render: the service's Shell tab). Admin accounts never receive a reset code through the API.
+- **Reset codes:** `EXPOSE_RESET_CODE=true` returns customer reset codes in the API response so the app can show them. Anyone who knows a customer's email could then reset that password. Set it to `false` once codes are sent by email/SMS.
+- **Rate limits** (`app/rate_limit.py`, in memory, per process): failed logins, reset requests and codes, sign-ups and the contact form. Requests over the limit get HTTP 429.
+- Set `CORS_ORIGINS` to the website's address and `PUBLIC_URL` to the API's address in production.
+
 ## Not done yet
 
 - **Connecting the app.** Follow the app README's *Backend Migration Guide*: replace `simulateRequest` with a `fetch` wrapper that uses `EXPO_PUBLIC_API_URL` and stores the token in `expo-secure-store`, then swap each service body for the matching call above.

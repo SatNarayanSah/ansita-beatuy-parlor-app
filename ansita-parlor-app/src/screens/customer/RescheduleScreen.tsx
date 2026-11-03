@@ -62,7 +62,7 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
     <Screen refreshing={query.refreshing} onRefresh={() => void query.refetch()}>
       <QueryState query={query} skeleton={<Skeleton height={120} radius={radius.lg} />}>
         {(current) => (
-          <View style={{ gap: spacing.xl }}>
+          <View style={{ gap: spacing.lg }}>
             <Card variant="filled" style={{ gap: spacing.xs }}>
               <Text variant="overline" tone="muted">
                 Current booking
@@ -78,7 +78,7 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
               ) : null}
             </Card>
 
-            <View style={{ gap: spacing.md }}>
+            <View style={{ gap: spacing.sm }}>
               <SectionHeader title="New date" compact />
               <Card padding="sm">
                 <DateCalendar
@@ -94,7 +94,7 @@ export const RescheduleScreen = ({ navigation, route }: Props) => {
             </View>
 
             {date ? (
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="New time" subtitle={formatDisplayDate(date)} compact />
                 {!slots.loading && (slots.data?.length ?? 0) === 0 ? (
                   <Card variant="outlined" padding="none">

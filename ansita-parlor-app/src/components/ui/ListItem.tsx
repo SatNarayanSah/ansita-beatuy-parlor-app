@@ -66,7 +66,7 @@ export const ListItem = ({
       disabled={disabled || (!onPress && !onLongPress)}
       style={({ pressed }) => [
         styles.row,
-        { paddingVertical: compact ? spacing.xs + 2 : spacing.sm + 2, gap: spacing.md },
+        { paddingVertical: compact ? spacing.xs + 2 : spacing.sm, gap: spacing.md },
         pressed && { backgroundColor: colors.surfaceAlt },
         disabled && styles.disabled,
         style,

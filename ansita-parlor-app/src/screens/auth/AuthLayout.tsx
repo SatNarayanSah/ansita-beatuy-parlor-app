@@ -38,7 +38,7 @@ export const AuthLayout = ({ title, subtitle, onBack, showLogo = false, children
         ) : null}
 
         <Animated.View entering={FadeInDown.duration(400)} style={[showLogo && styles.centered, { gap: spacing.sm }]}>
-          {showLogo ? <BrandLogo size={76} style={{ marginBottom: spacing.md }} /> : null}
+          {showLogo ? <BrandLogo size={68} style={{ marginBottom: spacing.sm }} /> : null}
           <Text variant="h1" align={showLogo ? 'center' : 'left'} accessibilityRole="header">
             {title}
           </Text>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   // Forms read best at phone width; on tablets they are centred.
   content: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center' },
   back: { alignSelf: 'flex-start' },
-  centered: { alignItems: 'center', marginTop: 24 },
+  centered: { alignItems: 'center', marginTop: 12 },
   footer: { marginTop: 'auto', alignItems: 'center' },
   banner: { flexDirection: 'row', alignItems: 'flex-start' },
   bannerText: { flex: 1 },

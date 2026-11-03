@@ -51,12 +51,12 @@ export const EmptyState = ({
 }: EmptyStateProps) => {
   const { colors, spacing } = useTheme();
   const tones = getToneColors(colors, tone);
-  const outer = compact ? 80 : 112;
-  const inner = compact ? 56 : 76;
+  const outer = compact ? 72 : 96;
+  const inner = compact ? 52 : 66;
 
   return (
     <Animated.View entering={FadeIn.duration(250)} style={[styles.container, { padding: compact ? spacing.md : spacing.xl, gap: spacing.sm }, style]}>
-      <View style={[styles.illustration, { width: outer + 16, height: outer + 16 }]}>
+      <View style={[styles.illustration, { width: outer + 12, height: outer + 12 }]}>
         <View style={[styles.circle, { width: outer, height: outer, borderRadius: outer / 2, backgroundColor: tones.bg }]}>
           <View
             style={[
@@ -64,13 +64,13 @@ export const EmptyState = ({
               { width: inner, height: inner, borderRadius: inner / 2, backgroundColor: colors.surface, borderColor: tones.bg },
             ]}
           >
-            <Icon name={icon} size={compact ? 24 : 34} color={tones.fg} />
+            <Icon name={icon} size={compact ? 22 : 30} color={tones.fg} />
           </View>
         </View>
         <Sparkle size={compact ? 14 : 18} color={colors.highlight} style={{ top: 6, right: 10 }} />
         <Sparkle size={compact ? 10 : 12} color={colors.primaryMuted} style={{ bottom: 14, left: 6 }} />
-        <View style={[styles.dot, { backgroundColor: colors.highlight, top: compact ? 30 : 40, left: 4 }]} />
-        <View style={[styles.dot, { backgroundColor: colors.primaryMuted, bottom: 4, right: compact ? 24 : 36 }]} />
+        <View style={[styles.dot, { backgroundColor: colors.highlight, top: compact ? 26 : 34, left: 4 }]} />
+        <View style={[styles.dot, { backgroundColor: colors.primaryMuted, bottom: 4, right: compact ? 22 : 30 }]} />
       </View>
 
       <Text variant={compact ? 'h3' : 'h2'} align="center">

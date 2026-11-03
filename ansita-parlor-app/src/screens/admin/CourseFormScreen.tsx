@@ -197,7 +197,7 @@ export const CourseFormScreen = ({ navigation, route }: Props) => {
               />
             </Card>
 
-            <View style={{ gap: spacing.md }}>
+            <View style={{ gap: spacing.sm }}>
               <SectionHeader
                 title="Syllabus"
                 subtitle={`${modules.fields.length} modules · ${totalHours} hours`}

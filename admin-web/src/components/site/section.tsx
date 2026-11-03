@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /** Page-width container used by every public page. */
 export function Container({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("mx-auto w-full max-w-7xl px-4 sm:px-6", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full max-w-7xl px-4 sm:px-4", className)}>{children}</div>;
 }
 
 /** A section that fades up once when scrolled into view. */
@@ -51,7 +51,7 @@ export function SectionHeading({
   return (
     <Reveal
       className={cn(
-        "mb-10 flex flex-col gap-4",
+        "mb-7 flex flex-col gap-4",
         align === "center" ? "items-center text-center" : "sm:flex-row sm:items-end sm:justify-between",
       )}
     >
@@ -68,7 +68,7 @@ export function SectionHeading({
 /** Compact animated hero for inner pages. */
 export function PageHero({ eyebrow, title, subtitle, children }: { eyebrow: string; title: React.ReactNode; subtitle?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <section className="relative overflow-hidden border-b border-line/60 pt-14 pb-12 sm:pt-20 sm:pb-16">
+    <section className="relative overflow-hidden border-b border-line/60 pt-10 pb-8 sm:pt-12 sm:pb-10">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 left-1/4 h-72 w-72 animate-float rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute -right-10 top-10 h-64 w-64 animate-float rounded-full bg-gold/15 blur-3xl [animation-delay:-5s]" />
@@ -101,7 +101,7 @@ export function PageHero({ eyebrow, title, subtitle, children }: { eyebrow: stri
           </motion.p>
         )}
         {children && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-8">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="mt-6">
             {children}
           </motion.div>
         )}

@@ -317,7 +317,7 @@ export function Dropdown<T extends string>({
                       </motion.li>
                     );
                   })}
-                  {withSearch && !visible.length && <li className="px-3 py-6 text-center text-sm text-muted">No matches</li>}
+                  {withSearch && !visible.length && <li className="px-3 py-4 text-center text-sm text-muted">No matches</li>}
                 </ul>
               </motion.div>
             )}

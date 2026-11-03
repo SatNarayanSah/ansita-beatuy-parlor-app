@@ -84,7 +84,7 @@ export function EnquiryForm({ defaultSubject = "General enquiry", subjects = SUB
           key="sent"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-3 py-10 text-center"
+          className="flex flex-col items-center gap-3 py-7 text-center"
         >
           <SuccessMark />
           <h3 className="font-display text-2xl font-semibold text-ink">Message sent!</h3>

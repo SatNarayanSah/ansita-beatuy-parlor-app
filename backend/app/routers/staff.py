@@ -66,13 +66,19 @@ def list_staff(query: str = "", active_only: bool = Query(False, alias="activeOn
                               func.lower(Staff.email).like(needle)))
     rows = to_list(list(db.scalars(stmt.order_by(Staff.name))))
     if user is None:
-        rows = [{**row, "phone": "", "email": ""} for row in rows]
+        rows = [_public(row) for row in rows]
     return rows
 
 
+def _public(row: dict) -> dict:
+    """What visitors (not signed in) see: no personal phone or email."""
+    return {**row, "phone": "", "email": ""}
+
+
 @router.get("/{id_}")
-def get_staff(id_: str, db: Session = Depends(get_db)):
-    return to_dict(_staff(db, id_))
+def get_staff(id_: str, user: User | None = Depends(get_optional_user), db: Session = Depends(get_db)):
+    row = to_dict(_staff(db, id_))
+    return _public(row) if user is None else row
 
 
 @router.post("", status_code=201)

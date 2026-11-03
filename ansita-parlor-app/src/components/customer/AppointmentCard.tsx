@@ -60,7 +60,7 @@ const AppointmentCardBase = ({
   ].filter(Boolean);
 
   return (
-    <Card style={{ gap: spacing.md }}>
+    <Card style={{ gap: spacing.sm }}>
       <View style={styles.top}>
         <View style={[styles.dateBlock, { backgroundColor: colors.primarySoft, borderRadius: radius.md }]}>
           <Text variant="overline" tone="primary">
@@ -95,7 +95,7 @@ const AppointmentCardBase = ({
         <StatusPill kind="appointment" status={appointment.status} size="sm" />
       </View>
 
-      <View style={[styles.footer, { borderTopColor: colors.border, paddingTop: spacing.md }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border, paddingTop: spacing.sm }]}>
         <View style={styles.flex}>
           <Text variant="label">{formatCurrency(appointment.totalPrice)}</Text>
           {appointment.offerDiscount > 0 && appointment.status !== 'cancelled' ? (
@@ -140,7 +140,7 @@ export const AppointmentCard = memo(AppointmentCardBase, sameDataProps);
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  dateBlock: { width: 58, paddingVertical: 8, alignItems: 'center' },
+  dateBlock: { width: 56, paddingVertical: 6, alignItems: 'center' },
   day: { lineHeight: 26 },
   body: { flex: 1, gap: 4 },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4 },

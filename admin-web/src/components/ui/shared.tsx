@@ -53,7 +53,7 @@ export function StatCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07, type: "spring", stiffness: 240, damping: 24 }}
-      className="group relative h-full overflow-hidden p-4 sm:p-5"
+      className="group relative h-full overflow-hidden p-4 sm:p-4"
     >
       <div
         className={cn(

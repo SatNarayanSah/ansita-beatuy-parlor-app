@@ -76,7 +76,7 @@ function StaffEditor({ member, onClose }: { member: Staff | null; onClose: () =>
         </>
       }
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Full name" className="sm:col-span-2">
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} autoFocus />
@@ -193,7 +193,7 @@ function StaffDetail({ member, onClose, onEdit }: { member: Staff; onClose: () =
         </Button>
       }
     >
-      <div className="mb-5 flex items-center gap-4">
+      <div className="mb-4 flex items-center gap-4">
         <Avatar name={member.name} src={member.avatar} size={64} />
         <div className="flex flex-col gap-1 text-sm text-ink-2">
           {member.phone && (
@@ -339,7 +339,7 @@ export default function StaffPage() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs
           value={filter}
           onChange={setFilter}
@@ -376,7 +376,7 @@ export default function StaffPage() {
                   animate={{ opacity: member.isActive ? 1 : 0.65, y: 0, transition: { delay: Math.min(i, 12) * 0.04 } }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   onClick={() => setViewing(member)}
-                  className="group relative cursor-pointer overflow-hidden p-5"
+                  className="group relative cursor-pointer overflow-hidden p-4"
                 >
                   <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft opacity-70 transition-opacity group-hover:opacity-100" />
                   <div className="relative flex items-start justify-between">

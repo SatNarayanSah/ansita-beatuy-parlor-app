@@ -24,14 +24,16 @@ DEFAULT_MESSAGES: dict[str, str] = {
 class ApiError(Exception):
     """Mirrors the app's ApiError: the JSON body is {"code", "message"}."""
 
-    def __init__(self, code: ApiErrorCode, message: str | None = None):
+    def __init__(self, code: ApiErrorCode, message: str | None = None, *, status_code: int | None = None):
         self.code = code
         self.message = message or DEFAULT_MESSAGES[code]
+        # Only for statuses the app has no code for (429 Too Many Requests): the body keeps a known code.
+        self._status_code = status_code
         super().__init__(self.message)
 
     @property
     def status_code(self) -> int:
-        return STATUS_BY_CODE[self.code]
+        return self._status_code or STATUS_BY_CODE[self.code]
 
 
 T = TypeVar("T")

@@ -52,7 +52,7 @@ const DashboardSkeleton = () => {
   const { spacing, radius } = useTheme();
   return (
     <View style={{ gap: spacing.md }}>
-      <View style={[styles.grid, { gap: spacing.md }]}>
+      <View style={[styles.grid, { gap: spacing.sm }]}>
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} height={104} radius={radius.lg} style={styles.cell} />
         ))}
@@ -154,7 +154,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
       <QueryState query={query} skeleton={<DashboardSkeleton />}>
         {() =>
           view ? (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               {paymentsToVerify > 0 ? (
                 <Card padding="sm">
                   <ListItem
@@ -168,7 +168,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                   />
                 </Card>
               ) : null}
-              <View style={[styles.grid, { gap: spacing.md }]}>
+              <View style={[styles.grid, { gap: spacing.sm }]}>
                 <StatCard
                   label="Today's bookings"
                   value={view.todayCount}
@@ -220,7 +220,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                 <StatusDonutChart counts={view.statuses} />
               </Card>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader
                   title="Pending approval"
                   subtitle={view.pending.length ? `${view.pending.length} requests` : undefined}
@@ -248,7 +248,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                 )}
               </View>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Still to come today" actionLabel="Calendar" onAction={() => navigation.navigate('Appointments', { view: 'schedule', date: today })} />
                 {view.upcomingToday.length === 0 ? (
                   <Card variant="outlined" padding="none">
@@ -275,7 +275,7 @@ export const DashboardScreen = ({ navigation }: Props) => {
                 )}
               </View>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Quick actions" />
                 <View style={[styles.actions, { gap: spacing.sm }]}>
                   {actions.map((action) => {

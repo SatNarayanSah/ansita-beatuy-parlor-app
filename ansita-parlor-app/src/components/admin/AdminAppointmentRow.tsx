@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, StatusPill, Text } from '@/components/ui';
 import { firstName, serviceNames } from '@/hooks/useCatalog';
+import { selectDiscountTotal } from '@/store';
 import { useTheme } from '@/theme';
 import type { Appointment, Customer, ID, Service, Staff } from '@/types';
 import { formatTime12 } from '@/utils/date';
@@ -33,7 +34,7 @@ const AdminAppointmentRowBase = ({ appointment, customer, services, staff, onPre
       accessibilityLabel={`${formatTime12(appointment.startTime)}, ${customer?.name ?? 'Customer'}, ${serviceNames(appointment.serviceIds, services)}, ${appointment.status}`}
       style={({ pressed }) => [
         styles.row,
-        { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, gap: spacing.md, borderLeftColor: status.fg },
+        { backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.md, gap: spacing.sm + 2, borderLeftColor: status.fg },
         pressed && styles.pressed,
       ]}
     >
@@ -55,8 +56,8 @@ const AdminAppointmentRowBase = ({ appointment, customer, services, staff, onPre
         <Text variant="caption" tone="secondary" numberOfLines={1}>
           {serviceNames(appointment.serviceIds, services)}
         </Text>
-        <Text variant="caption" tone="muted">
-          {firstName(staff.get(appointment.staffId)?.name)} · {formatCurrency(appointment.totalPrice)}
+        <Text variant="caption" tone="muted" numberOfLines={1}>
+          {firstName(staff.get(appointment.staffId)?.name)} · {formatCurrency(Math.max(0, appointment.totalPrice - selectDiscountTotal(appointment)))}
         </Text>
       </View>
       {onConfirm ? (
@@ -73,6 +74,6 @@ export const AdminAppointmentRow = memo(AdminAppointmentRowBase, sameDataProps);
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', borderLeftWidth: 4 },
   pressed: { opacity: 0.85 },
-  time: { width: 64 },
+  time: { width: 60 },
   body: { flex: 1, gap: 1 },
 });

@@ -74,9 +74,9 @@ export const FAB = ({
           shadows.lg,
           {
             backgroundColor: background,
-            borderRadius: label ? radius.xl : 30,
+            borderRadius: label ? radius.xl : 27,
             paddingHorizontal: label ? spacing.xl : 0,
-            width: label ? undefined : 58,
+            width: label ? undefined : 54,
           },
         ]}
       >
@@ -93,5 +93,5 @@ export const FAB = ({
 
 const styles = StyleSheet.create({
   container: { position: 'absolute' },
-  button: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  button: { height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 });

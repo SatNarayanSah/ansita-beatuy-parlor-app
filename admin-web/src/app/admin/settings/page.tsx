@@ -18,7 +18,7 @@ const SECTIONS: Section[] = ["profile", "holidays", "loyalty", "payments", "aler
 function Panel({ icon, title, description, children, footer }: { icon: React.ReactNode; title: string; description: string; children: React.ReactNode; footer?: React.ReactNode }) {
   return (
     <Card initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 240, damping: 26 }} className="overflow-hidden">
-      <div className="flex items-start gap-4 border-b border-line p-5">
+      <div className="flex items-start gap-4 border-b border-line p-4">
         <motion.span
           initial={{ scale: 0, rotate: -30 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -32,8 +32,8 @@ function Panel({ icon, title, description, children, footer }: { icon: React.Rea
           <p className="text-sm text-muted">{description}</p>
         </div>
       </div>
-      <div className="p-5">{children}</div>
-      {footer && <div className="flex justify-end gap-2 border-t border-line bg-bg/50 px-5 py-3">{footer}</div>}
+      <div className="p-4">{children}</div>
+      {footer && <div className="flex justify-end gap-2 border-t border-line bg-bg/50 px-4 py-3">{footer}</div>}
     </Card>
   );
 }
@@ -115,7 +115,7 @@ function HolidaysSection({ holidays }: { holidays: BusinessSettings["holidays"] 
   return (
     <Panel icon={<CalendarOff className="h-5 w-5" />} title="Holidays" description="No bookings can be made on these days. Days that already have bookings can't be closed.">
       <form
-        className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end"
+        className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
           if (date && name.trim()) add.mutate();
@@ -208,7 +208,7 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
         </Button>
       }
     >
-      <div className="mb-5 flex items-center justify-between rounded-xl border border-line p-4">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-line p-4">
         <div>
           <p className="text-sm font-semibold text-ink">Loyalty programme</p>
           <p className="text-xs text-muted">{form.enabled ? "Points are being awarded." : "No points are awarded while off."}</p>
@@ -230,7 +230,7 @@ function LoyaltySection({ loyalty }: { loyalty: LoyaltyRules }) {
         key={`${earned}-${value}`}
         initial={{ scale: 0.97, opacity: 0.6 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="mt-5 rounded-2xl bg-gradient-to-br from-gold-soft to-primary-soft p-4 text-sm text-ink"
+        className="mt-4 rounded-2xl bg-gradient-to-br from-gold-soft to-primary-soft p-4 text-sm text-ink"
       >
         A <b>Rs. 1,000</b> visit earns <b className="text-primary-dark">{earned} points</b>, worth <b className="text-gold-text">{money(earned * value)}</b> off a
         later visit, once they have <b>{Number(form.minRedeemPoints) || 0} points</b>.
@@ -277,7 +277,7 @@ function PaymentsSection({ payments }: { payments: PaymentSettings }) {
         </Button>
       }
     >
-      <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-line p-4">
+      <div className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-line p-4">
         <div>
           <p className="text-sm font-semibold text-ink">&ldquo;I&apos;ve paid&rdquo; requests</p>
           <p className="text-xs text-muted">{requests ? "Customers can tell you they've paid online." : "Off: customers pay at the counter only."}</p>
@@ -289,7 +289,7 @@ function PaymentsSection({ payments }: { payments: PaymentSettings }) {
         <Tabs
           value={method}
           onChange={setMethod}
-          className="mb-5"
+          className="mb-4"
           options={ONLINE_METHODS.map((m) => ({ value: m, label: `${label(m)}${accounts[m].enabled ? " ✓" : ""}` }))}
         />
         <AnimatePresence mode="wait">
@@ -400,7 +400,7 @@ function AccountSection() {
   const mismatch = pw.confirm.length > 0 && pw.confirm !== pw.newPassword;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-2">
+    <div className="grid gap-4 xl:grid-cols-2">
       <Panel
         icon={<UserCog className="h-5 w-5" />}
         title="Your account"
@@ -411,7 +411,7 @@ function AccountSection() {
           </Button>
         }
       >
-        <div className="mb-5 flex items-center gap-4">
+        <div className="mb-4 flex items-center gap-4">
           <Avatar name={form.name || "?"} src={user?.avatar} size={56} />
           <div>
             <p className="font-semibold text-ink">{user?.name}</p>
@@ -475,7 +475,7 @@ export default function SettingsPage() {
       <Tabs
         value={section}
         onChange={setSection}
-        className="mb-6"
+        className="mb-4"
         options={[
           { value: "profile", label: "Profile" },
           { value: "holidays", label: "Holidays", count: data?.holidays.filter((h) => h.date >= todayISO()).length },

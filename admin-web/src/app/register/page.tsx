@@ -21,7 +21,7 @@ function IconInput({
       <span className="text-xs font-medium text-ink-2">{label}</span>
       <div className="group relative">
         <Icon className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted transition-colors group-focus-within:text-primary" />
-        <Input {...props} className="h-12 pl-10" />
+        <Input {...props} className="h-12 pl-7" />
       </div>
     </motion.label>
   );
@@ -68,18 +68,18 @@ export default function RegisterPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       <AuthShowcase />
-      <div className="relative flex items-center justify-center px-6 py-12">
+      <div className="relative flex items-center justify-center px-4 py-8">
         <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden">
           <div className="absolute -top-32 -right-20 h-80 w-80 animate-float rounded-full bg-primary/15 blur-3xl" />
           <div className="absolute -bottom-32 -left-20 h-80 w-80 animate-float rounded-full bg-gold/15 blur-3xl [animation-delay:-4s]" />
         </div>
         <motion.form variants={staggerParent} initial="hidden" animate="show" onSubmit={onSubmit} className="relative w-full max-w-sm">
-          <motion.div variants={fadeUp} className="mb-8">
+          <motion.div variants={fadeUp} className="mb-6">
             <motion.span
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 14 }}
-              className="mb-6 block w-fit"
+              className="mb-4 block w-fit"
             >
               <BrandLogo size={88} priority />
             </motion.span>
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={set("password")}
                   placeholder="At least 6 characters"
-                  className="h-12 pr-11 pl-10"
+                  className="h-12 pr-8 pl-7"
                 />
                 <button
                   type="button"
@@ -137,7 +137,7 @@ export default function RegisterPage() {
             </motion.div>
           </motion.div>
 
-          <motion.p variants={fadeUp} className="mt-6 text-center text-sm text-muted">
+          <motion.p variants={fadeUp} className="mt-4 text-center text-sm text-muted">
             Already have an account?{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
               Sign in

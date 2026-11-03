@@ -21,7 +21,7 @@ export const SectionHeader = ({ title, subtitle, actionLabel, onAction, compact 
   return (
     <View style={[styles.row, style]}>
       <View style={styles.titles}>
-        <Text variant={compact ? 'overline' : 'h2'} tone={compact ? 'muted' : 'default'} accessibilityRole="header">
+        <Text variant={compact ? 'overline' : 'h3'} tone={compact ? 'muted' : 'default'} accessibilityRole="header">
           {title}
         </Text>
         {subtitle ? (

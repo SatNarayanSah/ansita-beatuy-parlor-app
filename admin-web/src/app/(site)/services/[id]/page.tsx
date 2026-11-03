@@ -8,7 +8,7 @@ export default function ServicePage({ params }: PageProps<"/services/[id]">) {
   return (
     <Suspense
       fallback={
-        <Container className="grid gap-8 py-12 lg:grid-cols-2">
+        <Container className="grid gap-6 py-8 lg:grid-cols-2">
           <Skeleton className="aspect-[4/3] rounded-3xl" />
           <div className="flex flex-col gap-4">
             <Skeleton className="h-6 w-32" />

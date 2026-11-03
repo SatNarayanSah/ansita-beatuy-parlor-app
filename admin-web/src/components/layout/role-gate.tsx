@@ -9,7 +9,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Splash({ text = "Preparing your studio…" }: { text?: string }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-5">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
       <div className="relative flex items-center justify-center">
         <motion.span
           className="absolute h-28 w-28 rounded-full border-2 border-primary/30"

@@ -50,7 +50,7 @@ function NavLinks({ sections, onNavigate }: { sections: Sections; onNavigate?: (
   const hasPayments = sections.some((s) => s.items.some((i) => i.href === "/admin/payments"));
   const pendingPayments = usePendingPaymentCount(hasPayments);
   return (
-    <nav className="flex flex-col gap-6">
+    <nav className="flex flex-col gap-4">
       {sections.map((section, sectionIndex) => (
         <div key={section.title}>
           <p className="mb-2 px-3 text-[10px] font-semibold tracking-[0.2em] text-muted uppercase">{section.title}</p>
@@ -283,7 +283,7 @@ export function AppShell({
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col gap-6 border-r border-line bg-surface/80 px-4 py-6 backdrop-blur-xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col gap-4 border-r border-line bg-surface/80 px-4 py-4 backdrop-blur-xl lg:flex">
         <Brand href={homeHref} tagline={tagline} />
         <div className="-mx-1 flex-1 overflow-y-auto px-1">
           <NavLinks sections={sections} />
@@ -310,7 +310,7 @@ export function AppShell({
               role="dialog"
               aria-modal="true"
               aria-label="Menu"
-              className="absolute inset-y-0 left-0 flex w-[280px] max-w-[86vw] flex-col gap-6 bg-surface px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl"
+              className="absolute inset-y-0 left-0 flex w-[280px] max-w-[86vw] flex-col gap-4 bg-surface px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <Brand href={homeHref} tagline={tagline} onNavigate={() => setMobileOpen(false)} />
@@ -328,7 +328,7 @@ export function AppShell({
       </AnimatePresence>
 
       <div className="lg:pl-[264px]">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line/70 bg-bg/75 px-4 backdrop-blur-xl sm:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line/70 bg-bg/75 px-4 backdrop-blur-xl sm:px-6">
           <button
             onClick={() => setMobileOpen(true)}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-ink-2 lg:hidden"
@@ -352,7 +352,7 @@ export function AppShell({
             <BellButton href={notificationsHref} />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1400px] px-4 py-4 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>
   );

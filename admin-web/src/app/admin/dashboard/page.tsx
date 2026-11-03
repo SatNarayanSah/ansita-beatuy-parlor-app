@@ -17,7 +17,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { api } from "@/lib/api";
-import { addDaysISO, balanceDue, compactMoney, formatDate, label, money, time12, todayISO } from "@/lib/format";
+import { addDaysISO, balanceDue, billTotal, compactMoney, formatDate, label, money, time12, todayISO } from "@/lib/format";
 import { useAction, useAppointments, useEnrollments, useLookups, usePaymentRequests, useReviews } from "@/lib/queries";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -52,11 +52,11 @@ function Section({ title, action, children, className, delay = 0 }: { title: str
       transition={{ delay, type: "spring", stiffness: 200, damping: 24 }}
       className={className}
     >
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
         {action}
       </div>
-      <div className="px-5 pb-5">{children}</div>
+      <div className="px-4 pb-4">{children}</div>
     </Card>
   );
 }
@@ -132,7 +132,7 @@ export default function DashboardPage() {
       />
 
       {toVerify.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
           <Link
             href="/admin/payments"
             className="group flex items-center gap-3 rounded-2xl border border-warning/40 bg-warning-soft/60 p-4 transition-colors hover:border-warning"
@@ -168,7 +168,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Section title="Revenue · last 14 days" className="xl:col-span-2" delay={0.15}>
           <div className="h-[260px]">
             {loading ? (
@@ -225,7 +225,7 @@ export default function DashboardPage() {
         </Section>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Section
           title="Today's schedule"
           className="xl:col-span-2"
@@ -239,7 +239,7 @@ export default function DashboardPage() {
           {stats.todayList.length === 0 ? (
             <EmptyState icon={<Clock className="h-7 w-7" />} title="A quiet day" message="No appointments are booked for today." />
           ) : (
-            <ol className="relative ml-2 border-l-2 border-dashed border-line pl-6">
+            <ol className="relative ml-2 border-l-2 border-dashed border-line pl-4">
               {stats.todayList.map((a, i) => {
                 const customer = lookups.customer.get(a.customerId);
                 const member = lookups.staff.get(a.staffId);
@@ -289,7 +289,7 @@ export default function DashboardPage() {
                 >
                   <p className="text-sm font-semibold text-ink">{lookups.customer.get(a.customerId)?.name ?? "Customer"}</p>
                   <p className="text-xs text-muted">
-                    {formatDate(a.date, "EEE d MMM")} · {time12(a.startTime)} · {money(a.totalPrice)}
+                    {formatDate(a.date, "EEE d MMM")} · {time12(a.startTime)} · {money(billTotal(a))}
                   </p>
                   <div className="mt-2 flex gap-2">
                     <Button size="sm" icon={<Check className="h-3.5 w-3.5" />} loading={confirm.isPending && confirm.variables === a.id} onClick={() => confirm.mutate(a.id)}>
@@ -306,7 +306,7 @@ export default function DashboardPage() {
         </Section>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <Section title="Most booked services" delay={0.4}>
           {stats.topServices.length === 0 ? (
             <EmptyState icon={<CalendarCheck className="h-7 w-7" />} title="No data yet" />

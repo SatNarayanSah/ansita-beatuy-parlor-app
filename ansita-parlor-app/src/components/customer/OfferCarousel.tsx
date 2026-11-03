@@ -108,7 +108,7 @@ const OfferDetails = ({ offer, validity, onPoster }: OfferDetailsProps) => {
   const t = useT();
   const cap = offerCapLabel(t, offer);
   return (
-    <View style={[styles.content, { padding: spacing.lg, gap: spacing.sm }]}>
+    <View style={[styles.content, { padding: spacing.md, gap: spacing.sm }]}>
       <View style={styles.topRow}>
         <View style={styles.discountWrap}>
           <View style={[styles.discount, { borderRadius: radius.md }]}>
@@ -181,7 +181,7 @@ const OfferDetails = ({ offer, validity, onPoster }: OfferDetailsProps) => {
  * covered, since posters carry their own text and logo) above a brand panel with the details.
  * Without an image it's a gradient banner.
  */
-const OfferCardBase = ({ offer, index = 0, width, height = 196, stretch = false, onPress }: OfferCardProps) => {
+const OfferCardBase = ({ offer, index = 0, width, height = 168, stretch = false, onPress }: OfferCardProps) => {
   const { radius, spacing } = useTheme();
   const t = useT();
   const cap = offerCapLabel(t, offer);
@@ -364,8 +364,8 @@ export const OfferDetailSheet = ({ offer, onClose, onBook }: OfferDetailSheetPro
       }
     >
       {shown ? (
-        <View style={{ gap: spacing.lg }}>
-          <OfferCard offer={shown} height={176} />
+        <View style={{ gap: spacing.md }}>
+          <OfferCard offer={shown} height={156} />
           <View style={{ gap: spacing.sm }}>
             <InfoRow icon="sparkles-outline" text={scope} />
             <InfoRow icon="calendar-outline" text={`${formatDisplayDate(shown.validFrom)} - ${formatDisplayDate(shown.validTo)}`} />
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   ringLarge: { width: 220, height: 220, right: -70, top: -90 },
   ringSmall: { width: 120, height: 120, left: -50, bottom: -60 },
   giftMark: { position: 'absolute', right: 14, bottom: 34, transform: [{ rotate: '-12deg' }] },
-  placeholder: { height: 196 },
+  placeholder: { height: 168 },
   poster: { width: '100%', overflow: 'hidden', backgroundColor: palette.plum900 },
   posterDim: { backgroundColor: 'rgba(0, 0, 0, 0.35)' },
   cornerChip: { position: 'absolute' },

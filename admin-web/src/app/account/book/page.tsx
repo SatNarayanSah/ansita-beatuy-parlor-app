@@ -60,7 +60,7 @@ function Confetti() {
 
 function Success({ appointment, onAgain }: { appointment: Appointment; onAgain: () => void }) {
   return (
-    <Card className="relative mx-auto max-w-lg overflow-hidden p-8 text-center" initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}>
+    <Card className="relative mx-auto max-w-lg overflow-hidden p-6 text-center" initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}>
       <Confetti />
       <motion.div
         initial={{ scale: 0, rotate: -90 }}
@@ -72,13 +72,13 @@ function Success({ appointment, onAgain }: { appointment: Appointment; onAgain: 
           <motion.path d="M5 12l5 5L19 7" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.35, duration: 0.5 }} />
         </motion.svg>
       </motion.div>
-      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-6 font-display text-3xl font-bold text-ink">
+      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-4 font-display text-3xl font-bold text-ink">
         Request sent!
       </motion.h2>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="mt-2 text-sm text-ink-2">
         {formatDate(appointment.date, "EEEE, d MMMM")} at {time12(appointment.startTime)}. The parlour will confirm shortly, and you&apos;ll get a notification as soon as they do.
       </motion.p>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mt-6 flex flex-wrap justify-center gap-2">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="mt-4 flex flex-wrap justify-center gap-2">
         <Link href="/account/appointments">
           <Button icon={<CalendarCheck className="h-4 w-4" />}>My appointments</Button>
         </Link>
@@ -172,7 +172,7 @@ export default function BookPage() {
       <PageHeader eyebrow="Book online" title="Book a visit" subtitle="Choose your treatments, then a stylist and a time that suits you." />
 
       {/* progress */}
-      <div className="mb-6">
+      <div className="mb-4">
         <div className="mb-3 flex justify-between gap-2">
           {STEPS.map((name, i) => (
             <button
@@ -204,8 +204,8 @@ export default function BookPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Card className="overflow-hidden p-5 sm:p-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <Card className="overflow-hidden p-4 sm:p-4">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -227,7 +227,7 @@ export default function BookPage() {
                 ) : grouped.length === 0 ? (
                   <EmptyState icon={<Sparkles className="h-7 w-7" />} title="No services available" message="Please check back soon." />
                 ) : (
-                  <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-4">
                     {grouped.map(({ category, items }) => (
                       <section key={category.id}>
                         <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
@@ -276,7 +276,7 @@ export default function BookPage() {
                 ))}
 
               {step === 1 && (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
                   <section>
                     <h3 className="mb-3 text-sm font-semibold text-ink">Pick a day</h3>
                     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
@@ -373,7 +373,7 @@ export default function BookPage() {
               )}
 
               {step === 2 && (
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4">
                   <Field label="Anything we should know? (optional)" hint="Allergies, hair length, a reference look…">
                     <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} placeholder="e.g. I have sensitive skin" />
                   </Field>
@@ -425,7 +425,7 @@ export default function BookPage() {
 
         {/* summary */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <Card className="p-5">
+          <Card className="p-4">
             <h3 className="font-display text-lg font-semibold text-ink">Your selection</h3>
             {chosen.length === 0 ? (
               <p className="mt-2 text-sm text-muted">No services chosen yet.</p>
@@ -487,7 +487,7 @@ export default function BookPage() {
                 {!!quote?.discount && <p className="text-xs text-muted line-through">{money(total)}</p>}
               </div>
             </div>
-            <div className="mt-5 flex gap-2">
+            <div className="mt-4 flex gap-2">
               {step > 0 && (
                 <Button variant="outline" icon={<ArrowLeft className="h-4 w-4" />} onClick={() => go(step - 1)}>
                   Back

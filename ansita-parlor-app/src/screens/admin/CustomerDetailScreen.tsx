@@ -82,7 +82,7 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {({ customer, stats, appointments, enrollments }) => {
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               <Card style={[styles.center, { gap: spacing.sm }]}>
                 <Avatar name={customer.name} uri={customer.avatar} size="xl" />
                 <Text variant="h2" align="center">
@@ -103,7 +103,7 @@ export const CustomerDetailScreen = ({ navigation, route }: Props) => {
                 </View>
               </Card>
 
-              <View style={[styles.grid, { gap: spacing.md }]}>
+              <View style={[styles.grid, { gap: spacing.sm }]}>
                 <StatCard label="Visits" value={stats.totalVisits} icon="checkmark-done-outline" caption={stats.lastVisit ? `Last ${formatRelativeDay(stats.lastVisit)}` : 'No visits yet'} style={styles.cell} />
                 <StatCard label="Total spend" value={formatCurrency(stats.totalSpent)} icon="cash-outline" tone="success" caption={`${stats.cancelledCount} cancelled`} style={styles.cell} />
                 <StatCard

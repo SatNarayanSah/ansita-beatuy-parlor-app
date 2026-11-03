@@ -22,7 +22,7 @@ export const SearchBar = ({ value, onChangeText, placeholder = 'Search', onSubmi
     <View
       style={[
         styles.container,
-        { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.lg },
+        { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: spacing.md },
         style,
       ]}
     >
@@ -54,6 +54,6 @@ export const SearchBar = ({ value, onChangeText, placeholder = 'Search', onSubmi
 };
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 46, borderWidth: 1 },
+  container: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, borderWidth: 1 },
   input: { flex: 1, paddingVertical: 0 },
 });

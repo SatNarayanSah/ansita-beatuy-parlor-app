@@ -84,7 +84,7 @@ export function PromoCode({
             placeholder="e.g. TIHAR25"
             maxLength={40}
             autoComplete="off"
-            className="h-10 w-full rounded-xl border border-line bg-surface pr-3 pl-9 font-mono text-sm tracking-widest text-ink uppercase outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:normal-case placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-[var(--ring)]"
+            className="h-10 w-full rounded-xl border border-line bg-surface pr-3 pl-6 font-mono text-sm tracking-widest text-ink uppercase outline-none transition-colors placeholder:font-sans placeholder:tracking-normal placeholder:normal-case placeholder:text-muted focus:border-primary focus:ring-4 focus:ring-[var(--ring)]"
           />
         </div>
         {applied ? (

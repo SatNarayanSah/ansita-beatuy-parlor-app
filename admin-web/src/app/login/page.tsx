@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       <AuthShowcase />
-      <div className="relative flex items-center justify-center px-6 py-12">
+      <div className="relative flex items-center justify-center px-4 py-8">
         <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden">
           <div className="absolute -top-32 -right-20 h-80 w-80 animate-float rounded-full bg-primary/15 blur-3xl" />
           <div className="absolute -bottom-32 -left-20 h-80 w-80 animate-float rounded-full bg-gold/15 blur-3xl [animation-delay:-4s]" />
@@ -56,12 +56,12 @@ export default function LoginPage() {
           onSubmit={onSubmit}
           className="relative w-full max-w-sm"
         >
-          <motion.div variants={fadeUp} className="mb-8">
+          <motion.div variants={fadeUp} className="mb-6">
             <motion.span
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 14 }}
-              className="mb-6 block w-fit"
+              className="mb-4 block w-fit"
             >
               <BrandLogo size={88} priority />
             </motion.span>
@@ -83,7 +83,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@ansita.com"
-                  className="h-12 pl-10"
+                  className="h-12 pl-7"
                 />
               </div>
             </motion.label>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 pr-11 pl-10"
+                  className="h-12 pr-8 pl-7"
                 />
                 <button
                   type="button"
@@ -129,7 +129,7 @@ export default function LoginPage() {
             </motion.div>
           </motion.div>
 
-          <motion.p variants={fadeUp} className="mt-6 text-center text-sm text-muted">
+          <motion.p variants={fadeUp} className="mt-4 text-center text-sm text-muted">
             New to Ansita?{" "}
             <Link href="/register" className="font-semibold text-primary hover:underline">
               Create an account

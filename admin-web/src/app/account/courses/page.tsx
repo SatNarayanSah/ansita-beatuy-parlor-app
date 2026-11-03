@@ -40,7 +40,7 @@ export default function MyCoursesPage() {
       {enrollments.error ? (
         <ErrorState error={enrollments.error} onRetry={() => enrollments.refetch()} />
       ) : enrollments.isLoading || !names.ready ? (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <Skeleton className="h-72" />
           <Skeleton className="h-72" />
         </div>
@@ -58,7 +58,7 @@ export default function MyCoursesPage() {
           />
         </Card>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {list.map((e, i) => {
             const course = names.course.get(e.courseId);
             const batch = course?.batches.find((b) => b.id === e.batchId);
@@ -73,7 +73,7 @@ export default function MyCoursesPage() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08, type: "spring", stiffness: 220, damping: 24 }}
-                className="relative overflow-hidden p-5"
+                className="relative overflow-hidden p-4"
               >
                 <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-plum/10 blur-2xl" />
                 <div className="relative flex items-start justify-between gap-3">
@@ -101,7 +101,7 @@ export default function MyCoursesPage() {
                   </div>
                 )}
 
-                <div className="relative mt-5 flex items-center gap-5">
+                <div className="relative mt-4 flex items-center gap-4">
                   <Ring value={pct}>
                     <span className="text-center">
                       <span className="block font-display text-lg leading-none font-semibold text-ink">{pct}%</span>
@@ -131,7 +131,7 @@ export default function MyCoursesPage() {
                   </div>
                 </div>
 
-                <div className="relative mt-5">
+                <div className="relative mt-4">
                   <p className="mb-1.5 flex justify-between text-[11px] font-semibold tracking-wider text-muted uppercase">
                     Fees <span className="normal-case">{due > 0 ? `${money(due)} due` : "Paid in full"}</span>
                   </p>
@@ -142,7 +142,7 @@ export default function MyCoursesPage() {
                 {course?.certificate && (
                   <div
                     className={cn(
-                      "relative mt-5 flex items-center gap-3 rounded-2xl p-3 text-sm",
+                      "relative mt-4 flex items-center gap-3 rounded-2xl p-3 text-sm",
                       e.certificateIssued ? "bg-gradient-to-r from-gold-soft to-primary-soft text-ink" : "bg-bg-deep/60 text-muted",
                     )}
                   >

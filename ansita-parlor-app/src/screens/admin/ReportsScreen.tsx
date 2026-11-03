@@ -113,8 +113,8 @@ export const ReportsScreen = ({ navigation }: Props) => {
       >
         {() =>
           report ? (
-            <View style={{ gap: spacing.xl }}>
-              <View style={[styles.grid, { gap: spacing.md }]}>
+            <View style={{ gap: spacing.lg }}>
+              <View style={[styles.grid, { gap: spacing.sm }]}>
                 <StatCard label="Service revenue" value={formatCurrency(report.revenue)} icon="cash-outline" tone="success" caption={`Avg ticket ${formatCurrency(report.avgTicket)}`} style={styles.cell} />
                 <StatCard label="Course fees" value={formatCurrency(report.fees)} icon="school-outline" tone="accent" caption="Received in period" style={styles.cell} />
                 <StatCard label="Bookings" value={report.booked} icon="calendar-outline" caption={`${report.completed} completed`} style={styles.cell} />
@@ -145,7 +145,7 @@ export const ReportsScreen = ({ navigation }: Props) => {
 
               <Card style={{ gap: spacing.md }}>
                 <SectionHeader title="Customer retention" subtitle="Based on completed visits" compact />
-                <View style={[styles.grid, { gap: spacing.md }]}>
+                <View style={[styles.grid, { gap: spacing.sm }]}>
                   <View style={styles.cell}>
                     <Text variant="h2">{report.retention.active}</Text>
                     <Text variant="caption" tone="muted">

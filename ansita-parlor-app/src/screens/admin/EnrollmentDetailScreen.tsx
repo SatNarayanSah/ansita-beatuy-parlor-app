@@ -103,7 +103,7 @@ export const EnrollmentDetailScreen = ({ navigation, route }: Props) => {
                 : null;
 
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               <Card padding="sm">
                 <ListItem
                   title={student?.name ?? 'Student'}

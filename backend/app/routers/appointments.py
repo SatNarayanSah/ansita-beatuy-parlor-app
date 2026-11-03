@@ -199,9 +199,11 @@ def list_appointments(
     db: Session = Depends(get_db),
 ):
     """Customers only ever receive their own appointments."""
-    if user.role == "customer":
-        customer_id = user.customer_id
     stmt = select(Appointment)
+    if user.role != "admin":
+        # Always filtered, even for an account without a linked customer (sees nothing).
+        stmt = stmt.where(Appointment.customer_id == user.customer_id)
+        customer_id = None
     if status:
         stmt = stmt.where(Appointment.status == status)
     if customer_id:

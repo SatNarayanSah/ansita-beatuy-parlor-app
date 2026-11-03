@@ -376,7 +376,7 @@ export default function ServicesPage() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex gap-2 overflow-x-auto pb-1">
           {[{ id: "all", name: "All", color: "var(--primary)" }, ...categoryList].map((c) => {
             const active = category === c.id;
@@ -443,7 +443,7 @@ export default function ServicesPage() {
                   initial={{ opacity: 0, y: 20, scale: 0.97 }}
                   animate={{ opacity: service.isActive ? 1 : 0.6, y: 0, scale: 1, transition: { delay: Math.min(i, 12) * 0.035 } }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.18 } }}
-                  className="group relative flex flex-col overflow-hidden p-5"
+                  className="group relative flex flex-col overflow-hidden p-4"
                 >
                   <div className="absolute inset-x-0 top-0 h-1" style={{ background: cat?.color ?? "var(--primary)" }} />
                   <div className="flex items-start justify-between gap-3">

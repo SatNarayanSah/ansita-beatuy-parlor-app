@@ -102,7 +102,7 @@ export function ServiceCard({ service, category, index = 0 }: { service: Service
           </span>
         )}
       </Link>
-      <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex flex-1 flex-col gap-2 p-4">
         <h3 className="font-display text-lg leading-snug font-semibold text-ink">
           <Link href={`/services/${service.id}`} className="transition-colors hover:text-primary">
             {service.name}
@@ -314,7 +314,7 @@ export function OfferBanner({
             <EndsChip validTo={offer.validTo} />
           </div>
         </div>
-        <div className={cn("relative flex flex-1 flex-col gap-2.5 p-5 sm:p-6", featured && "lg:justify-center lg:p-8")}>
+        <div className={cn("relative flex flex-1 flex-col gap-2.5 p-4 sm:p-4", featured && "lg:justify-center lg:p-6")}>
           <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gold/25 blur-3xl" />
           <DiscountBadge offer={offer} featured={featured} index={index} />
           {details}
@@ -339,11 +339,11 @@ export function OfferBanner({
           {offer.discountType === "percent" ? `${offer.discountValue}%` : "Rs"}
         </span>
       </div>
-      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4 sm:p-5">
+      <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4 sm:p-4">
         <DiscountBadge offer={offer} featured={featured} index={index} />
         <EndsChip validTo={offer.validTo} />
       </div>
-      <div className={cn("relative flex flex-col gap-2.5 p-5 sm:p-6", featured && "sm:max-w-[70%]")}>{details}</div>
+      <div className={cn("relative flex flex-col gap-2.5 p-4 sm:p-4", featured && "sm:max-w-[70%]")}>{details}</div>
     </motion.article>
   );
 }
@@ -377,7 +377,7 @@ export function StaffCard({
       transition={{ delay: Math.min(index, 10) * 0.06, type: "spring", stiffness: 200, damping: 24 }}
       onClick={onClick}
       className={cn(
-        "group hover-lift relative flex h-full flex-col items-center overflow-hidden rounded-3xl border border-line bg-surface p-4 text-center shadow-soft sm:p-6",
+        "group hover-lift relative flex h-full flex-col items-center overflow-hidden rounded-3xl border border-line bg-surface p-4 text-center shadow-soft sm:p-4",
         onClick && "cursor-pointer",
       )}
     >

@@ -245,7 +245,7 @@ export function BookingWizard({ open, onClose }: { open: boolean; onClose: () =>
       }
     >
       {/* Step indicator */}
-      <div className="mb-5 flex items-center gap-2">
+      <div className="mb-4 flex items-center gap-2">
         {STEPS.map((name, i) => (
           <div key={name} className="flex flex-1 items-center gap-2">
             <motion.span

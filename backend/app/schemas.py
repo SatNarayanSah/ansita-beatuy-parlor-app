@@ -58,8 +58,8 @@ class PushDeviceRemove(CamelModel):
 
 
 class LoginInput(CamelModel):
-    email: str
-    password: str
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=128)
 
 
 class RegisterInput(CamelModel):
@@ -72,22 +72,22 @@ class RegisterInput(CamelModel):
 class ProfileInput(CamelModel):
     name: str | None = Field(default=None, min_length=2, max_length=120)
     email: str | None = Field(default=None, min_length=3, max_length=254)
-    phone: str | None = None
+    phone: str | None = Field(default=None, max_length=32)
     avatar: ImageUrl = None
 
 
 class ChangePasswordInput(CamelModel):
-    current_password: str
+    current_password: str = Field(max_length=128)
     new_password: str = Field(min_length=6, max_length=128)
 
 
 class PasswordResetRequestInput(CamelModel):
-    email: str
+    email: str = Field(max_length=254)
 
 
 class ResetPasswordInput(CamelModel):
-    email: str
-    code: str
+    email: str = Field(max_length=254)
+    code: str = Field(max_length=12)
     new_password: str = Field(min_length=6, max_length=128)
 
 
@@ -100,7 +100,7 @@ class AppointmentInput(CamelModel):
     staff_id: str
     date: DateStr
     start_time: TimeStr
-    notes: str = ""
+    notes: str = Field(default="", max_length=1000)
     preferred_payment_method: PaymentMethod | None = None
     # Promo code entered at booking. Empty: the best automatic offer (if any) is applied.
     offer_code: str | None = Field(default=None, max_length=40)
@@ -111,7 +111,7 @@ class AppointmentUpdate(CamelModel):
     staff_id: str | None = None
     date: DateStr | None = None
     start_time: TimeStr | None = None
-    notes: str | None = None
+    notes: str | None = Field(default=None, max_length=1000)
     # Omit to keep the current offer (re-checked against the new services/date); "" to drop the code.
     offer_code: str | None = Field(default=None, max_length=40)
 
@@ -130,7 +130,7 @@ class OfferQuoteInput(CamelModel):
 
 class StatusInput(CamelModel):
     status: AppointmentStatus
-    reason: str | None = None
+    reason: str | None = Field(default=None, max_length=300)
 
 
 class PaymentInput(CamelModel):
@@ -369,11 +369,11 @@ class BatchAttendanceInput(CamelModel):
 class ReviewInput(CamelModel):
     appointment_id: str
     rating: int = Field(ge=1, le=5)
-    comment: str = ""
+    comment: str = Field(default="", max_length=2000)
 
 
 class ReplyInput(CamelModel):
-    reply: str
+    reply: str = Field(max_length=2000)
 
 
 # ---------- Offers ----------

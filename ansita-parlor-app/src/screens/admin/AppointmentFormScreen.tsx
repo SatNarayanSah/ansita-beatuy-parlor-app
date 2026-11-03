@@ -191,7 +191,7 @@ export const AppointmentFormScreen = ({ navigation, route }: Props) => {
     <Screen>
       <QueryState query={existing} skeleton={<SkeletonCard />}>
         {() => (
-          <View style={{ gap: spacing.xl }}>
+          <View style={{ gap: spacing.lg }}>
             {/* Customer */}
             <View style={{ gap: spacing.sm }}>
               <SectionHeader title="Customer" compact />

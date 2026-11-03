@@ -134,7 +134,7 @@ function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose: () =>
               role="dialog"
               aria-modal="true"
               aria-label="Menu"
-              className="absolute inset-y-0 right-0 flex w-[320px] max-w-[88vw] flex-col gap-6 overflow-y-auto border-l border-line bg-surface px-5 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl"
+              className="absolute inset-y-0 right-0 flex w-[320px] max-w-[88vw] flex-col gap-4 overflow-y-auto border-l border-line bg-surface px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl"
             >
               <div className="flex items-center justify-between gap-3">
                 <SiteLogo />
@@ -179,7 +179,7 @@ function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose: () =>
 
 function DesktopLinks({ pathname }: { pathname: string | null }) {
   return (
-    <nav className="ml-6 hidden items-center gap-1 lg:flex">
+    <nav className="ml-4 hidden items-center gap-1 lg:flex">
       {SITE_LINKS.map((link) => {
         const active = pathname !== null && isActive(pathname, link.href);
         return (
@@ -238,7 +238,7 @@ export function SiteHeader() {
         scrolled ? "border-b border-line/70 bg-bg/80 shadow-soft backdrop-blur-xl" : "border-b border-transparent bg-transparent",
       )}
     >
-      <div className={cn("mx-auto flex max-w-7xl items-center gap-2 px-4 sm:gap-4 transition-[height] duration-300 sm:px-6", scrolled ? "h-16" : "h-20")}>
+      <div className={cn("mx-auto flex max-w-7xl items-center gap-2 px-4 sm:gap-4 transition-[height] duration-300 sm:px-4", scrolled ? "h-16" : "h-20")}>
         <SiteLogo />
 
         <Suspense fallback={<DesktopLinks pathname={null} />}>

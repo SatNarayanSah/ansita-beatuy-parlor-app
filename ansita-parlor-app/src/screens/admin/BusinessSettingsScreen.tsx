@@ -96,7 +96,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
 
   return (
     <Screen gap="lg">
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Business profile" subtitle="Shown to customers under Help & contact" compact />
         <Card style={{ gap: spacing.md }}>
           <FormInput control={profileForm.control} name="name" label="Business name" required />
@@ -143,7 +143,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
         </Card>
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Holidays" subtitle="The parlour is closed; no bookings can be made" compact />
         <Card style={{ gap: spacing.sm }}>
           {upcoming.length === 0 ? (
@@ -193,7 +193,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
         </Card>
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Loyalty rules" compact />
         <Card style={{ gap: spacing.md }}>
           <ListItem
@@ -237,7 +237,7 @@ export const BusinessSettingsScreen = (_props: Props) => {
 
       <OnlinePaymentSettings payments={payments} onDirtyChange={setPaymentsDirty} />
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Admin notifications" subtitle="Which events create a notification for admins" compact />
         <Card padding="sm">
           {ALERTS.map((alert, index) => (

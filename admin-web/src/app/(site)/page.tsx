@@ -56,7 +56,7 @@ function Hero() {
   const categoryMap = new Map((categories.data ?? []).map((c) => [c.id, c]));
 
   return (
-    <section ref={ref} className="relative overflow-hidden pt-10 pb-20 sm:pt-16 lg:pb-28">
+    <section ref={ref} className="relative overflow-hidden pt-7 pb-12 sm:pt-10 lg:pb-16">
       {/* Parallax blobs */}
       <motion.div style={{ y: blobY }} className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-20 -left-20 h-[28rem] w-[28rem] animate-float rounded-full bg-primary/20 blur-3xl" />
@@ -76,12 +76,12 @@ function Hero() {
         ))}
       </div>
 
-      <Container className="grid items-center gap-14 lg:grid-cols-[1.15fr_1fr]">
+      <Container className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr]">
         <motion.div style={{ y: textY, opacity: fade }}>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-ink-2 shadow-soft backdrop-blur"
+            className="mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-xs font-medium text-ink-2 shadow-soft backdrop-blur"
           >
             <span className="relative flex h-2 w-2">
               <span className={cn("absolute inline-flex h-full w-full animate-ping rounded-full opacity-75", status?.open ? "bg-success" : "bg-warning")} />
@@ -122,7 +122,7 @@ function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.75 }}
-            className="mt-6 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg"
+            className="mt-4 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg"
           >
             {profile?.tagline ? `${profile.tagline}. ` : ""}Hair, skin, nails and bridal care at {name}, plus a beauty
             academy that trains the next generation of artists.
@@ -132,7 +132,7 @@ function Hero() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
+            className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap"
           >
             <Link href="/account/book" className="block">
               <Button size="lg" icon={<CalendarPlus className="h-4 w-4" />} className="group w-full sm:w-auto">
@@ -151,7 +151,7 @@ function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.05 }}
-            className="mt-10 grid max-w-md grid-cols-3 gap-4"
+            className="mt-7 grid max-w-md grid-cols-3 gap-4"
           >
             {[
               { value: (services.data ?? []).length, label: "Services", format: undefined },
@@ -262,7 +262,7 @@ function Categories() {
   }
   if (!list.length) return null;
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <SectionHeading eyebrow="What we do" title={<>Care for every <span className="text-gradient">part of you</span></>} subtitle="Pick a category to see every treatment, price and how long it takes." />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -270,7 +270,7 @@ function Categories() {
             const count = (services.data ?? []).filter((s) => s.categoryId === category.id && s.isActive).length;
             return (
               <Reveal key={category.id} delay={i * 0.07} className="h-full">
-                <Link href="/services" className="group relative block h-full overflow-hidden rounded-3xl border border-line bg-surface p-4 shadow-soft transition-shadow hover:shadow-lift sm:p-6">
+                <Link href="/services" className="group relative block h-full overflow-hidden rounded-3xl border border-line bg-surface p-4 shadow-soft transition-shadow hover:shadow-lift sm:p-4">
                   <div
                     className="absolute -right-10 -bottom-10 h-36 w-36 rounded-full opacity-20 blur-2xl transition-all duration-700 group-hover:scale-[2.2] group-hover:opacity-30"
                     style={{ background: category.color }}
@@ -283,7 +283,7 @@ function Categories() {
                   >
                     <CategoryIcon category={category} className="h-6 w-6" />
                   </motion.span>
-                  <h3 className="relative mt-4 font-display text-lg font-semibold text-ink sm:mt-5 sm:text-xl">{category.name}</h3>
+                  <h3 className="relative mt-4 font-display text-lg font-semibold text-ink sm:mt-4 sm:text-xl">{category.name}</h3>
                   <p className="relative mt-1 flex items-center gap-1 text-xs text-muted">
                     {count} {count === 1 ? "treatment" : "treatments"}
                     <ArrowRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
@@ -305,7 +305,7 @@ function PopularServices() {
   const list = (services.data ?? []).filter((s) => s.isActive).slice(0, 6);
   if (!services.isLoading && !list.length) return null;
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <SectionHeading
           align="left"
@@ -320,7 +320,7 @@ function PopularServices() {
             </Link>
           }
         />
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.isLoading
             ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-64" />)
             : list.map((service, i) => <ServiceCard key={service.id} service={service} category={categoryMap.get(service.categoryId)} index={i} />)}
@@ -337,7 +337,7 @@ function OffersStrip() {
   const list = (offers.data ?? []).slice(0, 3);
   if (!list.length) return null;
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <SectionHeading
           align="left"
@@ -352,7 +352,7 @@ function OffersStrip() {
           }
         />
         {/* The newest offer as a wide hero, the next two side by side. */}
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {list.map((offer, i) => (
             <div key={offer.id} className={i === 0 ? "lg:col-span-2" : undefined}>
               <OfferBanner offer={offer} categories={categoryMap} index={i} featured={i === 0} />
@@ -369,13 +369,13 @@ function AcademyTeaser() {
   const list = (courses.data ?? []).filter((c) => c.isActive).slice(0, 3);
   if (!list.length) return null;
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <Reveal>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#35222f] via-[#5a2d52] to-[#84374f] p-6 text-white shadow-2xl sm:rounded-[2.5rem] sm:p-12">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#35222f] via-[#5a2d52] to-[#84374f] p-4 text-white shadow-2xl sm:rounded-[2.5rem] sm:p-8">
             <div className="absolute -top-20 -right-20 h-72 w-72 animate-float rounded-full bg-[#e0bc6e]/25 blur-3xl" />
             <div className="absolute -bottom-24 left-10 h-72 w-72 animate-float rounded-full bg-[#efbfcd]/20 blur-3xl [animation-delay:-6s]" />
-            <div className="relative grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center">
+            <div className="relative grid gap-7 lg:grid-cols-[1fr_1.3fr] lg:items-center">
               <div>
                 <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold tracking-[0.3em] text-[#f7edd8] uppercase">
                   <GraduationCap className="h-4 w-4" /> Ansita Academy
@@ -386,7 +386,7 @@ function AcademyTeaser() {
                 <p className="mt-4 text-sm leading-relaxed text-white/75">
                   Hands-on courses taught by our senior artists, in small batches, with a certificate at the end.
                 </p>
-                <Link href="/academy" className="mt-6 inline-block">
+                <Link href="/academy" className="mt-4 inline-block">
                   <Button variant="gold" size="lg" className="group">
                     Explore courses <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
@@ -430,7 +430,7 @@ function TeamPreview() {
   const list = (staff.data ?? []).filter((s) => s.isActive).slice(0, 4);
   if (!list.length) return null;
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <SectionHeading
           align="left"
@@ -480,11 +480,11 @@ function Testimonials() {
   };
 
   return (
-    <section className="py-16">
+    <section className="py-10">
       <Container>
         <SectionHeading eyebrow="Kind words" title={<>What our clients <span className="text-gradient">say</span></>} />
         <Reveal className="relative mx-auto max-w-3xl">
-          <div className="relative overflow-hidden rounded-[2rem] border border-line bg-surface px-6 py-12 text-center shadow-lift sm:px-14">
+          <div className="relative overflow-hidden rounded-[2rem] border border-line bg-surface px-4 py-8 text-center shadow-lift sm:px-10">
             <Quote className="absolute top-6 left-6 h-16 w-16 text-primary-soft" />
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -497,8 +497,8 @@ function Testimonials() {
                 className="relative"
               >
                 <Stars value={current.rating} size={18} />
-                <p className="mt-5 font-display text-xl leading-relaxed text-ink sm:text-2xl">“{current.comment}”</p>
-                <div className="mt-6 flex items-center justify-center gap-3">
+                <p className="mt-4 font-display text-xl leading-relaxed text-ink sm:text-2xl">“{current.comment}”</p>
+                <div className="mt-4 flex items-center justify-center gap-3">
                   <Avatar name={current.customerName ?? "Client"} size={40} />
                   <p className="text-sm font-semibold text-ink">{current.customerName ?? "Happy client"}</p>
                 </div>
@@ -506,7 +506,7 @@ function Testimonials() {
             </AnimatePresence>
           </div>
           {list.length > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-4">
+            <div className="mt-4 flex items-center justify-center gap-4">
               <button onClick={() => go(-1)} className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-ink-2 hover:text-primary" aria-label="Previous review">
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -539,10 +539,10 @@ function VisitAndCta() {
   const profile = settings.data?.profile;
   const status = openStatus(settings.data);
   return (
-    <section className="py-16">
-      <Container className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+    <section className="py-10">
+      <Container className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Reveal>
-          <div className="h-full rounded-[2rem] border border-line bg-surface p-8 shadow-soft">
+          <div className="h-full rounded-[2rem] border border-line bg-surface p-6 shadow-soft">
             <div className="flex items-center justify-between">
               <h3 className="font-display text-2xl font-semibold text-ink">Visit today</h3>
               {status && (
@@ -552,7 +552,7 @@ function VisitAndCta() {
               )}
             </div>
             {profile ? (
-              <ul className="mt-6 flex flex-col gap-4 text-sm text-ink-2">
+              <ul className="mt-4 flex flex-col gap-4 text-sm text-ink-2">
                 <li className="flex gap-3">
                   <Clock className="h-5 w-5 shrink-0 text-primary" />
                   <span>
@@ -574,15 +574,15 @@ function VisitAndCta() {
                 </li>
               </ul>
             ) : (
-              <Skeleton className="mt-6 h-28" />
+              <Skeleton className="mt-4 h-28" />
             )}
-            <Link href="/contact" className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+            <Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
               Directions & contact <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </Reveal>
         <Reveal delay={0.1}>
-          <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary-dark to-plum p-8 text-white shadow-2xl sm:p-12 dark:from-[#84374f] dark:via-[#7a2f4a] dark:to-[#5a2d52]">
+          <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary-dark to-plum p-6 text-white shadow-2xl sm:p-8 dark:from-[#84374f] dark:via-[#7a2f4a] dark:to-[#5a2d52]">
             <motion.div
               className="absolute -top-16 -right-16 h-64 w-64 rounded-full border-[30px] border-white/10"
               animate={{ rotate: 360 }}
@@ -595,7 +595,7 @@ function VisitAndCta() {
             <p className="relative mt-3 max-w-md text-sm text-white/80">
               Create a free account to book online, see your history and earn loyalty points on every visit.
             </p>
-            <div className="relative mt-7 flex flex-wrap gap-3">
+            <div className="relative mt-5 flex flex-wrap gap-3">
               <Link href="/account/book">
                 <Button variant="gold" size="lg" icon={<CalendarPlus className="h-4 w-4" />}>
                   Book now

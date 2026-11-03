@@ -208,7 +208,7 @@ export default function OffersPage() {
       <Tabs
         value={phase}
         onChange={setPhase}
-        className="mb-5"
+        className="mb-4"
         options={[
           { value: "all" as const, label: "All", count: all.length },
           ...(["live", "scheduled", "paused", "expired"] as Phase[]).map((p) => ({
@@ -230,7 +230,7 @@ export default function OffersPage() {
       ) : list.length === 0 ? (
         <EmptyState icon={<Tag className="h-7 w-7" />} title="No offers here" message="Create a festive discount or a promo code." />
       ) : (
-        <motion.div layout className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <motion.div layout className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">
             {list.map((offer, i) => {
               const p = phaseOf(offer, today);
@@ -245,7 +245,7 @@ export default function OffersPage() {
                   className="group relative overflow-visible"
                 >
                   {/* Coupon head */}
-                  <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-br from-primary via-primary-dark to-plum px-5 pt-5 pb-6 text-white">
+                  <div className="relative overflow-hidden rounded-t-2xl bg-gradient-to-br from-primary via-primary-dark to-plum px-4 pt-4 pb-4 text-white">
                     <motion.div
                       className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10"
                       animate={{ scale: [1, 1.2, 1] }}
@@ -266,7 +266,7 @@ export default function OffersPage() {
                     <span className="absolute -top-3 -right-3 h-6 w-6 rounded-full bg-bg" />
                     <div className="absolute inset-x-5 top-0 border-t-2 border-dashed border-line-strong" />
                   </div>
-                  <div className="p-5">
+                  <div className="p-4">
                     {offer.code ? (
                       <button
                         type="button"

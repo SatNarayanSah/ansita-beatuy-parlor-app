@@ -3,7 +3,7 @@ import { FlatList, Platform, RefreshControl, StyleSheet, View, type ListRenderIt
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import type { ServiceQueryState } from '@/hooks/useServiceQuery';
-import { useTheme } from '@/theme';
+import { overlayClearance, useTheme } from '@/theme';
 
 import { Appear } from './Appear';
 import { EmptyState, type EmptyStateProps } from './EmptyState';
@@ -68,7 +68,7 @@ export const ListScreen = <T,>({ query, items, keyExtractor, renderItem, header,
         ListEmptyComponent={loaded ? <EmptyState {...empty} /> : undefined}
         ItemSeparatorComponent={Separator}
         getItemLayout={itemHeight ? (_, index) => ({ length: itemHeight, offset: itemHeight * index, index }) : undefined}
-        contentContainerStyle={[styles.content, { padding: spacing.md, paddingBottom: overlay ? spacing.huge * 2 : spacing.xxl }]}
+        contentContainerStyle={[styles.content, { padding: spacing.md, paddingBottom: overlay ? overlayClearance : spacing.xl }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         initialNumToRender={10}

@@ -9,7 +9,7 @@ type TypeStyle = Pick<TextStyle, 'fontFamily' | 'fontSize' | 'lineHeight' | 'let
  * matras above and below the line are never clipped.
  */
 export const typography = {
-  display: { fontFamily: fontFamily.headingBold, fontSize: 30, lineHeight: 42, letterSpacing: -0.3 },
+  display: { fontFamily: fontFamily.headingBold, fontSize: 28, lineHeight: 40, letterSpacing: -0.3 },
   h1: { fontFamily: fontFamily.headingBold, fontSize: 24, lineHeight: 34, letterSpacing: -0.2 },
   h2: { fontFamily: fontFamily.headingSemibold, fontSize: 20, lineHeight: 30 },
   h3: { fontFamily: fontFamily.semibold, fontSize: 17, lineHeight: 26 },

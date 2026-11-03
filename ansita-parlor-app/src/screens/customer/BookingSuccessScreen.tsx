@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeInDown,
   useAnimatedStyle,
@@ -34,7 +34,7 @@ const Sparkle = ({ angle, burst }: { angle: number; burst: SharedValue<number> }
   const rad = (angle * Math.PI) / 180;
   const style = useAnimatedStyle(() => ({
     opacity: burst.value < 0.85 ? burst.value : (1 - burst.value) * 6,
-    transform: [{ translateX: Math.cos(rad) * 78 * burst.value }, { translateY: Math.sin(rad) * 78 * burst.value }, { scale: burst.value }],
+    transform: [{ translateX: Math.cos(rad) * 66 * burst.value }, { translateY: Math.sin(rad) * 66 * burst.value }, { scale: burst.value }],
   }));
   return (
     <Animated.View style={[styles.sparkle, style]}>
@@ -68,35 +68,36 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
 
   const addToCalendar = (): void => {
     setAddedToCalendar(true);
-    toast.success('Added to your calendar (demo)');
+    toast.success(t('success.calendarToast'));
   };
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={[styles.content, { padding: spacing.xxl, gap: spacing.xxl }]}>
+      {/* Scrolls on short screens / large text instead of clipping the buttons. */}
+      <ScrollView contentContainerStyle={[styles.content, { padding: spacing.xl, gap: spacing.xl }]} bounces={false}>
         <View style={styles.hero}>
           <Animated.View style={[styles.ring, { borderColor: colors.success }, ringStyle]} />
           {SPARKLES.map((angle) => (
             <Sparkle key={angle} angle={angle} burst={burst} />
           ))}
           <Animated.View style={[styles.check, { backgroundColor: colors.success }, checkStyle]}>
-            <Icon name="checkmark" size={56} color={colors.textInverse} />
+            <Icon name="checkmark" size={48} color={colors.textInverse} />
           </Animated.View>
         </View>
 
         <Animated.View entering={FadeInDown.delay(250).duration(400)} style={{ gap: spacing.sm }}>
           <Text variant="h1" align="center">
-            Booking requested!
+            {t('success.title')}
           </Text>
           <Text variant="body" tone="secondary" align="center">
-            We’ll confirm your appointment shortly. You’ll get a notification once it’s confirmed.
+            {t('success.message')}
           </Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(400).duration(400)}>
           <QueryState query={query} skeleton={<Skeleton height={140} radius={16} />}>
             {(appointment) => (
-              <Card style={{ gap: spacing.md }}>
+              <Card style={{ gap: spacing.sm }}>
                 <View style={styles.row}>
                   <Text variant="h4" style={styles.flex}>
                     {serviceNames(appointment.serviceIds, services)}
@@ -112,12 +113,14 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
                     : []),
                   {
                     icon: 'wallet-outline' as const,
-                    text: `${formatCurrency(Math.max(0, appointment.totalPrice - selectDiscountTotal(appointment)))}${appointment.preferredPaymentMethod ? ` · pay by ${PAYMENT_METHOD_META[appointment.preferredPaymentMethod].label}` : ''}`,
+                    text: `${formatCurrency(Math.max(0, appointment.totalPrice - selectDiscountTotal(appointment)))}${appointment.preferredPaymentMethod ? ` · ${t('success.payBy', { method: PAYMENT_METHOD_META[appointment.preferredPaymentMethod].label })}` : ''}`,
                   },
                 ].map((item) => (
                   <View key={item.icon} style={styles.row}>
                     <Icon name={item.icon} size={18} color={colors.primary} />
-                    <Text variant="bodyMedium">{item.text}</Text>
+                    <Text variant="bodyMedium" style={styles.flex}>
+                      {item.text}
+                    </Text>
                   </View>
                 ))}
               </Card>
@@ -127,7 +130,7 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
 
         <View style={[styles.actions, { gap: spacing.sm }]}>
           <Button
-            title={addedToCalendar ? 'Added to calendar' : 'Add to calendar'}
+            title={addedToCalendar ? t('success.addedToCalendar') : t('success.addToCalendar')}
             leftIcon={addedToCalendar ? 'checkmark-circle' : 'calendar-number-outline'}
             variant="secondary"
             disabled={addedToCalendar}
@@ -135,23 +138,23 @@ export const BookingSuccessScreen = ({ navigation, route }: Props) => {
             fullWidth
           />
           <Button
-            title="View my bookings"
+            title={t('success.viewBookings')}
             onPress={() => navigation.popTo('CustomerTabs', { screen: 'MyAppointments', params: { tab: 'upcoming' } })}
             fullWidth
           />
-          <Button title="Back to home" variant="ghost" onPress={() => navigation.popTo('CustomerTabs', { screen: 'Home' })} fullWidth />
+          <Button title={t('success.backHome')} variant="ghost" onPress={() => navigation.popTo('CustomerTabs', { screen: 'Home' })} fullWidth />
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { flex: 1, justifyContent: 'center' },
-  hero: { alignSelf: 'center', width: 180, height: 180, alignItems: 'center', justifyContent: 'center' },
-  ring: { position: 'absolute', width: 110, height: 110, borderRadius: 55, borderWidth: 3 },
-  check: { width: 104, height: 104, borderRadius: 52, alignItems: 'center', justifyContent: 'center' },
+  content: { flexGrow: 1, justifyContent: 'center' },
+  hero: { alignSelf: 'center', width: 150, height: 150, alignItems: 'center', justifyContent: 'center' },
+  ring: { position: 'absolute', width: 96, height: 96, borderRadius: 48, borderWidth: 3 },
+  check: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
   sparkle: { position: 'absolute' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   flex: { flex: 1 },

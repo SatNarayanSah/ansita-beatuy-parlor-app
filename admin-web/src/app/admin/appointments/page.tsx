@@ -50,7 +50,7 @@ function DayBoard({ onOpen }: { onOpen: (id: string) => void }) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-4">
         <div className="flex items-center gap-1">
           <Button variant="outline" size="icon" onClick={() => shift(-1)} aria-label="Previous day">
             <ChevronLeft className="h-4 w-4" />
@@ -76,15 +76,15 @@ function DayBoard({ onOpen }: { onOpen: (id: string) => void }) {
       </div>
 
       {holiday && (
-        <div className="bg-gold-soft px-5 py-2 text-sm text-gold-text">Closed for {holiday.name}</div>
+        <div className="bg-gold-soft px-4 py-2 text-sm text-gold-text">Closed for {holiday.name}</div>
       )}
 
       {appointments.error ? (
-        <div className="p-5">
+        <div className="p-4">
           <ErrorState error={appointments.error} onRetry={() => appointments.refetch()} />
         </div>
       ) : appointments.isLoading || !lookups.ready ? (
-        <div className="p-5">
+        <div className="p-4">
           <Skeleton className="h-[420px]" />
         </div>
       ) : staff.length === 0 ? (
@@ -202,7 +202,7 @@ function ListView({ onOpen }: { onOpen: (id: string) => void }) {
         </div>
       </div>
       {appointments.error ? (
-        <div className="p-5">
+        <div className="p-4">
           <ErrorState error={appointments.error} onRetry={() => appointments.refetch()} />
         </div>
       ) : appointments.isLoading || !lookups.ready ? (
@@ -250,7 +250,7 @@ function ListView({ onOpen }: { onOpen: (id: string) => void }) {
                 </div>
               ),
             },
-            { header: "Total", cell: (a) => <span className="font-semibold text-ink">{money(a.totalPrice)}</span> },
+            { header: "Total", cell: (a) => <span className="font-semibold text-ink">{money(billTotal(a))}</span> },
             { header: "Paid", className: "w-[150px]", cell: (a) => <PaymentProgress paid={a.amountPaid} total={billTotal(a)} /> },
             { header: "Status", cell: (a) => <StatusBadge status={a.status} /> },
           ]}

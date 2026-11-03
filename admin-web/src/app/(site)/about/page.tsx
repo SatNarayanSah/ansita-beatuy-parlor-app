@@ -49,14 +49,14 @@ export default function AboutPage() {
         subtitle={`${name} started with one chair and a simple promise: make every client leave feeling more like themselves.`}
       />
 
-      <section className="py-16">
-        <Container className="grid items-center gap-12 lg:grid-cols-2">
+      <section className="py-10">
+        <Container className="grid items-center gap-8 lg:grid-cols-2">
           <Reveal>
             <p className="mb-2 text-[11px] font-semibold tracking-[0.25em] text-gold-text uppercase">Who we are</p>
             <h2 className="font-display text-3xl leading-tight font-bold text-ink sm:text-4xl">
               Beauty, care and craft, <span className="text-gradient">under one roof.</span>
             </h2>
-            <div className="mt-5 flex flex-col gap-4 text-sm leading-relaxed text-ink-2 sm:text-base">
+            <div className="mt-4 flex flex-col gap-4 text-sm leading-relaxed text-ink-2 sm:text-base">
               <p>
                 From everyday haircuts and facials to full bridal looks, our team brings years of experience and a lot of heart.
                 We keep up with the latest techniques so you don&apos;t have to.
@@ -67,7 +67,7 @@ export default function AboutPage() {
               </p>
               <p>{settings.data?.profile.tagline}</p>
             </div>
-            <Link href="/services" className="mt-7 inline-block">
+            <Link href="/services" className="mt-5 inline-block">
               <Button className="group">
                 See our services <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
@@ -82,7 +82,7 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, type: "spring", stiffness: 160, damping: 20 }}
-                className={`group hover-grow relative overflow-hidden rounded-3xl p-5 text-white shadow-lift ${tile.span}`}
+                className={`group hover-grow relative overflow-hidden rounded-3xl p-4 text-white shadow-lift ${tile.span}`}
                 style={{ background: `linear-gradient(135deg, ${tile.from}, ${tile.to})` }}
               >
                 <div className="absolute -right-8 -bottom-8 h-32 w-32 rounded-full bg-white/15 blur-xl transition-transform duration-700 group-hover:scale-150" />
@@ -94,9 +94,9 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      <section className="py-12">
+      <section className="py-8">
         <Container>
-          <Reveal className="grid grid-cols-2 gap-4 rounded-[2rem] border border-line bg-surface p-8 shadow-soft lg:grid-cols-4">
+          <Reveal className="grid grid-cols-2 gap-4 rounded-[2rem] border border-line bg-surface p-6 shadow-soft lg:grid-cols-4">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="font-display text-4xl font-bold text-gradient">
@@ -109,13 +109,13 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      <section className="py-16">
+      <section className="py-10">
         <Container>
           <SectionHeading eyebrow="What we stand for" title={<>Why clients <span className="text-gradient">choose us</span></>} />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {VALUES.map(({ icon: Icon, title, text }, i) => (
               <Reveal key={title} delay={i * 0.08}>
-                <div className="group hover-lift h-full rounded-3xl border border-line bg-surface p-6 shadow-soft">
+                <div className="group hover-lift h-full rounded-3xl border border-line bg-surface p-4 shadow-soft">
                   <motion.span
                     whileHover={{ rotate: 12, scale: 1.1 }}
                     transition={{ type: "spring", stiffness: 170, damping: 16 }}
@@ -132,16 +132,16 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      <section className="py-12">
+      <section className="py-8">
         <Container>
           <Reveal>
-            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#35222f] via-[#5a2d52] to-[#84374f] p-10 text-center text-white shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#35222f] via-[#5a2d52] to-[#84374f] p-7 text-center text-white shadow-2xl">
               <motion.div className="absolute -top-20 -left-20 h-64 w-64 rounded-full border-[28px] border-white/10" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} />
               <div className="absolute -right-16 -bottom-16 h-64 w-64 rounded-full bg-[#e0bc6e]/25 blur-3xl" />
               <Gem className="relative mx-auto h-8 w-8 text-[#f7edd8]" />
               <h2 className="relative mt-4 font-display text-3xl font-bold sm:text-4xl">Come and see us</h2>
               <p className="relative mx-auto mt-3 max-w-lg text-sm text-white/75">Book online in a minute, or drop by for a chat about bridal packages and courses.</p>
-              <div className="relative mt-7 flex flex-wrap justify-center gap-3">
+              <div className="relative mt-5 flex flex-wrap justify-center gap-3">
                 <Link href="/account/book">
                   <Button variant="gold" size="lg">
                     Book a visit

@@ -200,7 +200,7 @@ def list_requests(
 ):
     """Newest first; pending ones first of all. Customers only ever get their own."""
     stmt = select(PaymentRequest)
-    if user.role == "customer":
+    if user.role != "admin":
         stmt = stmt.where(PaymentRequest.customer_id == user.customer_id)
     if status:
         stmt = stmt.where(PaymentRequest.status == status)

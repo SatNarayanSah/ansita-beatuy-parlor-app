@@ -227,7 +227,7 @@ function PaidDialog({
         </>
       }
     >
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <div>
           <p className="mb-2 text-xs font-medium text-ink-2">1 · How did you pay?</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

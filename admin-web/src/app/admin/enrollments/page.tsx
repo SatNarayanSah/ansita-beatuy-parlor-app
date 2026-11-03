@@ -235,13 +235,13 @@ function BatchAttendance({ onClose }: { onClose: () => void }) {
           <Input type="date" max={todayISO()} value={date} onChange={(e) => setDate(e.target.value || todayISO())} />
         </Field>
       </div>
-      <div className="mt-5">
+      <div className="mt-4">
         {!batchId ? (
-          <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">Pick a course and batch.</p>
+          <p className="rounded-xl border border-dashed border-line p-4 text-center text-sm text-muted">Pick a course and batch.</p>
         ) : enrollments.isLoading ? (
           <Skeleton className="h-32" />
         ) : students.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-line p-6 text-center text-sm text-muted">No active students in this batch.</p>
+          <p className="rounded-xl border border-dashed border-line p-4 text-center text-sm text-muted">No active students in this batch.</p>
         ) : (
           <>
             <div className="mb-2 flex justify-end gap-2">
@@ -334,7 +334,7 @@ function EnrollmentDetail({ enrollment, onClose }: { enrollment: Enrollment; onC
           </>
         }
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <Avatar name={student?.name ?? "?"} src={student?.avatar} size={56} />
             <div>
@@ -464,7 +464,7 @@ export default function EnrollmentsPage() {
         }
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard index={0} label="Active students" value={totals.active} icon={<ClipboardList className="h-5 w-5" />} />
         <StatCard index={1} label="Fees collected" value={totals.collected} format={money} icon={<Wallet className="h-5 w-5" />} accent="gold" />
         <StatCard index={2} label="Fees due" value={totals.due} format={money} icon={<Wallet className="h-5 w-5" />} accent="plum" />

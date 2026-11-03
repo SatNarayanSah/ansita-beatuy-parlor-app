@@ -37,7 +37,7 @@ import { formatCurrency, formatDuration, roundRating } from '@/utils/format';
 
 type Props = RootStackScreenProps<'ServiceDetail'>;
 
-const HERO_HEIGHT = 260;
+const HERO_HEIGHT = 220;
 
 /** Reviewer shown as "Sabina S." for privacy. */
 const shortName = (name: string | undefined, fallback: string): string => {
@@ -48,10 +48,11 @@ const shortName = (name: string | undefined, fallback: string): string => {
 
 /** Edge-to-edge photo, or a gradient in the category colour with its icon when there's no photo. */
 const ServiceHero = ({ image, category }: { image: string | null; category: ServiceCategory | undefined }) => {
-  const { colors, spacing } = useTheme();
+  // Bleeds to the screen edges, so it must cancel the Screen's own padding exactly.
+  const { colors, screenPadding } = useTheme();
   const tint = category?.color ?? colors.primary;
   const icon = category && isIconName(category.icon) ? category.icon : 'sparkles-outline';
-  const bleed = { marginHorizontal: -spacing.lg, marginTop: -spacing.lg, height: HERO_HEIGHT };
+  const bleed = { marginHorizontal: -screenPadding, marginTop: -screenPadding, height: HERO_HEIGHT };
 
   if (isWebImage(image)) {
     return (
@@ -69,7 +70,7 @@ const ServiceHero = ({ image, category }: { image: string | null; category: Serv
       <View style={[styles.ring, styles.ringLarge, { borderColor: `${tint}1F` }]} />
       <View style={[styles.ring, styles.ringSmall, { borderColor: `${tint}26` }]} />
       <View style={[styles.heroIcon, { backgroundColor: colors.surface, borderColor: `${tint}55` }]}>
-        <Icon name={icon} size={52} color={tint} />
+        <Icon name={icon} size={44} color={tint} />
       </View>
     </View>
   );
@@ -112,7 +113,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
     navigation.navigate('Booking', offerCode ? { serviceIds: [serviceId], offerCode } : { serviceIds: [serviceId] });
 
   const bookButton = query.data?.service.isActive ? (
-    <View style={[styles.sticky, shadows.lg, { backgroundColor: colors.surface, paddingBottom: insets.bottom + spacing.md, padding: spacing.lg }]}>
+    <View style={[styles.sticky, shadows.lg, { backgroundColor: colors.surface, paddingHorizontal: spacing.md, paddingTop: spacing.sm + 2, paddingBottom: insets.bottom + spacing.sm + 2 }]}>
       <View style={styles.flex}>
         <Text variant="caption" tone="muted">
           {formatDuration(query.data.service.duration)}
@@ -131,7 +132,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
         query={query}
         skeleton={
           <View style={{ gap: spacing.lg }}>
-            <Skeleton height={HERO_HEIGHT - spacing.lg} radius={radius.xl} />
+            <Skeleton height={HERO_HEIGHT - spacing.md} radius={radius.xl} />
             <SkeletonText lines={4} />
           </View>
         }
@@ -142,7 +143,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
           // Older servers don't send benefits.
           const benefits = service.benefits ?? [];
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               <ServiceHero image={service.image} category={category} />
 
               <View style={{ gap: spacing.sm }}>
@@ -191,7 +192,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
               {benefits.length > 0 ? (
                 <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('services.benefits')} compact />
-                  <Card padding="lg" style={{ gap: spacing.md }}>
+                  <Card padding="md" style={{ gap: spacing.sm }}>
                     {benefits.map((benefit) => (
                       <View key={benefit} style={styles.benefit}>
                         <View style={[styles.check, { backgroundColor: colors.successSoft }]}>
@@ -210,7 +211,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
                 <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('services.offers')} compact />
                   {offers.map((offer, index) => (
-                    <OfferCard key={offer.id} offer={offer} index={index} height={176} onPress={() => setOpenOffer(offer)} />
+                    <OfferCard key={offer.id} offer={offer} index={index} height={156} onPress={() => setOpenOffer(offer)} />
                   ))}
                 </View>
               ) : null}
@@ -237,7 +238,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
                 </View>
               ) : null}
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader
                   title={t('services.reviews')}
                   subtitle={reviews.length ? t('services.reviewCount', { count: reviews.length }) : undefined}
@@ -248,12 +249,12 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
                     <EmptyState compact icon="chatbubble-ellipses-outline" title={t('services.noReviews')} message={t('services.noReviewsHint')} />
                   </Card>
                 ) : (
-                  <Card padding="lg" style={{ gap: spacing.md }}>
+                  <Card padding="md" style={{ gap: spacing.sm }}>
                     {reviews.slice(0, 6).map((review, index) => (
                       <View key={review.id} style={{ gap: spacing.xs }}>
                         {index > 0 ? <Divider spacing="sm" /> : null}
                         <View style={styles.reviewHead}>
-                          <Text variant="label">
+                          <Text variant="label" numberOfLines={1} style={styles.flex}>
                             {shortName(review.customerName ?? customers.find((c) => c.id === review.customerId)?.name, t('services.verifiedCustomer'))}
                           </Text>
                           <Text variant="caption" tone="muted">
@@ -281,8 +282,8 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
                   </Card>
                 )}
               </View>
-              {/* Clearance for the sticky booking bar. */}
-              <View style={{ height: 80 }} />
+              {/* Screen adds overlay clearance; this covers the home indicator under the sticky bar. */}
+              <View style={{ height: insets.bottom }} />
             </View>
           );
         }}
@@ -306,7 +307,7 @@ export const ServiceDetailScreen = ({ navigation, route }: Props) => {
 const styles = StyleSheet.create({
   hero: { overflow: 'hidden' },
   center: { alignItems: 'center', justifyContent: 'center' },
-  heroIcon: { width: 112, height: 112, borderRadius: 56, borderWidth: 6, alignItems: 'center', justifyContent: 'center' },
+  heroIcon: { width: 96, height: 96, borderRadius: 48, borderWidth: 6, alignItems: 'center', justifyContent: 'center' },
   ring: { position: 'absolute', borderRadius: 999, borderWidth: 22 },
   ringLarge: { width: 300, height: 300, top: -120, right: -90 },
   ringSmall: { width: 170, height: 170, bottom: -40, left: -60 },
@@ -316,11 +317,11 @@ const styles = StyleSheet.create({
   fact: { flex: 1, gap: 2 },
   benefit: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   check: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 0 },
-  staffRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 20 },
+  staffRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   staff: { alignItems: 'center', gap: 4, width: 72 },
   inline: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  reviewHead: { flexDirection: 'row', justifyContent: 'space-between' },
+  reviewHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   reply: { padding: 10, gap: 2, marginTop: 4 },
-  sticky: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  sticky: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1 },
 });

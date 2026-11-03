@@ -18,7 +18,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
-import { formatDate, money, relativeDay, time12, timeAgo } from "@/lib/format";
+import { billTotal, formatDate, money, relativeDay, time12, timeAgo } from "@/lib/format";
 import { useAppointments, useCustomerStats, useEnrollments, useMyCustomer, useNotifications, useSettings } from "@/lib/queries";
 import type { Appointment } from "@/lib/types";
 import { isUpcoming, serviceNames, startsAt, useNames } from "./_parts";
@@ -29,7 +29,7 @@ function LoyaltyCard({ points, pointValue, minRedeem, enabled, name }: { points:
       initial={{ opacity: 0, y: 24, rotateX: 12 }}
       animate={{ opacity: 1, y: 0, rotateX: 0 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className="hover-lift relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#b08b3e] p-6 text-white shadow-lift"
+      className="hover-lift relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#b08b3e] p-4 text-white shadow-lift"
     >
       {/* moving sheen */}
       <motion.div
@@ -52,7 +52,7 @@ function LoyaltyCard({ points, pointValue, minRedeem, enabled, name }: { points:
           <Crown className="h-5 w-5 text-[#f7edd8]" />
         </motion.span>
       </div>
-      <div className="relative mt-8 flex items-end justify-between gap-4">
+      <div className="relative mt-6 flex items-end justify-between gap-4">
         <div>
           <p className="font-display text-5xl leading-none font-bold">
             <AnimatedNumber value={points} />
@@ -93,7 +93,7 @@ function NextVisit({ appointment, names }: { appointment: Appointment | undefine
   const countdown = useCountdown(appointment ? startsAt(appointment) : null);
   if (!appointment) {
     return (
-      <Card className="flex h-full flex-col justify-center overflow-hidden p-6" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+      <Card className="flex h-full flex-col justify-center overflow-hidden p-4" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
         <EmptyState
           icon={<CalendarPlus className="h-7 w-7" />}
           title="No visit booked"
@@ -109,7 +109,7 @@ function NextVisit({ appointment, names }: { appointment: Appointment | undefine
   }
   const member = names.staff.get(appointment.staffId);
   return (
-    <Card className="relative h-full overflow-hidden p-6" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+    <Card className="relative h-full overflow-hidden p-4" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
       <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -120,7 +120,7 @@ function NextVisit({ appointment, names }: { appointment: Appointment | undefine
         <StatusBadge status={appointment.status} />
       </div>
       {countdown && (
-        <div className="relative mt-5 grid grid-cols-4 gap-2">
+        <div className="relative mt-4 grid grid-cols-4 gap-2">
           {(
             [
               ["days", countdown.days],
@@ -138,12 +138,12 @@ function NextVisit({ appointment, names }: { appointment: Appointment | undefine
           ))}
         </div>
       )}
-      <div className="relative mt-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="relative mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           {member && <Avatar name={member.name} src={member.avatar} size={34} />}
           <div className="text-sm">
             <p className="font-medium text-ink">{member?.name ?? "Your stylist"}</p>
-            <p className="text-xs text-muted">{money(appointment.totalPrice)} · ends {time12(appointment.endTime)}</p>
+            <p className="text-xs text-muted">{money(billTotal(appointment))} · ends {time12(appointment.endTime)}</p>
           </div>
         </div>
         <Link href="/account/appointments" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
@@ -157,7 +157,7 @@ function NextVisit({ appointment, names }: { appointment: Appointment | undefine
 function Panel({ title, href, children, delay = 0 }: { title: string; href?: string; children: React.ReactNode; delay?: number }) {
   return (
     <Card initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, type: "spring", stiffness: 200, damping: 24 }}>
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
         {href && (
           <Link href={href} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
@@ -165,7 +165,7 @@ function Panel({ title, href, children, delay = 0 }: { title: string; href?: str
           </Link>
         )}
       </div>
-      <div className="px-5 pb-5">{children}</div>
+      <div className="px-4 pb-4">{children}</div>
     </Card>
   );
 }
@@ -204,7 +204,7 @@ export default function AccountDashboard() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         {customer.isLoading || settings.isLoading ? (
           <Skeleton className="h-[210px] rounded-3xl" />
         ) : (
@@ -219,7 +219,7 @@ export default function AccountDashboard() {
         {appointments.isLoading || !names.ready ? <Skeleton className="h-[210px] rounded-3xl" /> : <NextVisit appointment={upcoming[0]} names={names} />}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {stats.isLoading ? (
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[118px]" />)
         ) : (
@@ -236,7 +236,7 @@ export default function AccountDashboard() {
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.2 } } }}
-        className="mt-6 grid gap-3 sm:grid-cols-3"
+        className="mt-4 grid gap-3 sm:grid-cols-3"
       >
         {[
           { href: "/account/book", icon: CalendarPlus, title: "Book a visit", text: "Pick services, stylist and time" },
@@ -261,12 +261,12 @@ export default function AccountDashboard() {
         ))}
       </motion.div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <Panel title="Upcoming appointments" href="/account/appointments" delay={0.25}>
           {appointments.error ? (
             <ErrorState error={appointments.error} onRetry={() => appointments.refetch()} />
           ) : upcoming.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted">Nothing booked yet.</p>
+            <p className="py-4 text-center text-sm text-muted">Nothing booked yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {upcoming.slice(0, 4).map((a, i) => (
@@ -288,7 +288,7 @@ export default function AccountDashboard() {
 
         <Panel title="My courses" href="/account/courses" delay={0.3}>
           {activeCourses.length === 0 ? (
-            <div className="py-6 text-center">
+            <div className="py-4 text-center">
               <p className="text-sm text-muted">Not enrolled in a course.</p>
               <Link href="/academy" className="mt-1 inline-block text-sm font-medium text-primary hover:underline">
                 Browse the academy
@@ -314,7 +314,7 @@ export default function AccountDashboard() {
 
         <Panel title="Latest updates" href="/account/notifications" delay={0.35}>
           {!notifications.data?.length ? (
-            <p className="flex flex-col items-center gap-2 py-6 text-sm text-muted">
+            <p className="flex flex-col items-center gap-2 py-4 text-sm text-muted">
               <Bell className="h-5 w-5" /> No notifications yet.
             </p>
           ) : (

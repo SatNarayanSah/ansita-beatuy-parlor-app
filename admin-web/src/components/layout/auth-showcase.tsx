@@ -13,7 +13,7 @@ const PETALS = Array.from({ length: 14 }, (_, i) => ({
 
 export function AuthShowcase() {
   return (
-    <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#a44a67] lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#5a2d52] via-[#84374f] to-[#a44a67] lg:flex lg:flex-col lg:justify-between lg:p-8">
       {/* Drifting light */}
       <div className="absolute -top-24 -left-24 h-96 w-96 animate-float rounded-full bg-[#e0bc6e]/30 blur-3xl" />
       <div className="absolute right-0 bottom-0 h-[28rem] w-[28rem] animate-float rounded-full bg-[#efbfcd]/25 blur-3xl [animation-delay:-5s]" />
@@ -57,7 +57,7 @@ export function AuthShowcase() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-6 max-w-md text-sm leading-relaxed text-white/75"
+          className="mt-4 max-w-md text-sm leading-relaxed text-white/75"
         >
           Book your next visit, follow your academy course and collect loyalty points. Your account works
           the same here and in the Ansita mobile app.

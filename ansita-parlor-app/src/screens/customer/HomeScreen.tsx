@@ -145,7 +145,7 @@ const HomeSkeleton = () => {
         <Skeleton height={112} radius={radius.lg} style={styles.flex} />
         <Skeleton height={112} radius={radius.lg} style={styles.flex} />
       </View>
-      <Skeleton height={196} radius={radius.xl} />
+      <Skeleton height={168} radius={radius.xl} />
       <View style={styles.rail}>
         <Skeleton height={150} width={156} radius={radius.lg} />
         <Skeleton height={150} width={156} radius={radius.lg} />
@@ -155,7 +155,7 @@ const HomeSkeleton = () => {
 };
 
 export const HomeScreen = ({ navigation }: Props) => {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, screenPadding } = useTheme();
   const t = useT();
   const now = useNow();
   const user = useAuthStore(selectCurrentUser);
@@ -260,13 +260,13 @@ export const HomeScreen = ({ navigation }: Props) => {
           const points = data.customer.loyaltyPoints;
 
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               {/* ---------- Next visit / first visit ---------- */}
               {next ? (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('home.nextVisit')} actionLabel={t('common.seeAll')} onAction={() => goToAppointments()} />
                   <Card onPress={() => goToAppointments()} accessibilityLabel={`${t('home.nextVisit')}: ${serviceNames(next.serviceIds, services)}. ${countdown ?? ''}`}>
-                    <View style={{ gap: spacing.md }}>
+                    <View style={{ gap: spacing.sm }}>
                       <View style={styles.between}>
                         {countdown ? <Badge label={countdown} icon="hourglass-outline" tone="primary" variant="solid" /> : <View />}
                         <StatusPill kind="appointment" status={next.status} size="sm" />
@@ -312,7 +312,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                   />
                 </Card>
               ) : (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('home.nextVisit')} actionLabel={t('common.seeAll')} onAction={() => goToAppointments('past')} />
                   <Card variant="outlined" padding="none">
                     <EmptyState
@@ -357,7 +357,7 @@ export const HomeScreen = ({ navigation }: Props) => {
 
               {/* ---------- Amount due ---------- */}
               {dues.total > 0 ? (
-                <Card padding="lg" style={{ gap: spacing.md }}>
+                <Card padding="md" style={{ gap: spacing.sm }}>
                   <View style={styles.between}>
                     <View style={styles.flex}>
                       <Text variant="label" tone="secondary">
@@ -402,7 +402,7 @@ export const HomeScreen = ({ navigation }: Props) => {
 
               {/* ---------- Course progress ---------- */}
               {derived.activeEnrollments.length > 0 ? (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('home.courses')} actionLabel={t('common.seeAll')} onAction={() => navigation.navigate('MyCourses')} />
                   {derived.activeEnrollments.map((enrollment) => {
                     const attendance = selectAttendancePercent(enrollment);
@@ -410,7 +410,7 @@ export const HomeScreen = ({ navigation }: Props) => {
                     const title = courses.get(enrollment.courseId)?.title ?? t('home.course');
                     return (
                       <Card key={enrollment.id} onPress={() => navigation.navigate('MyCourses')} accessibilityLabel={title}>
-                        <View style={{ gap: spacing.md }}>
+                        <View style={{ gap: spacing.sm }}>
                           <View style={styles.between}>
                             <Text variant="h4" numberOfLines={1} style={styles.flex}>
                               {title}
@@ -448,7 +448,7 @@ export const HomeScreen = ({ navigation }: Props) => {
 
               {/* ---------- Offers ---------- */}
               {derived.offers.length > 0 ? (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('offers.title')} />
                   <OfferCarousel offers={derived.offers} onPressOffer={setOpenOffer} />
                 </View>
@@ -460,9 +460,15 @@ export const HomeScreen = ({ navigation }: Props) => {
 
               {/* ---------- Popular services ---------- */}
               {derived.popular.length > 0 ? (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title={t('home.popular')} actionLabel={t('common.seeAll')} onAction={() => navigation.navigate('Book')} />
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.rail, styles.railPad]}>
+                  {/* Bleeds to the screen edges like the offer carousel, so tiles aren't clipped by the page padding. */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginHorizontal: -screenPadding }}
+                    contentContainerStyle={[styles.rail, styles.railPad, { paddingHorizontal: screenPadding }]}
+                  >
                     {derived.popular.map((service) => (
                       <ServiceTile
                         key={service.id}
@@ -493,5 +499,5 @@ const styles = StyleSheet.create({
   iconTile: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   rail: { flexDirection: 'row', gap: 12 },
   // Room for card shadows inside the horizontal scroller.
-  railPad: { paddingVertical: 6, paddingRight: 4 },
+  railPad: { paddingVertical: 6 },
 });

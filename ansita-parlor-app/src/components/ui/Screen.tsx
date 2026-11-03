@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { useTheme, type SpacingKey } from '@/theme';
+import { overlayClearance, useTheme, type SpacingKey } from '@/theme';
 
 /** Content wider than this (tablets, landscape) is centred instead of stretched. */
 export const MAX_CONTENT_WIDTH = 760;
@@ -54,7 +54,7 @@ export const Screen = ({
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
           // Scrolls the focused input above the keyboard on iOS.
           automaticallyAdjustKeyboardInsets
-          contentContainerStyle={[inner, styles.capped, { paddingBottom: overlay ? spacing.huge * 2 : spacing.xxl }, contentStyle]}
+          contentContainerStyle={[inner, styles.capped, { paddingBottom: overlay ? overlayClearance : spacing.xl }, contentStyle]}
           refreshControl={
             onRefresh ? (
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />

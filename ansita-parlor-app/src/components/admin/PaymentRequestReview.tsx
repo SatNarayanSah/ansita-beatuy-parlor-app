@@ -71,7 +71,7 @@ export const PendingPaymentRequests = ({ targetType, targetId, due }: PendingPay
   if (pending.length === 0) return null;
 
   return (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.sm }}>
       <SectionHeader title="Payments to verify" subtitle="Check your eSewa / Khalti / Fonepay / bank app, then approve or reject" compact />
       {pending.map((request) => (
         <PaymentRequestCard

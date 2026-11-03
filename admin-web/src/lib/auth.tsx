@@ -84,7 +84,8 @@ export function homeFor(user: Pick<User, "role">): string {
 
 /** Only follow same-site paths from ?next=, and only into the area the user may open. */
 export function safeNext(next: string | null, user: Pick<User, "role">): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return homeFor(user);
+  // Browsers read "/\evil.com" (and "/<tab>/evil.com") as "//evil.com", another site.
+  if (!next || !next.startsWith("/") || next.startsWith("//") || /[\\\u0000-\u001f\u007f]/.test(next)) return homeFor(user);
   if (next.startsWith("/admin") && user.role !== "admin") return homeFor(user);
   if (next.startsWith("/account") && user.role !== "customer") return homeFor(user);
   return next;

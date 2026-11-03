@@ -39,8 +39,8 @@ export const StatCard = ({
   const trendUp = trend !== undefined && trend >= 0;
 
   return (
-    <Card onPress={onPress} accessibilityLabel={`${label}: ${value}`} style={style} padding="lg">
-      <View style={[styles.header, { marginBottom: spacing.md }]}>
+    <Card onPress={onPress} accessibilityLabel={`${label}: ${value}`} style={style} padding="md">
+      <View style={[styles.header, { marginBottom: spacing.sm }]}>
         <Text variant="label" tone="secondary" style={styles.label} numberOfLines={1}>
           {label}
         </Text>

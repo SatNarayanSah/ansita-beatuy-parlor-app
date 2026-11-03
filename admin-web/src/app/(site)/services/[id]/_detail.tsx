@@ -40,14 +40,14 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
 
   if (services.isError) {
     return (
-      <Container className="py-16">
+      <Container className="py-10">
         <ErrorState error={services.error} onRetry={() => services.refetch()} />
       </Container>
     );
   }
   if (services.isLoading) {
     return (
-      <Container className="grid gap-8 py-12 lg:grid-cols-2">
+      <Container className="grid gap-6 py-8 lg:grid-cols-2">
         <Skeleton className="aspect-[4/3] rounded-3xl" />
         <div className="flex flex-col gap-4">
           <Skeleton className="h-6 w-32" />
@@ -59,7 +59,7 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
   }
   if (!service) {
     return (
-      <Container className="py-16">
+      <Container className="py-10">
         <title>Treatment not found · Ansita Beauty Parlour</title>
         <EmptyState
           icon={<Scissors className="h-7 w-7" />}
@@ -80,13 +80,13 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
   return (
     <>
       <title>{`${service.name} · Ansita Beauty Parlour`}</title>
-      <section className="relative overflow-hidden pt-6 pb-12 sm:pt-10 sm:pb-16">
+      <section className="relative overflow-hidden pt-4 pb-8 sm:pt-7 sm:pb-10">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-32 right-0 h-96 w-96 rounded-full opacity-25 blur-3xl" style={{ background: color }} />
         </div>
         <Container>
           {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-6 flex min-w-0 items-center gap-1.5 text-xs text-muted">
+          <nav aria-label="Breadcrumb" className="mb-4 flex min-w-0 items-center gap-1.5 text-xs text-muted">
             <Link href="/services" className="hover:text-primary">
               Services
             </Link>
@@ -100,7 +100,7 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
             <span className="truncate font-medium text-ink-2">{service.name}</span>
           </nav>
 
-          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+          <div className="grid items-center gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Picture, or a designed card in the category's colour */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, rotate: -1 }}
@@ -137,7 +137,7 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
               )}
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex min-w-0 flex-col gap-5">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex min-w-0 flex-col gap-4">
               {category && (
                 <span
                   className="flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
@@ -200,11 +200,11 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
       </section>
 
       {service.benefits?.length > 0 && (
-        <section className="border-t border-line/60 bg-surface-alt/40 py-14">
+        <section className="border-t border-line/60 bg-surface-alt/40 py-10">
           <Container>
             <p className="text-xs font-semibold tracking-[0.2em] text-gold-text uppercase">Why you&apos;ll love it</p>
             <h2 className="mt-2 font-display text-2xl font-bold text-ink sm:text-3xl">Benefits of {service.name}</h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {service.benefits.map((benefit, i) => (
                 <motion.li
                   key={benefit}
@@ -232,10 +232,10 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
         </section>
       )}
 
-      <section className="py-14">
+      <section className="py-10">
         <Container>
           <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">How your visit goes</h2>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+          <ol className="mt-6 grid gap-4 sm:grid-cols-3">
             {STEPS.map((step, i) => (
               <motion.li
                 key={step.title}
@@ -243,7 +243,7 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="relative rounded-2xl border border-line bg-surface p-5"
+                className="relative rounded-2xl border border-line bg-surface p-4"
               >
                 <span className="absolute top-4 right-5 font-display text-4xl font-bold text-line">{i + 1}</span>
                 <step.icon className="h-6 w-6 text-primary" />
@@ -256,10 +256,10 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
       </section>
 
       {deals.length > 0 && (
-        <section className="pb-14">
+        <section className="pb-10">
           <Container>
-            <h2 className="mb-6 font-display text-2xl font-bold text-ink sm:text-3xl">Save on this treatment</h2>
-            <div className="grid gap-5 lg:grid-cols-2">
+            <h2 className="mb-4 font-display text-2xl font-bold text-ink sm:text-3xl">Save on this treatment</h2>
+            <div className="grid gap-4 lg:grid-cols-2">
               {deals.map((offer, i) => (
                 <OfferBanner key={offer.id} offer={offer} categories={categoryMap} index={i} />
               ))}
@@ -269,15 +269,15 @@ export function ServiceDetail({ params }: { params: Promise<{ id: string }> }) {
       )}
 
       {related.length > 0 && (
-        <section className="border-t border-line/60 py-14">
+        <section className="border-t border-line/60 py-10">
           <Container>
-            <div className="mb-6 flex items-end justify-between gap-4">
+            <div className="mb-4 flex items-end justify-between gap-4">
               <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">More {category?.name.toLowerCase() ?? "treatments"}</h2>
               <Link href="/services" className="shrink-0 text-sm font-medium text-primary hover:underline">
                 All services
               </Link>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((s, i) => (
                 <ServiceCard key={s.id} service={s} category={categoryMap.get(s.categoryId)} index={i} />
               ))}

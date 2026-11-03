@@ -195,7 +195,7 @@ export const BottomSheet = ({
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
   sheet: { width: '100%' },
-  handleArea: { alignItems: 'center', paddingTop: 10, paddingBottom: 12 },
+  handleArea: { alignItems: 'center', paddingTop: 8, paddingBottom: 8 },
   handle: { width: 40, height: 5, borderRadius: 3 },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   headerText: { flex: 1, gap: 2 },

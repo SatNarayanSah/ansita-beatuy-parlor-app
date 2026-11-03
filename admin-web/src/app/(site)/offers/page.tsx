@@ -25,11 +25,11 @@ export default function OffersPage() {
         }
         subtitle="Tap a code to copy it, then use it when you book or show it at the desk."
       />
-      <Container className="py-12">
+      <Container className="py-8">
         {offers.isError ? (
           <ErrorState error={offers.error} onRetry={() => offers.refetch()} />
         ) : offers.isLoading ? (
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className={i === 0 ? "h-80 lg:col-span-2" : "h-72"} />
             ))}
@@ -46,7 +46,7 @@ export default function OffersPage() {
             }
           />
         ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             {offers.data.map((offer, i) => (
               <div key={offer.id} className={i === 0 ? "lg:col-span-2" : undefined}>
                 <OfferBanner offer={offer} categories={categoryMap} index={i} featured={i === 0} />

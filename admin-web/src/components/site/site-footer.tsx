@@ -18,9 +18,9 @@ export function SiteFooter() {
   const year = useSyncExternalStore(noopSubscribe, () => new Date().getFullYear(), () => null);
 
   return (
-    <footer className="relative mt-24 overflow-hidden border-t border-line bg-surface/70">
+    <footer className="relative mt-14 overflow-hidden border-t border-line bg-surface/70">
       <div className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[40rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-      <Container className="relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+      <Container className="relative grid gap-7 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-4">
           <SiteLogo />
           <p className="text-sm leading-relaxed text-muted">
@@ -113,7 +113,7 @@ export function SiteFooter() {
         </div>
       </Container>
       <div className="border-t border-line">
-        <Container className="flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted sm:flex-row">
+        <Container className="flex flex-col items-center justify-between gap-2 py-4 text-xs text-muted sm:flex-row">
           <p>
             © {year ? `${year} ` : ""}{profile?.name ?? "Ansita Beauty Parlour"}. All rights reserved.
           </p>

@@ -85,7 +85,7 @@ export const StaffDetailScreen = ({ navigation, route }: Props) => {
           const noShows = recent.filter((a) => a.status === 'no_show').length;
           const booked = recent.filter((a) => a.status !== 'cancelled').length;
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               <Card style={[styles.center, { gap: spacing.sm }]}>
                 <Avatar name={member.name} uri={member.avatar} size="xl" ring />
                 <Text variant="h2">{member.name}</Text>
@@ -100,9 +100,9 @@ export const StaffDetailScreen = ({ navigation, route }: Props) => {
                 </View>
               </Card>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Last 30 days" compact />
-                <View style={[styles.grid, { gap: spacing.md }]}>
+                <View style={[styles.grid, { gap: spacing.sm }]}>
                   <StatCard label="Appointments" value={booked} icon="calendar-outline" caption={`${completed.length} completed`} style={styles.cell} />
                   <StatCard label="Revenue" value={formatCurrency(sumCollected(recent))} icon="cash-outline" tone="success" style={styles.cell} />
                   <StatCard label="Rating" value={member.rating || '–'} icon="star-outline" tone="highlight" caption={`${reviews.length} reviews`} style={styles.cell} />
@@ -117,7 +117,7 @@ export const StaffDetailScreen = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Schedule" compact />
                 <View style={styles.dateBar}>
                   <IconButton icon="chevron-back" accessibilityLabel="Previous day" variant="soft" onPress={() => setDate(addDaysISO(date, -1))} />
@@ -155,7 +155,7 @@ export const StaffDetailScreen = ({ navigation, route }: Props) => {
                 </QueryState>
               </View>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Working hours" actionLabel="Edit" onAction={() => navigation.navigate('StaffForm', { staffId })} compact />
                 <Card padding="md">
                   {member.workingHours.map((day, index) => (
@@ -175,7 +175,7 @@ export const StaffDetailScreen = ({ navigation, route }: Props) => {
               </View>
 
               {reviews.length > 0 ? (
-                <View style={{ gap: spacing.md }}>
+                <View style={{ gap: spacing.sm }}>
                   <SectionHeader title="Recent reviews" compact />
                   <Card padding="md" style={{ gap: spacing.sm }}>
                     {reviews.slice(0, 4).map((review, index) => (

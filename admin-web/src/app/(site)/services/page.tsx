@@ -53,8 +53,8 @@ export default function ServicesPage() {
         }
         subtitle="Every service with its price and how long it takes. Pick one and book your slot online."
       />
-      <Container className="py-10">
-        <div className="sticky top-16 z-20 -mx-4 mb-8 flex flex-col gap-3 bg-bg/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 md:flex-row md:items-center md:justify-between">
+      <Container className="py-7">
+        <div className="sticky top-16 z-20 -mx-4 mb-6 flex flex-col gap-3 bg-bg/80 px-4 py-3 backdrop-blur-xl sm:-mx-4 sm:px-4 md:flex-row md:items-center md:justify-between">
           <Tabs value={category} onChange={setCategory} options={tabs} />
           <SearchInput value={query} onChange={setQuery} placeholder="Search treatments…" className="md:w-72" />
         </div>
@@ -62,7 +62,7 @@ export default function ServicesPage() {
         {services.isError ? (
           <ErrorState error={services.error} onRetry={() => services.refetch()} />
         ) : services.isLoading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-64" />
             ))}
@@ -74,7 +74,7 @@ export default function ServicesPage() {
             message={query ? `Nothing matches “${query}”. Try another word.` : "This category has no treatments yet."}
           />
         ) : (
-          <motion.div layout className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <motion.div layout className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout">
               {filtered.map((service, i) => (
                 <ServiceCard key={service.id} service={service} category={categoryMap.get(service.categoryId)} index={i} />

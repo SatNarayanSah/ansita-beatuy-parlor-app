@@ -89,7 +89,7 @@ export const CategoryFormScreen = ({ navigation, route }: Props) => {
     <Screen>
       <QueryState query={query} skeleton={<SkeletonCard />}>
         {() => (
-          <View style={{ gap: spacing.xl }}>
+          <View style={{ gap: spacing.lg }}>
             <View style={styles.preview}>
               <CategoryIcon category={preview} size={72} />
               <Text variant="h3">{name || 'New category'}</Text>

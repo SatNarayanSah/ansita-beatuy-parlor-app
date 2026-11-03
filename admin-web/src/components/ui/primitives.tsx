@@ -24,7 +24,7 @@ const buttonVariants: Record<ButtonVariant, string> = {
 const buttonSizes: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-xs gap-1.5 rounded-lg",
   md: "h-10 px-4 text-sm gap-2 rounded-xl",
-  lg: "h-12 px-6 text-sm gap-2 rounded-xl",
+  lg: "h-12 px-4 text-sm gap-2 rounded-xl",
   icon: "h-9 w-9 rounded-xl",
 };
 
@@ -122,7 +122,7 @@ export function SearchInput({
   return (
     <div className={cn("group relative", className)}>
       <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted transition-colors group-focus-within:text-primary" />
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="pr-8 pl-9" />
+      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="pr-6 pl-6" />
       {value && (
         <button
           type="button"
@@ -329,7 +329,7 @@ export function EmptyState({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center"
+      className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center"
     >
       <motion.div
         animate={{ y: [0, -6, 0] }}
@@ -350,7 +350,7 @@ export function EmptyState({
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const message = error instanceof Error ? error.message : "Something went wrong.";
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-danger/30 bg-danger-soft/60 px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-2xl border border-danger/30 bg-danger-soft/60 px-4 py-7 text-center">
       <p className="text-sm font-medium text-danger">{message}</p>
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>

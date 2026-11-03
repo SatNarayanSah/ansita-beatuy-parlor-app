@@ -51,7 +51,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
 
   return (
     <Screen gap="lg">
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Preferences" compact />
         <Card style={{ gap: spacing.md }}>
           <ListItem
@@ -100,7 +100,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
         </Card>
       ) : null}
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="App" compact />
         <Card padding="sm">
           <ListItem
@@ -137,7 +137,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
         </Card>
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Account" compact />
         <Card padding="sm">
           {user ? <ListItem title={user.name} subtitle={user.email} leftIcon="person-circle-outline" leftIconTone="neutral" /> : null}

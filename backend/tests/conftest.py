@@ -44,3 +44,13 @@ def register(client, name: str, email: str, phone: str) -> tuple[dict, dict]:
     assert response.status_code == 200, response.text
     body = response.json()
     return body["user"], auth(body["token"])
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limits():
+    """Every test starts with fresh attempt counters (they are per-process, in memory)."""
+    from app import rate_limit
+
+    rate_limit.clear_all()
+    yield
+    rate_limit.clear_all()

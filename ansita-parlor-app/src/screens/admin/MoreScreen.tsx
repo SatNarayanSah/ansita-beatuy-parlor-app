@@ -40,7 +40,7 @@ export const MoreScreen = ({ navigation }: Props) => {
   const counts: Partial<Record<MoreRoute, number>> = { Notifications: unread, PaymentRequests: paymentsToVerify };
 
   const section = (title: string, items: readonly MenuItem[], footer?: ReactNode) => (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.sm }}>
       <SectionHeader title={title} compact />
       <Card padding="sm">
         {items.map((item, index) => (

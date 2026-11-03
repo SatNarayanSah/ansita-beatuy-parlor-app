@@ -31,7 +31,7 @@ import { useAdoptParam } from '@/hooks/useAdoptParam';
 import { ANY_STAFF, useFreeSlots, useIsDayOff, useQualifiedStaff, type FreeSlot, type StaffChoice } from '@/hooks/useBookingAvailability';
 import { useCategoryMap, useServiceMap } from '@/hooks/useCatalog';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
-import { useT } from '@/i18n';
+import { useT, type TranslationKey, type Translate } from '@/i18n';
 import type { RootStackScreenProps } from '@/navigation/types';
 import { appointmentService, catalogService, getErrorMessage, isApiError } from '@/services';
 import { selectCurrentUser, useAuthStore, useServiceStore, useSettingsStore } from '@/store';
@@ -45,11 +45,19 @@ type Props = RootStackScreenProps<'Booking'>;
 const STEP_KEYS = ['booking.step.services', 'booking.step.stylist', 'booking.step.date', 'booking.step.time', 'booking.step.review'] as const;
 const LAST_STEP = STEP_KEYS.length - 1;
 
-const DAY_NAMES: Record<Weekday, string> = { sun: 'Sundays', mon: 'Mondays', tue: 'Tuesdays', wed: 'Wednesdays', thu: 'Thursdays', fri: 'Fridays', sat: 'Saturdays' };
+const DAY_KEYS: Record<Weekday, TranslationKey> = {
+  sun: 'day.sun',
+  mon: 'day.mon',
+  tue: 'day.tue',
+  wed: 'day.wed',
+  thu: 'day.thu',
+  fri: 'day.fri',
+  sat: 'day.sat',
+};
 
-const offDaysLabel = (member: Staff): string => {
-  const off = member.workingHours.filter((hours) => hours.isOff).map((hours) => DAY_NAMES[hours.day]);
-  return off.length ? `Off on ${off.join(', ')}` : 'Works every day';
+const offDaysLabel = (t: Translate, member: Staff): string => {
+  const off = member.workingHours.filter((hours) => hours.isOff).map((hours) => t(DAY_KEYS[hours.day]));
+  return off.length ? t('booking.offOn', { days: off.join(', ') }) : t('booking.worksEveryDay');
 };
 
 // ---------- Step 2: stylist ----------
@@ -214,7 +222,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const servicesStep = (
     <View style={{ gap: spacing.md }}>
       <Text variant="bodySmall" tone="secondary">
-        Pick one or more services for the same visit.
+        {t('booking.pickServices')}
       </Text>
       {promo.code ? (
         <View style={styles.inline}>
@@ -235,7 +243,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
           </View>
         }
         isEmpty={(list) => list.length === 0}
-        empty={{ icon: 'sparkles-outline', title: 'No services available', message: 'Please check back soon.' }}
+        empty={{ icon: 'sparkles-outline', title: t('booking.noServices'), message: t('booking.noServicesHint') }}
       >
         {(list) => (
           <View style={{ gap: spacing.sm }}>
@@ -259,13 +267,16 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const stylistStep = (
     <View style={{ gap: spacing.md }}>
       <Text variant="bodySmall" tone="secondary">
-        {qualified.length} stylist{qualified.length === 1 ? '' : 's'} can do {selected.length === 1 ? 'this service' : 'all of these services'}.
+        {t(qualified.length === 1 ? 'booking.qualifiedOne' : 'booking.qualifiedMany', {
+          count: qualified.length,
+          what: t(selected.length === 1 ? 'booking.thisService' : 'booking.allTheseServices'),
+        })}
       </Text>
       <StaffOption
         selected={staffChoice === ANY_STAFF}
         onPress={() => setStaffChoice(ANY_STAFF)}
-        title="Any available stylist"
-        subtitle="Most time slots. We'll assign the best available."
+        title={t('booking.anyStylist')}
+        subtitle={t('booking.anyStylistHint')}
         leading={
           <View style={[styles.anyIcon, { backgroundColor: colors.highlightSoft, borderRadius: radius.pill }]}>
             <Icon name="sparkles" size={22} color={colors.highlight} />
@@ -278,7 +289,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
           selected={staffChoice === member.id}
           onPress={() => setStaffChoice(member.id)}
           title={member.name}
-          subtitle={`${formatEnumLabel(member.role)} · ★ ${member.rating} · ${offDaysLabel(member)}`}
+          subtitle={`${formatEnumLabel(member.role)} · ★ ${member.rating} · ${offDaysLabel(t, member)}`}
           leading={<Avatar name={member.name} uri={member.avatar} size="md" />}
           trailing={member.id === preferences.favoriteStaffId ? <Icon name="heart" size={18} color={colors.primary} /> : undefined}
         />
@@ -294,7 +305,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
       <View style={styles.inline}>
         <Icon name="information-circle-outline" size={16} color={colors.textMuted} />
         <Text variant="caption" tone="muted" style={styles.flex}>
-          Greyed-out days are when {staffChoice === ANY_STAFF ? 'no stylist is' : 'your stylist is not'} working.
+          {t(staffChoice === ANY_STAFF ? 'booking.greyedAny' : 'booking.greyedStaff')}
         </Text>
       </View>
     </View>
@@ -303,16 +314,17 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const timeStep = (
     <View style={{ gap: spacing.md }}>
       <Text variant="bodySmall" tone="secondary">
-        {date ? formatDisplayDate(date) : ''} · {formatDuration(totals.duration)} appointment
+        {date ? `${formatDisplayDate(date)} · ` : ''}
+        {t('booking.appointmentLength', { duration: formatDuration(totals.duration) })}
       </Text>
       {!slots.loading && (slots.data?.length ?? 0) === 0 ? (
         <Card variant="outlined" padding="none">
           <EmptyState
             compact
             icon="time-outline"
-            title="Fully booked"
-            message="No free slot fits this appointment on this day."
-            actionLabel="Pick another date"
+            title={t('booking.fullyBooked')}
+            message={t('booking.fullyBookedHint')}
+            actionLabel={t('booking.pickAnotherDate')}
             onAction={() => setStep(2)}
           />
         </Card>
@@ -327,8 +339,8 @@ export const BookingScreen = ({ navigation, route }: Props) => {
       {slot && staffChoice === ANY_STAFF && slotStaff ? (
         <Animated.View entering={FadeIn} style={styles.inline}>
           <Icon name="person-circle-outline" size={18} color={colors.primary} />
-          <Text variant="bodySmall">
-            You’ll be with <Text variant="label">{slotStaff.name}</Text>
+          <Text variant="bodySmall" style={styles.flex}>
+            {t('booking.withStaff', { name: slotStaff.name })}
           </Text>
         </Animated.View>
       ) : null}
@@ -336,8 +348,8 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   );
 
   const reviewStep = (
-    <View style={{ gap: spacing.lg }}>
-      <Card style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.md }}>
+      <Card style={{ gap: spacing.sm }}>
         {selected.map((service) => (
           <View key={service.id} style={styles.lineItem}>
             <View style={styles.flex}>
@@ -385,32 +397,32 @@ export const BookingScreen = ({ navigation, route }: Props) => {
       <PromoCodeCard state={promo} />
 
       <Card padding="sm">
-        <View style={[styles.summaryRow, { padding: spacing.sm }]}>
+        <View style={[styles.summaryRow, { paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs }]}>
           <Icon name="calendar-outline" size={18} color={colors.primary} />
           <Text variant="bodyMedium" style={styles.flex}>
             {date ? formatDisplayDate(date) : ''}
           </Text>
-          <Button title="Change" size="sm" variant="ghost" onPress={() => setStep(2)} />
+          <Button title={t('booking.change')} size="sm" variant="ghost" onPress={() => setStep(2)} />
         </View>
-        <View style={[styles.summaryRow, { padding: spacing.sm }]}>
+        <View style={[styles.summaryRow, { paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs }]}>
           <Icon name="time-outline" size={18} color={colors.primary} />
           <Text variant="bodyMedium" style={styles.flex}>
             {slot ? formatTimeRange(slot.time, addMinutesToTime(slot.time, totals.duration)) : ''}
           </Text>
-          <Button title="Change" size="sm" variant="ghost" onPress={() => setStep(3)} />
+          <Button title={t('booking.change')} size="sm" variant="ghost" onPress={() => setStep(3)} />
         </View>
-        <View style={[styles.summaryRow, { padding: spacing.sm }]}>
+        <View style={[styles.summaryRow, { paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs }]}>
           <Icon name="person-outline" size={18} color={colors.primary} />
           <Text variant="bodyMedium" style={styles.flex}>
             {slotStaff?.name ?? ''}
           </Text>
-          <Button title="Change" size="sm" variant="ghost" onPress={() => setStep(1)} />
+          <Button title={t('booking.change')} size="sm" variant="ghost" onPress={() => setStep(1)} />
         </View>
       </Card>
 
       <Input
-        label="Notes for your stylist (optional)"
-        placeholder="Allergies, reference style, anything we should know"
+        label={t('booking.notesLabel')}
+        placeholder={t('booking.notesPlaceholder')}
         value={notes}
         onChangeText={setNotes}
         multiline
@@ -420,7 +432,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
 
       <View style={{ gap: spacing.sm }}>
         <Text variant="label" tone="secondary">
-          How will you pay?
+          {t('booking.howPay')}
         </Text>
         <PaymentMethodPicker value={payment} onChange={setPayment} />
       </View>
@@ -428,7 +440,7 @@ export const BookingScreen = ({ navigation, route }: Props) => {
       <View style={styles.inline}>
         <Icon name="shield-checkmark-outline" size={16} color={colors.success} />
         <Text variant="caption" tone="muted" style={styles.flex}>
-          Your request is sent to the parlour and confirmed shortly. Free cancellation any time before your visit.
+          {t('booking.requestNote')}
         </Text>
       </View>
     </View>
@@ -439,36 +451,36 @@ export const BookingScreen = ({ navigation, route }: Props) => {
   const footerHint =
     step === 0
       ? serviceIds.length === 0
-        ? 'Select at least one service'
+        ? t('booking.hint.selectService')
         : qualified.length === 0
-          ? 'No single stylist does all of these. Remove one and book it separately.'
-          : `${serviceIds.length} selected · ${formatDuration(totals.duration)} · ${formatCurrency(totals.price)}`
+          ? t('booking.hint.cantCombine')
+          : t('booking.hint.selected', { count: serviceIds.length, duration: formatDuration(totals.duration), price: formatCurrency(totals.price) })
       : step === 3 && slot
-        ? `${formatTime12(slot.time)} selected`
+        ? t('booking.hint.slot', { time: formatTime12(slot.time) })
         : null;
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={[styles.root, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-        <View style={[styles.capped, { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm }]}>
+        <View style={[styles.capped, { paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xs }]}>
           <Stepper steps={STEP_KEYS.map((key) => t(key))} current={step} />
         </View>
 
         <ScrollView
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          contentContainerStyle={[styles.capped, { padding: spacing.lg, paddingBottom: spacing.huge }]}
+          contentContainerStyle={[styles.capped, { padding: spacing.md, paddingBottom: spacing.xl }]}
         >
           <Animated.View key={step} entering={FadeInRight.duration(220)}>
             {bodies[step]}
           </Animated.View>
         </ScrollView>
 
-        <View style={[styles.footer, shadows.lg, { backgroundColor: colors.surface, borderTopColor: colors.border, padding: spacing.lg, gap: spacing.sm }]}>
+        <View style={[styles.footer, shadows.lg, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, gap: spacing.sm }]}>
           <View style={[styles.capped, { gap: spacing.sm }]}>
             {footerHint ? (
               <View style={styles.inline}>
-                {step === 0 && serviceIds.length > 0 && qualified.length === 0 ? <Badge label="Can't combine" tone="warning" size="sm" /> : null}
+                {step === 0 && serviceIds.length > 0 && qualified.length === 0 ? <Badge label={t('booking.cantCombine')} tone="warning" size="sm" /> : null}
                 <Text variant="caption" tone={step === 0 && serviceIds.length > 0 && qualified.length === 0 ? 'warning' : 'secondary'} style={styles.flex}>
                   {footerHint}
                 </Text>

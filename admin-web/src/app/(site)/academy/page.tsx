@@ -66,7 +66,7 @@ function CourseCard({ course, instructor, index, onEnquire }: { course: Course; 
   return (
     <Reveal delay={Math.min(index, 6) * 0.06}>
       <motion.article layout className="overflow-hidden rounded-3xl border border-line bg-surface shadow-soft transition-shadow hover:shadow-lift">
-        <motion.div layout="position" className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+        <motion.div layout="position" className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
           <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-plum to-[#35222f] text-white shadow-lg">
             {course.image && /^https?:\/\//.test(course.image) ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -127,9 +127,9 @@ function CourseCard({ course, instructor, index, onEnquire }: { course: Course; 
               transition={{ type: "spring", stiffness: 200, damping: 28 }}
               className="overflow-hidden"
             >
-              <div className="grid gap-8 border-t border-line p-6 lg:grid-cols-2">
+              <div className="grid gap-6 border-t border-line p-4 lg:grid-cols-2">
                 <div>
-                  {course.description && <p className="mb-5 text-sm leading-relaxed text-ink-2">{course.description}</p>}
+                  {course.description && <p className="mb-4 text-sm leading-relaxed text-ink-2">{course.description}</p>}
                   <h4 className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-[0.2em] text-gold-text uppercase">
                     <BookOpen className="h-4 w-4" /> Syllabus
                   </h4>
@@ -186,7 +186,7 @@ function CourseCard({ course, instructor, index, onEnquire }: { course: Course; 
                     <CalendarDays className="h-4 w-4" /> Upcoming batches
                   </h4>
                   <Batches course={course} />
-                  <Button className="mt-6 w-full sm:w-auto" size="lg" onClick={onEnquire}>
+                  <Button className="mt-4 w-full sm:w-auto" size="lg" onClick={onEnquire}>
                     Enquire to join
                   </Button>
                 </div>
@@ -232,7 +232,7 @@ export default function AcademyPage() {
         </div>
       </PageHero>
 
-      <Container className="flex flex-col gap-5 py-12">
+      <Container className="flex flex-col gap-4 py-8">
         {courses.isError ? (
           <ErrorState error={courses.error} onRetry={() => courses.refetch()} />
         ) : courses.isLoading ? (

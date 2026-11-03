@@ -55,10 +55,12 @@ export const ProfileScreen = ({ navigation }: Props) => {
 
   return (
     <Screen gap="lg">
-      <Card style={[styles.profile, { gap: spacing.md }]}>
+      <Card style={[styles.profile, { gap: spacing.sm }]}>
         <Avatar name={user.name} uri={user.avatar} size="xl" ring editable onPress={() => setPhotoOpen(true)} />
         <View style={styles.center}>
-          <Text variant="h2">{user.name}</Text>
+          <Text variant="h2" align="center" numberOfLines={2}>
+            {user.name}
+          </Text>
           <Text variant="bodySmall" tone="secondary">
             {formatPhone(user.phone)}
           </Text>
@@ -68,7 +70,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
         </View>
         <View style={styles.badges}>
           {customer?.tags.includes('vip') ? <Badge label="VIP" tone="highlight" icon="diamond" /> : null}
-          <Badge label={`${formatNumber(customer?.loyaltyPoints ?? 0)} points`} tone="accent" icon="gift-outline" />
+          <Badge label={t('profile.points', { count: formatNumber(customer?.loyaltyPoints ?? 0) })} tone="accent" icon="gift-outline" />
         </View>
       </Card>
 
@@ -109,7 +111,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
         />
       </Card>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title={t('profile.language')} compact />
         <SegmentedControl options={LANGUAGE_OPTIONS} value={language} onChange={setLanguage} />
       </View>

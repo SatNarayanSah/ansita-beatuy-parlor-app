@@ -198,7 +198,7 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
 
   return (
     <>
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="1. How did you pay?" compact />
         <Controller
           control={control}
@@ -237,12 +237,12 @@ const SendPaymentForm = ({ targetType, targetId, room, methods, accounts }: Send
         />
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="2. Pay to" subtitle="Pay in your wallet or bank app first, then come back here" compact />
         <PaymentAccountDetails method={method} account={accounts[method]} />
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="3. Tell us about the payment" compact />
         <Card style={{ gap: spacing.md }}>
           <FormInput

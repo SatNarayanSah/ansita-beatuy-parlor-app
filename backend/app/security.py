@@ -49,7 +49,8 @@ def get_optional_user(
     if credentials is None:
         return None
     try:
-        payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(credentials.credentials, settings.jwt_secret, algorithms=[settings.jwt_algorithm],
+                             options={"require": ["exp", "sub", "ver"]})
     except jwt.PyJWTError as exc:
         raise ApiError("UNAUTHORIZED") from exc
     user = db.get(User, payload.get("sub"))
@@ -72,5 +73,5 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
 
 def assert_customer_access(user: User, customer_id: str) -> None:
     """Admins may act on any customer; customers only on themselves."""
-    if user.role == "customer" and user.customer_id != customer_id:
+    if user.role != "admin" and (not user.customer_id or user.customer_id != customer_id):
         raise ApiError("FORBIDDEN")

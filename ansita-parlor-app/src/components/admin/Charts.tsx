@@ -272,7 +272,7 @@ export const RankedBars = ({ items, format = formatCurrency, detail, limit = 8 }
 
 const styles = StyleSheet.create({
   tooltip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   center: { alignItems: 'center' },
   legend: { flex: 1, gap: 8 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -34,7 +34,7 @@ export const EnrollmentCard = ({ enrollment, course, onPress, paymentRequests, o
   const notStarted = batch ? batch.startDate > todayISO() : false;
 
   return (
-    <Card onPress={onPress} accessibilityLabel={course?.title} style={{ gap: spacing.md }}>
+    <Card onPress={onPress} accessibilityLabel={course?.title} style={{ gap: spacing.sm }}>
       <View style={styles.header}>
         <View style={styles.flex}>
           <Text variant="h4">{course?.title ?? 'Course'}</Text>

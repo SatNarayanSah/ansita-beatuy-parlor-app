@@ -26,7 +26,7 @@ export const PreferencesScreen = (_props: Props) => {
 
   return (
     <Screen gap="lg">
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Favourite stylist" subtitle="Pre-selected when you book, if they offer the service." compact />
         <Card padding="sm">
           <ListItem
@@ -51,12 +51,12 @@ export const PreferencesScreen = (_props: Props) => {
         </Card>
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Preferred payment" compact />
         <PaymentMethodPicker value={preferences.paymentMethod} onChange={(paymentMethod) => update({ paymentMethod })} />
       </View>
 
-      <View style={{ gap: spacing.md }}>
+      <View style={{ gap: spacing.sm }}>
         <SectionHeader title="Appointment reminders" compact />
         <SegmentedControl options={REMINDER_OPTIONS} value={preferences.reminder} onChange={(reminder) => update({ reminder })} />
         <Card padding="sm">

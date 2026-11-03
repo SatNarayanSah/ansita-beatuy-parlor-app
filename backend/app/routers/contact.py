@@ -1,9 +1,10 @@
 """Enquiries from the public website's contact form. Each one becomes an admin notification."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import Field
 from sqlalchemy.orm import Session
 
+from .. import rate_limit
 from ..db import get_db
 from ..errors import ApiError
 from ..notify import notify_admins
@@ -22,7 +23,9 @@ class ContactInput(CamelModel):
 
 
 @router.post("", status_code=201)
-def send_enquiry(body: ContactInput, db: Session = Depends(get_db)):
+def send_enquiry(body: ContactInput, request: Request, db: Session = Depends(get_db)):
+    # Public form: each message notifies (and pushes to) every admin, so cap repeats per address.
+    rate_limit.contact_messages.check_and_hit(rate_limit.client_ip(request))
     phone = normalize_phone(body.phone) if body.phone.strip() else ""
     email = body.email.strip().lower()
     if not phone and not email:

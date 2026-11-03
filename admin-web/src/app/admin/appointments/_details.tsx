@@ -272,7 +272,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
         }
       >
         {a && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {/* Status actions */}
             {NEXT_STATUSES[a.status].length > 0 && (
               <section>
@@ -349,7 +349,7 @@ export function AppointmentDrawer({ appointment, onClose }: { appointment: Appoi
                 })}
                 <li className="flex justify-between bg-surface-alt px-4 py-2.5 text-sm font-semibold">
                   <span className="text-ink">Total at booking</span>
-                  <span className="text-primary-dark">{money(a.totalPrice)}</span>
+                  <span className="text-primary-dark">{billTotal(a) < a.totalPrice && <span className="mr-1.5 text-xs font-normal text-muted line-through">{money(a.totalPrice)}</span>}{money(billTotal(a))}</span>
                 </li>
               </ul>
             </section>

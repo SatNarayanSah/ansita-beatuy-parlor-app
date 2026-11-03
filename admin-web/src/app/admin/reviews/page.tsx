@@ -28,7 +28,7 @@ function ReviewCard({ review, index, onDelete }: { review: Review; index: number
       animate={{ opacity: 1, y: 0, transition: { delay: Math.min(index, 12) * 0.04, type: "spring", stiffness: 240, damping: 24 } }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
     >
-      <Card hover className="flex h-full flex-col gap-3 p-5">
+      <Card hover className="flex h-full flex-col gap-3 p-4">
         <div className="flex items-start gap-3">
           <Avatar name={name} size={40} />
           <div className="min-w-0 flex-1">
@@ -119,8 +119,8 @@ export default function ReviewsPage() {
         </div>
       ) : (
         <>
-          <Card initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6 grid gap-6 p-6 md:grid-cols-[220px_1fr]">
-            <div className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft p-5 text-center">
+          <Card initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-4 grid gap-4 p-4 md:grid-cols-[220px_1fr]">
+            <div className="flex flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-primary-soft via-plum-soft to-gold-soft p-4 text-center">
               <p className="font-display text-5xl font-bold text-ink">
                 <AnimatedNumber value={average} format={(n) => n.toFixed(1)} />
               </p>
@@ -149,7 +149,7 @@ export default function ReviewsPage() {
             </div>
           </Card>
 
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Tabs
               value={rating}
               onChange={setRating}

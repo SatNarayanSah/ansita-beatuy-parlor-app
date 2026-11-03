@@ -37,7 +37,7 @@ export default function ContactPage() {
         subtitle="Questions about a treatment, a bridal package or a course? Send a message and our team will reply soon."
       />
 
-      <Container className="py-12">
+      <Container className="py-8">
         {settings.isError && <ErrorState error={settings.error} onRetry={() => settings.refetch()} />}
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -49,7 +49,7 @@ export default function ContactPage() {
                     href={c.href}
                     target={c.href.startsWith("http") ? "_blank" : undefined}
                     rel="noreferrer"
-                    className="group hover-lift flex items-center gap-4 rounded-3xl border border-line bg-surface p-5 shadow-soft"
+                    className="group hover-lift flex items-center gap-4 rounded-3xl border border-line bg-surface p-4 shadow-soft"
                   >
                     <motion.span whileHover={{ rotate: -12 }} transition={{ type: "spring", stiffness: 170, damping: 16 }} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg ${c.tint}`}>
                       <c.icon className="h-5 w-5" />
@@ -63,18 +63,18 @@ export default function ContactPage() {
               ))}
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
           <Reveal>
-            <Card className="p-6 sm:p-8">
+            <Card className="p-4 sm:p-6">
               <h2 className="font-display text-2xl font-semibold text-ink">Send us a message</h2>
-              <p className="mt-1 mb-6 text-sm text-muted">We usually reply within a few hours during opening times.</p>
+              <p className="mt-1 mb-4 text-sm text-muted">We usually reply within a few hours during opening times.</p>
               <EnquiryForm />
             </Card>
           </Reveal>
 
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <Reveal delay={0.1}>
-              <Card className="p-6">
+              <Card className="p-4">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-ink">
                     <Clock className="h-5 w-5 text-primary" /> Opening hours
@@ -93,7 +93,7 @@ export default function ContactPage() {
                   <Skeleton className="mt-4 h-5 w-48" />
                 )}
                 {holidays.length > 0 && (
-                  <div className="mt-5">
+                  <div className="mt-4">
                     <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-[0.15em] text-gold-text uppercase">
                       <CalendarOff className="h-3.5 w-3.5" /> Upcoming closures
                     </p>
@@ -127,7 +127,7 @@ export default function ContactPage() {
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                     />
-                    <div className="flex items-start gap-3 p-5 text-sm text-ink-2">
+                    <div className="flex items-start gap-3 p-4 text-sm text-ink-2">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <span>
                         {profile.address}

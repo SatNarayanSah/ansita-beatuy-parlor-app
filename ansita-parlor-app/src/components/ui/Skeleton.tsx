@@ -102,7 +102,7 @@ export const SkeletonCard = ({ style }: { style?: StyleProp<ViewStyle> }) => {
   return (
     <View
       style={[
-        { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md, borderColor: colors.border, borderWidth: 1 },
+        { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.md, gap: spacing.sm, borderColor: colors.border, borderWidth: 1 },
         style,
       ]}
     >

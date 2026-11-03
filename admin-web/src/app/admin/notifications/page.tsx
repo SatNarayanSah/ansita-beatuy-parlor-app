@@ -102,7 +102,7 @@ export default function NotificationsPage() {
       />
 
       <Tabs
-        className="mb-5"
+        className="mb-4"
         value={filter}
         onChange={setFilter}
         options={[
@@ -128,7 +128,7 @@ export default function NotificationsPage() {
           />
         </Card>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4">
           {groups.map((group) => (
             <section key={group.title}>
               <h2 className="mb-2 px-1 text-[11px] font-semibold tracking-[0.2em] text-muted uppercase">{group.title}</h2>

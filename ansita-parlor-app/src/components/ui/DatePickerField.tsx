@@ -197,7 +197,7 @@ export const DatePickerField = ({
 };
 
 const styles = StyleSheet.create({
-  field: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 50, borderWidth: 1 },
+  field: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, borderWidth: 1 },
   value: { flex: 1 },
-  yearRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 24 },
+  yearRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
 });

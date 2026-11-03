@@ -87,7 +87,7 @@ export const EnrollStudentScreen = ({ navigation, route }: Props) => {
     <Screen>
       <QueryState query={courses} skeleton={<SkeletonCard />}>
         {(list) => (
-          <View style={{ gap: spacing.xl }}>
+          <View style={{ gap: spacing.lg }}>
             <View style={{ gap: spacing.sm }}>
               <SectionHeader title="Student" compact />
               {student ? (

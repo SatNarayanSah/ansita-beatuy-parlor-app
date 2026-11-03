@@ -134,7 +134,7 @@ export const MyAppointmentsScreen = ({ navigation, route }: Props) => {
         }
         empty={{
           ...EMPTY[tab],
-          actionLabel: tab === 'cancelled' ? undefined : 'Book an appointment',
+          actionLabel: tab === 'cancelled' ? undefined : t('home.bookNow'),
           onAction: tab === 'cancelled' ? undefined : () => navigation.navigate('Booking'),
         }}
       />

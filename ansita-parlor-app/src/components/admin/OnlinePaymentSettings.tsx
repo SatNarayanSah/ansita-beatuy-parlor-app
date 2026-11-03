@@ -60,7 +60,7 @@ export const OnlinePaymentSettings = ({ payments, onDirtyChange }: OnlinePayment
   };
 
   return (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.sm }}>
       <SectionHeader title="Online payments" subtitle="Customers pay your account, then tap “I’ve paid” for you to verify" compact />
       <Card padding="sm">
         <ListItem

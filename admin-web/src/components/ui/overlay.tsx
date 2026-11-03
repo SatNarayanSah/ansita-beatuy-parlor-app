@@ -81,7 +81,7 @@ interface OverlayProps {
 function ModalBody({ onClose, title, description, children, footer, className }: Omit<OverlayProps, "open">) {
   useOverlayLifecycle(onClose);
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
       <Backdrop onClick={onClose} />
       <motion.div
         role="dialog"
@@ -96,7 +96,7 @@ function ModalBody({ onClose, title, description, children, footer, className }:
         )}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary-soft/60 to-transparent" />
-        <header className="relative flex items-start justify-between gap-4 px-6 pt-6 pb-3">
+        <header className="relative flex items-start justify-between gap-4 px-4 pt-4 pb-3">
           <div>
             <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
             {description && <p className="mt-1 text-sm text-muted">{description}</p>}
@@ -105,9 +105,9 @@ function ModalBody({ onClose, title, description, children, footer, className }:
             <X className="h-4 w-4" />
           </Button>
         </header>
-        <div className="relative flex-1 overflow-y-auto px-6 pb-6">{children}</div>
+        <div className="relative flex-1 overflow-y-auto px-4 pb-4">{children}</div>
         {footer && (
-          <footer className="relative flex flex-wrap justify-end gap-2 border-t border-line bg-bg/60 px-6 py-4">{footer}</footer>
+          <footer className="relative flex flex-wrap justify-end gap-2 border-t border-line bg-bg/60 px-4 py-4">{footer}</footer>
         )}
       </motion.div>
     </div>
@@ -139,7 +139,7 @@ function DrawerBody({ onClose, title, description, children, footer, className }
           className,
         )}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
+        <header className="flex items-start justify-between gap-4 border-b border-line px-4 py-4">
           <div className="min-w-0">
             <h2 className="truncate font-display text-xl font-semibold text-ink">{title}</h2>
             {description && <div className="mt-1 text-sm text-muted">{description}</div>}
@@ -149,14 +149,14 @@ function DrawerBody({ onClose, title, description, children, footer, className }
           </Button>
         </header>
         <motion.div
-          className="flex-1 overflow-y-auto px-6 py-5"
+          className="flex-1 overflow-y-auto px-4 py-4"
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.12, duration: 0.3 }}
         >
           {children}
         </motion.div>
-        {footer && <footer className="flex flex-wrap justify-end gap-2 border-t border-line px-6 py-4">{footer}</footer>}
+        {footer && <footer className="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-4">{footer}</footer>}
       </motion.aside>
     </div>
   );

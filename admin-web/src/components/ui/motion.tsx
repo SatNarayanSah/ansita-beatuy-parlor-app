@@ -128,7 +128,7 @@ export function PageHeader({
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 260, damping: 28 }}
-      className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
     >
       <div>
         {eyebrow && <p className="mb-1 text-[11px] font-semibold tracking-[0.2em] text-gold-text uppercase">{eyebrow}</p>}

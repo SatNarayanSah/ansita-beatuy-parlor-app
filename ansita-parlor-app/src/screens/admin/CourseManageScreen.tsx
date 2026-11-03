@@ -77,7 +77,7 @@ export const CourseManageScreen = ({ navigation, route }: Props) => {
           const instructor = staff.get(course.instructor);
           const due = enrollments.filter((e) => e.status !== 'dropped').reduce((sum, e) => sum + selectFeeDue(e), 0);
           return (
-            <View style={{ gap: spacing.xl }}>
+            <View style={{ gap: spacing.lg }}>
               <Card style={{ gap: spacing.sm }}>
                 <View style={styles.row}>
                   <Badge label={formatEnumLabel(course.type)} tone={meta.tone} icon={meta.icon} size="sm" />
@@ -111,7 +111,7 @@ export const CourseManageScreen = ({ navigation, route }: Props) => {
                 </View>
               </Card>
 
-              <View style={{ gap: spacing.md }}>
+              <View style={{ gap: spacing.sm }}>
                 <SectionHeader title="Batches" actionLabel="Add batch" onAction={() => navigation.navigate('BatchForm', { courseId })} />
                 {availability.length === 0 ? (
                   <Card variant="outlined" padding="none">

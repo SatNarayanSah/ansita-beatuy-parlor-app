@@ -47,9 +47,11 @@ def list_enrollments(
     db: Session = Depends(get_db),
 ):
     """Customers only ever receive their own enrollments."""
-    if user.role == "customer":
-        student_id = user.customer_id
     stmt = select(Enrollment)
+    if user.role != "admin":
+        # Always filtered, even for an account without a linked customer (sees nothing).
+        stmt = stmt.where(Enrollment.student_id == user.customer_id)
+        student_id = None
     if course_id:
         stmt = stmt.where(Enrollment.course_id == course_id)
     if batch_id:

@@ -92,7 +92,7 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
         </>
       }
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Title" className="sm:col-span-2">
             <Input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Professional Makeup Artistry" autoFocus />
@@ -125,7 +125,7 @@ function CourseEditor({ course, onClose }: { course: Course | null; onClose: () 
             onUploadingChange={setUploading}
             className="sm:col-span-2"
           />
-          <div className="flex flex-wrap items-center gap-6 sm:col-span-2">
+          <div className="flex flex-wrap items-center gap-4 sm:col-span-2">
             <Checkbox checked={form.certificate} onChange={(v) => set("certificate", v)} label="Awards a certificate" />
             <Checkbox checked={form.isActive} onChange={(v) => set("isActive", v)} label="Open for enrollment" />
           </div>
@@ -312,7 +312,7 @@ function CourseDetail({ course, onClose, onEdit }: { course: Course; onClose: ()
           </>
         }
       >
-        <div className="mb-5 grid grid-cols-3 gap-3">
+        <div className="mb-4 grid grid-cols-3 gap-3">
           {[
             { label: "Fee", value: money(course.fee) },
             { label: "Instructor", value: lookups.staff.get(course.instructor)?.name ?? "—" },
@@ -330,7 +330,7 @@ function CourseDetail({ course, onClose, onEdit }: { course: Course; onClose: ()
             </motion.div>
           ))}
         </div>
-        {course.description && <p className="mb-5 text-sm leading-relaxed text-ink-2">{course.description}</p>}
+        {course.description && <p className="mb-4 text-sm leading-relaxed text-ink-2">{course.description}</p>}
 
         <Tabs
           value={tab}
@@ -475,7 +475,7 @@ export default function CoursesPage() {
         }
       />
 
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs
           value={type}
           onChange={setType}
@@ -544,7 +544,7 @@ export default function CoursesPage() {
                       />
                     </div>
                   </div>
-                  <div className="flex flex-1 flex-col p-5">
+                  <div className="flex flex-1 flex-col p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-display text-lg leading-snug font-semibold text-ink">{course.title}</h3>
                       <Badge tone={LEVEL_TONE[course.level]}>{label(course.level)}</Badge>
