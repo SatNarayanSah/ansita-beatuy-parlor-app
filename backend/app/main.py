@@ -31,8 +31,14 @@ from .routers import settings as settings_router
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if not settings.database_url.startswith("sqlite"):
-        if settings.jwt_secret == "change-me-in-production" or len(settings.jwt_secret) < 32:
-            raise RuntimeError("Set JWT_SECRET to a long random string (32+ characters) before running against a real database.")
+        secret = settings.jwt_secret
+        if secret == "change-me-in-production":
+            raise RuntimeError(
+                "JWT_SECRET is not set for this service. Add an environment variable named exactly JWT_SECRET "
+                "(32+ random characters) and redeploy."
+            )
+        if len(secret) < 32:
+            raise RuntimeError(f"JWT_SECRET is only {len(secret)} characters long; use 32 or more random characters.")
         if settings.jwt_algorithm not in ("HS256", "HS384", "HS512"):
             raise RuntimeError("JWT_ALGORITHM must be HS256, HS384 or HS512.")
     init_db()

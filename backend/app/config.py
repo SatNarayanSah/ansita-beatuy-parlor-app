@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,6 +42,12 @@ class Settings(BaseSettings):
     admin_password: str = ""
     admin_name: str = "Ansita Shrestha"
     admin_phone: str = "+9779841500100"
+
+    @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", mode="before")
+    @classmethod
+    def _strip(cls, value):
+        # Values pasted into a dashboard often carry a stray space or newline.
+        return value.strip() if isinstance(value, str) else value
 
     @property
     def sqlalchemy_url(self) -> str:
