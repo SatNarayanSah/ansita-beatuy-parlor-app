@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Ansita Beauty Parlor",
-    "slug": "ansita-parlor-app",
+    "slug": "ansita-parlor",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ansita.parlor"
+      "package": "com.ansita.parlor",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -52,6 +55,12 @@
           "defaultChannel": "default"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9640ff8e-e354-4de3-adae-8ac8e6cca833"
+      }
+    },
+    "owner": "satyamsahs-dev-team"
   }
 }

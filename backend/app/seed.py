@@ -73,7 +73,7 @@ SERVICES = [
 ]
 
 STAFF = [
-    {"id": "stf_ansita", "name": "Ansita Shrestha", "role": "owner", "phone": "+9779841500100", "email": "admin@ansita.com",
+    {"id": "stf_ansita", "name": "Ansita Shrestha", "role": "owner", "phone": "+9779854028392", "email": "admin@ansita.com",
      "specialties": ["cat_hair", "cat_skin"], "working_hours": shift("11:00", "17:00", ["tue"])},
     {"id": "stf_sarita", "name": "Sarita Maharjan", "role": "senior_stylist", "phone": "+9779851023344", "email": "sarita@ansita.com",
      "specialties": ["cat_hair"], "working_hours": shift("10:00", "19:00", ["wed"])},

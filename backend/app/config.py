@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     admin_email: str = ""
     admin_password: str = ""
     admin_name: str = "Ansita Shrestha"
-    admin_phone: str = "+9779841500100"
+    admin_phone: str = "+9779854028392"
 
     @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", "cors_origin_regex", mode="before")
     @classmethod
