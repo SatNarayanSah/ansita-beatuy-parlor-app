@@ -155,3 +155,19 @@ def test_codes_are_emailed_over_smtp_and_not_shown(client, monkeypatch):
     logo = [part for part in sent[0].walk() if part.get_content_type() == "image/png"]
     assert len(logo) == 1 and logo[0]["Content-ID"] == "<ansita-logo>" and "cid:ansita-logo" in html
     assert client.post("/auth/email/verify", json={"email": "mailed@example.com", "code": code}).status_code == 200
+
+
+def test_email_verification_can_be_switched_off(client, monkeypatch):
+    from app.routers import auth as auth_router
+
+    assert client.get("/auth/options").json() == {"emailVerification": True}
+    monkeypatch.setattr(auth_router.settings, "email_verification_enabled", False)
+    assert client.get("/auth/options").json() == {"emailVerification": False}
+    # Sign-up and email changes work without a code; the email must still be well formed.
+    assert client.post("/auth/register", json=_body("not-an-email", "9841000201")).status_code == 422
+    response = client.post("/auth/register", json=_body("Switched.Off@example.com", "9841000201"))
+    assert response.status_code == 200 and response.json()["user"]["email"] == "switched.off@example.com"
+    headers = {"Authorization": f"Bearer {response.json()['token']}"}
+    assert client.patch("/auth/me", json={"email": "switched.new@example.com"}, headers=headers).status_code == 200
+    # Phone rules still apply.
+    assert client.post("/auth/register", json=_body("switched.two@example.com", "9611234567")).status_code == 422

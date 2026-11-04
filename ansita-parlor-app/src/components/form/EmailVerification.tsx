@@ -22,7 +22,38 @@ interface Props {
 
 const RESEND_SECONDS = 30;
 
-export const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+// Asked once per app run; the setting only changes when the server is redeployed.
+let optionsRequest: Promise<boolean> | null = null;
+const loadEmailVerificationRequired = (): Promise<boolean> => {
+  optionsRequest ??= authService
+    .getAuthOptions()
+    .then((options) => options.emailVerification)
+    .catch(() => {
+      optionsRequest = null; // try again next time
+      return true;
+    });
+  return optionsRequest;
+};
+
+/**
+ * Whether the server wants an emailed code (sign-up, email change). It can be switched
+ * off where email can't be sent (EMAIL_VERIFICATION_ENABLED=false). Assumes "yes" until known.
+ */
+export const useEmailVerificationRequired = (): boolean => {
+  const [required, setRequired] = useState(true);
+  useEffect(() => {
+    let active = true;
+    void loadEmailVerificationRequired().then((value) => {
+      if (active) setRequired(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return required;
+};
+
+export const normalizeEmail =(email: string): string => email.trim().toLowerCase();
 
 /** True when `verified` proves exactly the address typed in the field. */
 export const isEmailVerified = (email: string, verified: VerifiedEmail | null): boolean =>

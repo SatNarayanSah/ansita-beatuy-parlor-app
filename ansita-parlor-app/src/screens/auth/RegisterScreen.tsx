@@ -4,7 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
-import { EmailVerification, isEmailVerified, type VerifiedEmail } from '@/components/form/EmailVerification';
+import { EmailVerification, isEmailVerified, useEmailVerificationRequired, type VerifiedEmail } from '@/components/form/EmailVerification';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Button, Text } from '@/components/ui';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
@@ -38,6 +38,7 @@ type Props = RootStackScreenProps<'Register'>;
 export const RegisterScreen = ({ navigation }: Props) => {
   const register = useAsyncAction(authService.register);
   const [verified, setVerified] = useState<VerifiedEmail | null>(null);
+  const verificationRequired = useEmailVerificationRequired();
 
   const { control, handleSubmit, setError } = useForm<RegisterValues, unknown, z.output<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -49,11 +50,11 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const emailValid = emailSchema.safeParse(email).success;
 
   const submit = handleSubmit(({ name, email: address, phone, password }) => {
-    if (!verified || !isEmailVerified(address, verified)) {
+    if (verificationRequired && (!verified || !isEmailVerified(address, verified))) {
       setError('email', { message: 'Verify your email with the code we send you' }, { shouldFocus: true });
       return;
     }
-    void register.run({ name, email: address, phone, password, emailVerificationToken: verified.token });
+    void register.run({ name, email: address, phone, password, emailVerificationToken: verified?.token ?? '' });
   });
 
   return (
@@ -84,7 +85,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
         autoComplete="email"
         textContentType="emailAddress"
       />
-      <EmailVerification email={email} emailValid={emailValid} verified={verified} onVerified={setVerified} />
+      {verificationRequired ? <EmailVerification email={email} emailValid={emailValid} verified={verified} onVerified={setVerified} /> : null}
       <FormPhoneInput control={control} name="phone" required helperText="NTC or Ncell. We send booking reminders here." />
       <FormInput
         control={control}

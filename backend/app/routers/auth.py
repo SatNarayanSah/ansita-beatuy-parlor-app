@@ -146,7 +146,10 @@ def register(body: RegisterInput, request: Request, db: Session = Depends(get_db
     email = _normalize_email(body.email)
     phone = _valid_mobile(body.phone)
     name = body.name.strip()
-    _assert_email_verified(body.email_verification_token, email)
+    if settings.email_verification_enabled:
+        _assert_email_verified(body.email_verification_token, email)
+    else:
+        email = _deliverable_email(email)
     _assert_email_available(db, email)
 
     # Walk-in customers who later download the app keep their history.
@@ -200,6 +203,12 @@ def register(body: RegisterInput, request: Request, db: Session = Depends(get_db
     return _session(user)
 
 
+@router.get("/options")
+def auth_options():
+    """Public. Tells the app and website which sign-up steps are switched on."""
+    return {"emailVerification": settings.email_verification_enabled}
+
+
 @router.get("/me")
 def get_current(user: User | None = Depends(get_optional_user)):
     """The signed-in user, or null when no token was sent."""
@@ -223,7 +232,10 @@ def update_profile(body: ProfileInput, user: User = Depends(get_current_user), d
         if email != _normalize_email(user.email):
             _assert_email_available(db, email, user.id)
             # A new sign-in email must be one the user can actually receive mail at.
-            _assert_email_verified(body.email_verification_token, email)
+            if settings.email_verification_enabled:
+                _assert_email_verified(body.email_verification_token, email)
+            else:
+                email = _deliverable_email(email)
             patch["email"] = email
     if "phone" in body.model_fields_set and body.phone is not None:
         phone = normalize_phone(body.phone)

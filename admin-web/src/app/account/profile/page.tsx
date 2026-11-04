@@ -15,6 +15,7 @@ import {
   ImageUpload,
   Input,
   isEmailVerified,
+  useEmailVerificationRequired,
   normalizeEmail,
   PageHeader,
   Skeleton,
@@ -65,7 +66,9 @@ function AccountForm({ user }: { user: User }) {
   const { setUser } = useAuth();
   const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone });
   const [verified, setVerified] = useState<VerifiedEmail | null>(null);
-  const emailChanged = normalizeEmail(form.email) !== normalizeEmail(user.email);
+  // True only when the new address needs an emailed code (off while the server can't send email).
+  const verificationRequired = useEmailVerificationRequired();
+  const emailChanged = verificationRequired && normalizeEmail(form.email) !== normalizeEmail(user.email);
   const phoneChanged = form.phone.trim() !== user.phone;
   const hint = phoneChanged ? phoneHint(form.phone) : null;
   const save = useAction(

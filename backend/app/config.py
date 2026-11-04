@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     # Look up the email's domain (MX/A records) before sending a code, so typos like
     # "gmial.com" are caught. Turn off only for tests or offline development.
     email_check_deliverability: bool = True
+    # Require a code emailed to the address at sign-up and when changing the sign-in email.
+    # false: skipped (the address is still checked for a real domain). Use while email can't
+    # be sent, e.g. on Render's free plan, which blocks SMTP. The apps read it from /auth/options.
+    email_verification_enabled: bool = True
     email_code_ttl_minutes: int = 10
     # How long a verified email stays usable for sign-up or an email change.
     email_verified_token_minutes: int = 30

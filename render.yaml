@@ -37,6 +37,10 @@ services:
         value: Ansita Beauty Parlour
       - key: MAIL_LOGO_URL
         sync: false
+      # Render's free plan blocks SMTP, so emailed sign-up codes are switched off here.
+      # Set to "true" after moving to a paid instance (SMTP allowed).
+      - key: EMAIL_VERIFICATION_ENABLED
+        value: "false"
       # Only used while no email provider is set: shows codes on screen instead of emailing.
       - key: EXPOSE_RESET_CODE
         value: "true"

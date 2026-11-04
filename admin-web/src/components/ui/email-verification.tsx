@@ -21,7 +21,38 @@ interface CodeSent {
 const RESEND_SECONDS = 30;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const normalizeEmail = (email: string) => email.trim().toLowerCase();
+// Asked once per page load; the setting only changes when the server is redeployed.
+let optionsRequest: Promise<boolean> | null = null;
+function loadEmailVerificationRequired(): Promise<boolean> {
+  optionsRequest ??= api
+    .get<{ emailVerification: boolean }>("/auth/options")
+    .then((options) => options.emailVerification)
+    .catch(() => {
+      optionsRequest = null; // try again next time
+      return true;
+    });
+  return optionsRequest;
+}
+
+/**
+ * Whether the server wants an emailed code (sign-up, email change). It can be switched
+ * off where email can't be sent (EMAIL_VERIFICATION_ENABLED=false). Assumes "yes" until known.
+ */
+export function useEmailVerificationRequired(): boolean {
+  const [required, setRequired] = useState(true);
+  useEffect(() => {
+    let active = true;
+    void loadEmailVerificationRequired().then((value) => {
+      if (active) setRequired(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return required;
+}
+
+export const normalizeEmail =(email: string) => email.trim().toLowerCase();
 
 /** True when `verified` proves exactly the address typed in the field. */
 export const isEmailVerified = (email: string, verified: VerifiedEmail | null) =>

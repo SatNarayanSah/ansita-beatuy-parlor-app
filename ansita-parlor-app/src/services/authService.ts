@@ -40,6 +40,11 @@ export interface EmailCodeSent {
   demoCode: string;
 }
 
+export interface AuthOptions {
+  /** false while the server can't send email: sign-up and email changes need no code. */
+  emailVerification: boolean;
+}
+
 export interface EmailVerified {
   email: string;
   verificationToken: string;
@@ -85,6 +90,9 @@ const startSession = async ({ user, token }: SessionResponse): Promise<User> => 
 export const authService = {
   login: async ({ email, password }: LoginInput): Promise<User> =>
     startSession(await api<SessionResponse>('POST', '/auth/login', { body: { email: email.trim(), password } })),
+
+  /** Which sign-up steps the server has switched on (e.g. emailed codes). Public. */
+  getAuthOptions: (): Promise<AuthOptions> => api<AuthOptions>('GET', '/auth/options'),
 
   /** Emails a 6-digit code to prove the address is real (sign-up, or changing your email). */
   sendEmailCode: (email: string): Promise<EmailCodeSent> =>

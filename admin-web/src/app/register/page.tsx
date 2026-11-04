@@ -7,7 +7,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthShowcase } from "@/components/layout/auth-showcase";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { Button, EmailVerification, fadeUp, Input, isEmailVerified, staggerParent, type VerifiedEmail } from "@/components/ui";
+import {
+  Button,
+  EmailVerification,
+  fadeUp,
+  Input,
+  isEmailVerified,
+  staggerParent,
+  useEmailVerificationRequired,
+  type VerifiedEmail,
+} from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { homeFor, useAuth } from "@/lib/auth";
 import { mobileNumberError, phoneHint } from "@/lib/phone";
@@ -37,6 +46,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState<VerifiedEmail | null>(null);
+  const verificationRequired = useEmailVerificationRequired();
   const hint = phoneHint(form.phone);
   const set =(key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -47,7 +57,7 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const problem = !verified || !isEmailVerified(form.email, verified)
+    const problem = verificationRequired && (!verified || !isEmailVerified(form.email, verified))
       ? "Verify your email with the code we send you."
       : mobileNumberError(form.phone) || (form.password.length < 6 ? "Use at least 6 characters for your password." : "");
     if (problem) {
@@ -62,7 +72,7 @@ export default function RegisterPage() {
         email: form.email.trim(),
         phone: form.phone.trim(),
         password: form.password,
-        emailVerificationToken: verified!.token,
+        emailVerificationToken: verified?.token ?? "",
       });
       router.replace(homeFor(created));
     } catch (err) {
@@ -101,9 +111,11 @@ export default function RegisterPage() {
           <motion.div animate={shake} className="flex flex-col gap-4">
             <IconInput icon={UserIcon} label="Full name" required minLength={2} autoComplete="name" value={form.name} onChange={set("name")} placeholder="Sita Sharma" />
             <IconInput icon={Mail} label="Email" type="email" required autoComplete="email" value={form.email} onChange={set("email")} placeholder="you@example.com" />
-            <motion.div variants={fadeUp}>
-              <EmailVerification email={form.email} verified={verified} onVerified={setVerified} />
-            </motion.div>
+            {verificationRequired && (
+              <motion.div variants={fadeUp}>
+                <EmailVerification email={form.email} verified={verified} onVerified={setVerified} />
+              </motion.div>
+            )}
             <div className="flex flex-col gap-1.5">
               <IconInput icon={Phone} label="Mobile (NTC or Ncell)" type="tel" required minLength={5} autoComplete="tel" value={form.phone} onChange={set("phone")} placeholder="98XXXXXXXX" />
               {hint && <p className={hint.error ? "text-xs text-danger" : "text-xs text-success"}>{hint.text}</p>}
