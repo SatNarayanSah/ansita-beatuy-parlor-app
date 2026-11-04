@@ -55,7 +55,8 @@ class Settings(BaseSettings):
     # Require a code emailed to the address at sign-up and when changing the sign-in email.
     # false: skipped (the address is still checked for a real domain). Use while email can't
     # be sent, e.g. on Render's free plan, which blocks SMTP. The apps read it from /auth/options.
-    email_verification_enabled: bool = True
+    # Off by default: the app and website hide the step (EMAIL_VERIFICATION_UI in each).
+    email_verification_enabled: bool = False
     email_code_ttl_minutes: int = 10
     # How long a verified email stays usable for sign-up or an email change.
     email_verified_token_minutes: int = 30

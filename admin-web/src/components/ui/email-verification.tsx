@@ -21,6 +21,13 @@ interface CodeSent {
 const RESEND_SECONDS = 30;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Master switch for the "Send verification code" step (sign-up, email change).
+ * false: the button is never shown and no code is asked for; the server must then have
+ * EMAIL_VERIFICATION_ENABLED=false too. Set true to bring the step back (code kept).
+ */
+export const EMAIL_VERIFICATION_UI = false;
+
 // Asked once per page load; the setting only changes when the server is redeployed.
 let optionsRequest: Promise<boolean> | null = null;
 function loadEmailVerificationRequired(): Promise<boolean> {
@@ -39,8 +46,9 @@ function loadEmailVerificationRequired(): Promise<boolean> {
  * off where email can't be sent (EMAIL_VERIFICATION_ENABLED=false). Assumes "yes" until known.
  */
 export function useEmailVerificationRequired(): boolean {
-  const [required, setRequired] = useState(true);
+  const [required, setRequired] = useState(EMAIL_VERIFICATION_UI);
   useEffect(() => {
+    if (!EMAIL_VERIFICATION_UI) return;
     let active = true;
     void loadEmailVerificationRequired().then((value) => {
       if (active) setRequired(value);

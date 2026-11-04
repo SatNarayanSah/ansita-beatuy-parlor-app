@@ -13,6 +13,8 @@ os.environ["EXPOSE_RESET_CODE"] = "true"
 os.environ["PUSH_ENABLED"] = "false"
 # No DNS lookups in tests; no mail provider, so codes come back as `demoCode`.
 os.environ["EMAIL_CHECK_DELIVERABILITY"] = "false"
+# Off in production for now, but the code-by-email flow stays tested.
+os.environ["EMAIL_VERIFICATION_ENABLED"] = "true"
 for _key in ("SMTP_HOST", "MAIL_FROM_EMAIL"):
     os.environ[_key] = ""
 os.environ["ADMIN_EMAIL"] = ADMIN_EMAIL = "owner@test.local"
