@@ -85,11 +85,16 @@ login_failures_per_email = AttemptLimiter(50, 15 * 60, _WAIT)
 reset_requests = AttemptLimiter(20, 60 * 60, _WAIT)
 reset_requests_per_email = AttemptLimiter(5, 60 * 60, _WAIT)
 reset_failures_per_email = AttemptLimiter(10, 60 * 60, _WAIT)
+# Email verification codes: sends per address and per email; wrong codes per email.
+email_codes = AttemptLimiter(20, 60 * 60, _WAIT)
+email_codes_per_email = AttemptLimiter(5, 60 * 60, _WAIT)
+email_code_failures_per_email = AttemptLimiter(10, 60 * 60, _WAIT)
 registrations = AttemptLimiter(10, 60 * 60, _WAIT)
 contact_messages = AttemptLimiter(5, 10 * 60, "You've sent several messages already. Please wait a little before sending another.")
 
 ALL = (login_failures, login_failures_per_email, reset_requests, reset_requests_per_email,
-       reset_failures_per_email, registrations, contact_messages)
+       reset_failures_per_email, email_codes, email_codes_per_email, email_code_failures_per_email,
+       registrations, contact_messages)
 
 
 def clear_all() -> None:

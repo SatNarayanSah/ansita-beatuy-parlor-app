@@ -42,3 +42,6 @@ yarn-error.*
 
 # Firebase service-account keys (push setup) are private; google-services.json is not
 *-firebase-adminsdk-*.json
+
+# APKs downloaded by `npm run build:apk`
+/builds

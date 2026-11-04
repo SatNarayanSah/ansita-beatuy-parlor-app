@@ -4,3 +4,4 @@ export * from "./motion";
 export * from "./shared";
 export * from "./image-upload";
 export * from "./dropdown";
+export * from "./email-verification";

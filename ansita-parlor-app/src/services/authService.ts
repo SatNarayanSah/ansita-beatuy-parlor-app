@@ -17,6 +17,8 @@ export interface RegisterInput {
   email: string;
   phone: string;
   password: string;
+  /** From `verifyEmailCode`: proves the email is real and belongs to this person. */
+  emailVerificationToken: string;
 }
 
 export interface ProfileInput {
@@ -24,6 +26,24 @@ export interface ProfileInput {
   email?: string;
   phone?: string;
   avatar?: ImageUri | null;
+  /** Needed only when `email` changes: from `verifyEmailCode` for the new address. */
+  emailVerificationToken?: string;
+}
+
+export interface EmailCodeSent {
+  /** The address as the server normalised it (lower case). */
+  email: string;
+  /** Masked address shown on screen, e.g. "si•••@gmail.com". */
+  sentTo: string;
+  expiresInMinutes: number;
+  /** Only while the server has no email provider set up (development). Empty otherwise. */
+  demoCode: string;
+}
+
+export interface EmailVerified {
+  email: string;
+  verificationToken: string;
+  expiresInMinutes: number;
 }
 
 export interface ChangePasswordInput {
@@ -65,6 +85,14 @@ const startSession = async ({ user, token }: SessionResponse): Promise<User> => 
 export const authService = {
   login: async ({ email, password }: LoginInput): Promise<User> =>
     startSession(await api<SessionResponse>('POST', '/auth/login', { body: { email: email.trim(), password } })),
+
+  /** Emails a 6-digit code to prove the address is real (sign-up, or changing your email). */
+  sendEmailCode: (email: string): Promise<EmailCodeSent> =>
+    api<EmailCodeSent>('POST', '/auth/email/send-code', { body: { email: email.trim() } }),
+
+  /** Checks the emailed code; the returned token goes with `register` / `updateProfile`. */
+  verifyEmailCode: (email: string, code: string): Promise<EmailVerified> =>
+    api<EmailVerified>('POST', '/auth/email/verify', { body: { email: email.trim(), code: code.trim() } }),
 
   /** Step 1 of "Forgot password": the server issues a 6-digit code valid for 10 minutes. */
   requestPasswordReset: (email: string): Promise<PasswordResetRequest> =>

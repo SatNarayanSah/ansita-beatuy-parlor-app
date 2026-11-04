@@ -4,14 +4,23 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api, ApiError, setUnauthorizedHandler, tokenStore } from "./api";
 import type { User } from "./types";
 
-type AuthStatus = "loading" | "signed-in" | "signed-out";
+export interface RegisterInput {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  /** From POST /auth/email/verify: proves the email is real and belongs to this person. */
+  emailVerificationToken: string;
+}
+
+type AuthStatus ="loading" | "signed-in" | "signed-out";
 
 interface AuthValue {
   status: AuthStatus;
   user: User | null;
   /** Signs in and returns the user, so the caller can route by role. */
   login: (email: string, password: string) => Promise<User>;
-  register: (input: { name: string; email: string; phone: string; password: string }) => Promise<User>;
+  register: (input: RegisterInput) => Promise<User>;
   logout: () => void;
   setUser: (user: User) => void;
 }
@@ -59,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (input: { name: string; email: string; phone: string; password: string }) =>
+    async (input: RegisterInput) =>
       startSession(await api.post<{ user: User; token: string }>("/auth/register", input)),
     [startSession],
   );

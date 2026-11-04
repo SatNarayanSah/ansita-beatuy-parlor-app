@@ -4,9 +4,25 @@ import { motion } from "motion/react";
 import { Crown, KeyRound, LogOut, MapPin, Save, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Avatar, Button, Card, Dropdown, ErrorState, Field, ImageUpload, Input, PageHeader, Skeleton } from "@/components/ui";
+import {
+  Avatar,
+  Button,
+  Card,
+  Dropdown,
+  EmailVerification,
+  ErrorState,
+  Field,
+  ImageUpload,
+  Input,
+  isEmailVerified,
+  normalizeEmail,
+  PageHeader,
+  Skeleton,
+  type VerifiedEmail,
+} from "@/components/ui";
 import { api, tokenStore } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { mobileNumberError, phoneHint } from "@/lib/phone";
 import { formatDate } from "@/lib/format";
 import { useAction, useMyCustomer } from "@/lib/queries";
 import type { Customer, Gender, User } from "@/lib/types";
@@ -48,17 +64,31 @@ function PhotoForm({ user }: { user: User }) {
 function AccountForm({ user }: { user: User }) {
   const { setUser } = useAuth();
   const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone });
-  const save = useAction(() => api.patch<User>("/auth/me", { name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() }), {
-    invalidate: ["customers"],
-    success: "Account updated",
-    onSuccess: (updated) => setUser(updated),
-  });
+  const [verified, setVerified] = useState<VerifiedEmail | null>(null);
+  const emailChanged = normalizeEmail(form.email) !== normalizeEmail(user.email);
+  const phoneChanged = form.phone.trim() !== user.phone;
+  const hint = phoneChanged ? phoneHint(form.phone) : null;
+  const save = useAction(
+    () =>
+      api.patch<User>("/auth/me", {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        ...(emailChanged && verified ? { emailVerificationToken: verified.token } : {}),
+      }),
+    {
+      invalidate: ["customers"],
+      success: "Account updated",
+      onSuccess: (updated) => setUser(updated),
+    },
+  );
   const dirty = form.name !== user.name || form.email !== user.email || form.phone !== user.phone;
+  const blocked = (emailChanged && !isEmailVerified(form.email, verified)) || (phoneChanged && Boolean(mobileNumberError(form.phone)));
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        save.mutate();
+        if (!blocked) save.mutate();
       }}
       className="grid gap-4 sm:grid-cols-2"
     >
@@ -68,14 +98,17 @@ function AccountForm({ user }: { user: User }) {
       <Field label="Full name" className="sm:col-span-2">
         <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required minLength={2} />
       </Field>
-      <Field label="Email">
-        <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-      </Field>
-      <Field label="Phone">
+      <div className="flex flex-col gap-2">
+        <Field label="Email" hint={emailChanged ? "Confirm the new address with a code before saving." : undefined}>
+          <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+        </Field>
+        {emailChanged && <EmailVerification email={form.email} verified={verified} onVerified={setVerified} />}
+      </div>
+      <Field label="Mobile (NTC or Ncell)" error={hint?.error ? hint.text : undefined} hint={hint && !hint.error ? hint.text : undefined}>
         <Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
       </Field>
       <div className="sm:col-span-2">
-        <Button type="submit" disabled={!dirty} loading={save.isPending} icon={<Save className="h-4 w-4" />}>
+        <Button type="submit" disabled={!dirty || blocked} loading={save.isPending} icon={<Save className="h-4 w-4" />}>
           Save account
         </Button>
       </div>

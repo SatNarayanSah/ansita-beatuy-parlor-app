@@ -67,6 +67,8 @@ class RegisterInput(CamelModel):
     email: str = Field(min_length=3, max_length=254)
     phone: str = Field(min_length=5, max_length=32)
     password: str = Field(min_length=6, max_length=128)
+    # From POST /auth/email/verify: proves the email belongs to whoever is signing up.
+    email_verification_token: str = Field(default="", max_length=2048)
 
 
 class ProfileInput(CamelModel):
@@ -74,6 +76,17 @@ class ProfileInput(CamelModel):
     email: str | None = Field(default=None, min_length=3, max_length=254)
     phone: str | None = Field(default=None, max_length=32)
     avatar: ImageUrl = None
+    # Needed only when `email` changes: from POST /auth/email/verify for the new address.
+    email_verification_token: str = Field(default="", max_length=2048)
+
+
+class EmailCodeRequestInput(CamelModel):
+    email: str = Field(min_length=3, max_length=254)
+
+
+class EmailCodeVerifyInput(CamelModel):
+    email: str = Field(min_length=3, max_length=254)
+    code: str = Field(max_length=12)
 
 
 class ChangePasswordInput(CamelModel):

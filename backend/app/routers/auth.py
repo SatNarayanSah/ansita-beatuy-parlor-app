@@ -2,7 +2,10 @@ import hashlib
 import hmac
 import secrets
 import time
+from datetime import datetime, timedelta, timezone
 
+import jwt
+from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -11,10 +14,13 @@ from .. import rate_limit
 from ..config import settings
 from ..db import get_db
 from ..errors import ApiError, ensure_found
-from ..models import Customer, PasswordReset, User
+from ..mailer import send_code_email
+from ..models import Customer, EmailVerification, PasswordReset, User
 from ..notify import link, notify_admins, notify_user
 from ..schemas import (
     ChangePasswordInput,
+    EmailCodeRequestInput,
+    EmailCodeVerifyInput,
     LoginInput,
     PasswordResetRequestInput,
     ProfileInput,
@@ -23,11 +29,13 @@ from ..schemas import (
 )
 from ..security import create_access_token, get_current_user, get_optional_user, hash_password, verify_password
 from ..serializers import to_dict
-from ..utils import generate_id, normalize_phone, now_iso
+from ..utils import generate_id, mobile_error, normalize_phone, now_iso
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 MAX_RESET_ATTEMPTS = 5
+MAX_EMAIL_CODE_ATTEMPTS = 5
+_EMAIL_TOKEN_TYPE = "email-verified"
 
 # Checked when the email is unknown, so a wrong email takes as long as a wrong password.
 _DUMMY_HASH = hash_password(secrets.token_urlsafe(16))
@@ -61,6 +69,60 @@ def _hash_code(code: str) -> str:
     return hashlib.sha256(f"{settings.jwt_secret}:{code}".encode()).hexdigest()
 
 
+def _hash_email_code(email: str, code: str) -> str:
+    return hashlib.sha256(f"{settings.jwt_secret}:email:{email}:{code}".encode()).hexdigest()
+
+
+def _new_code() -> str:
+    return f"{secrets.randbelow(900000) + 100000}"
+
+
+def _deliverable_email(raw: str) -> str:
+    """Checks the address is well formed and (unless turned off) that its domain can receive mail."""
+    try:
+        info = validate_email(raw.strip(), check_deliverability=settings.email_check_deliverability)
+    except EmailNotValidError as exc:
+        raise ApiError("VALIDATION", str(exc)) from exc
+    return _normalize_email(info.normalized)
+
+
+def _valid_mobile(raw: str) -> str:
+    phone = normalize_phone(raw)
+    error = mobile_error(phone)
+    if error:
+        raise ApiError("VALIDATION", error)
+    return phone
+
+
+# A separate signing key: an email token can never pass as a sign-in token (and vice versa).
+def _email_token_key() -> str:
+    return f"{settings.jwt_secret}:{_EMAIL_TOKEN_TYPE}"
+
+
+def _email_verified_token(email: str) -> str:
+    payload = {
+        "typ": _EMAIL_TOKEN_TYPE,
+        "email": email,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.email_verified_token_minutes),
+    }
+    return jwt.encode(payload, _email_token_key(), algorithm=settings.jwt_algorithm)
+
+
+def _assert_email_verified(token: str, email: str) -> None:
+    """`token` must come from POST /auth/email/verify for exactly this email."""
+    if not token:
+        raise ApiError("VALIDATION", "Verify your email with the code we send you first.")
+    try:
+        payload = jwt.decode(token, _email_token_key(), algorithms=[settings.jwt_algorithm],
+                             options={"require": ["exp", "email", "typ"]})
+    except jwt.ExpiredSignatureError as exc:
+        raise ApiError("VALIDATION", "Your email verification expired. Send a new code.") from exc
+    except jwt.PyJWTError as exc:
+        raise ApiError("VALIDATION", "Verify your email with the code we send you first.") from exc
+    if payload.get("typ") != _EMAIL_TOKEN_TYPE or payload.get("email") != email:
+        raise ApiError("VALIDATION", "Verify this email address with the code we send you first.")
+
+
 @router.post("/login")
 def login(body: LoginInput, request: Request, db: Session = Depends(get_db)):
     email = _normalize_email(body.email)
@@ -82,8 +144,9 @@ def register(body: RegisterInput, request: Request, db: Session = Depends(get_db
     """Creates a customer profile plus an app account and signs the user in."""
     rate_limit.registrations.check_and_hit(rate_limit.client_ip(request))
     email = _normalize_email(body.email)
-    phone = normalize_phone(body.phone)
+    phone = _valid_mobile(body.phone)
     name = body.name.strip()
+    _assert_email_verified(body.email_verification_token, email)
     _assert_email_available(db, email)
 
     # Walk-in customers who later download the app keep their history.
@@ -157,10 +220,16 @@ def update_profile(body: ProfileInput, user: User = Depends(get_current_user), d
         patch["name"] = body.name.strip()
     if "email" in body.model_fields_set and body.email is not None:
         email = _normalize_email(body.email)
-        _assert_email_available(db, email, user.id)
-        patch["email"] = email
+        if email != _normalize_email(user.email):
+            _assert_email_available(db, email, user.id)
+            # A new sign-in email must be one the user can actually receive mail at.
+            _assert_email_verified(body.email_verification_token, email)
+            patch["email"] = email
     if "phone" in body.model_fields_set and body.phone is not None:
-        patch["phone"] = normalize_phone(body.phone)
+        phone = normalize_phone(body.phone)
+        if phone != user.phone:  # numbers saved before these rules keep working until changed
+            phone = _valid_mobile(body.phone)
+        patch["phone"] = phone
     if "avatar" in body.model_fields_set:
         patch["avatar"] = body.avatar
 
@@ -201,16 +270,18 @@ def request_password_reset(body: PasswordResetRequestInput, request: Request, db
     user = _find_user_by_email(db, email)
     if user is None:
         raise ApiError("NOT_FOUND", "No account found with this email.")
-    code = f"{secrets.randbelow(900000) + 100000}"
+    code = _new_code()
+    if settings.mail_configured:
+        send_code_email(email, code, "reset", settings.reset_code_ttl_minutes)
     row = db.get(PasswordReset, email) or PasswordReset(email=email)
     row.code_hash = _hash_code(code)
     row.expires_at = time.time() + settings.reset_code_ttl_minutes * 60
     row.attempts = 0
     db.add(row)
     db.commit()
-    # TODO: send `code` by email/SMS (e.g. Sparrow SMS). Until then it is returned when allowed.
-    # Never for an admin: anyone who knows the owner's email could take over the whole business.
-    expose = settings.expose_reset_code and user.role != "admin"
+    # Without a mail provider (development) the code is returned when allowed. Never for an
+    # admin: anyone who knows the owner's email could take over the whole business.
+    expose = not settings.mail_configured and settings.expose_reset_code and user.role != "admin"
     return {"sentTo": _mask_email(email), "demoCode": code if expose else ""}
 
 
@@ -236,3 +307,57 @@ def reset_password(body: ResetPasswordInput, db: Session = Depends(get_db)):
     db.delete(pending)
     db.commit()
     return None
+
+
+# ---------- Email verification (sign-up and email changes) ----------
+
+
+@router.post("/email/send-code")
+def send_email_code(body: EmailCodeRequestInput, request: Request, db: Session = Depends(get_db),
+                    user: User | None = Depends(get_optional_user)):
+    """Emails a 6-digit code to prove the address is real and belongs to the person typing it."""
+    ip = rate_limit.client_ip(request)
+    rate_limit.email_codes.check(ip)
+    email = _deliverable_email(body.email)
+    rate_limit.email_codes_per_email.check(email)
+    if user is not None and _normalize_email(user.email) == email:
+        raise ApiError("VALIDATION", "This is already your email.")
+    _assert_email_available(db, email, user.id if user else None)
+    rate_limit.email_codes.hit(ip)
+    rate_limit.email_codes_per_email.hit(email)
+
+    code = _new_code()
+    minutes = settings.email_code_ttl_minutes
+    if settings.mail_configured:
+        send_code_email(email, code, "verify", minutes)
+    row = db.get(EmailVerification, email) or EmailVerification(email=email)
+    row.code_hash = _hash_email_code(email, code)
+    row.expires_at = time.time() + minutes * 60
+    row.attempts = 0
+    db.add(row)
+    db.commit()
+    expose = not settings.mail_configured and settings.expose_reset_code
+    return {"email": email, "sentTo": _mask_email(email), "expiresInMinutes": minutes,
+            "demoCode": code if expose else ""}
+
+
+@router.post("/email/verify")
+def verify_email_code(body: EmailCodeVerifyInput, db: Session = Depends(get_db)):
+    """Checks the code; returns a short-lived token that sign-up / an email change must include."""
+    email = _normalize_email(body.email)
+    rate_limit.email_code_failures_per_email.check(email)
+    pending = db.get(EmailVerification, email)
+    if pending is None or pending.expires_at < time.time() or pending.attempts >= MAX_EMAIL_CODE_ATTEMPTS:
+        if pending is not None:
+            db.delete(pending)
+            db.commit()
+        raise ApiError("VALIDATION", "This code has expired. Send a new one.")
+    if not hmac.compare_digest(pending.code_hash, _hash_email_code(email, body.code.strip())):
+        pending.attempts += 1
+        db.commit()
+        rate_limit.email_code_failures_per_email.hit(email)
+        raise ApiError("VALIDATION", "Incorrect code. Check the email and try again.")
+    db.delete(pending)
+    db.commit()
+    return {"email": email, "verificationToken": _email_verified_token(email),
+            "expiresInMinutes": settings.email_verified_token_minutes}

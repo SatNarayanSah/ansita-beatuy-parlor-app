@@ -5,6 +5,7 @@ import { useTheme } from '@/theme';
 import {
   DEFAULT_COUNTRY,
   getPhoneCountry,
+  nepalOperatorOf,
   parsePhone,
   PHONE_COUNTRIES,
   type CountryCode,
@@ -52,6 +53,9 @@ export const PhoneInput = ({
   const parsed = parsePhone(value);
   const country = parsed?.country ?? selected;
   const national = parsed?.national ?? '';
+  // Nepal: name the network as soon as the prefix is known (only NTC and Ncell are accepted).
+  const operator = country.code === 'NP' && national.length >= 3 ? nepalOperatorOf(national) : null;
+  const hint = operator ? [`${operator} number`, helperText].filter(Boolean).join(' · ') : helperText;
 
   const emit = (nextCountry: PhoneCountry, digits: string): void => {
     onChangeText(digits.length > 0 ? `+${nextCountry.dialCode}${digits}` : '');
@@ -69,7 +73,7 @@ export const PhoneInput = ({
         label={label}
         required={required}
         error={error}
-        helperText={helperText}
+        helperText={hint}
         disabled={disabled}
         containerStyle={containerStyle}
         value={national}
@@ -79,7 +83,7 @@ export const PhoneInput = ({
         keyboardType="phone-pad"
         textContentType="telephoneNumber"
         autoComplete="tel"
-        maxLength={12}
+        maxLength={country.code === 'NP' ? 10 : 12}
         accessibilityLabel={`${label}, country code plus ${country.dialCode}`}
         leftAccessory={
           <Pressable

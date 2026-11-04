@@ -29,9 +29,32 @@ class Settings(BaseSettings):
     # links. Empty: taken from the request, which needs the proxy's forwarded headers to be trusted.
     public_url: str = ""
 
-    # Until email/SMS is wired up, the reset code can be returned in the response (dev only).
+    # Dev only: while no mail provider is set up, verification and reset codes are returned
+    # in the API response instead of being emailed. Ignored once email sending is configured.
     expose_reset_code: bool = True
     reset_code_ttl_minutes: int = 10
+
+    # ---------- Email (verification codes, password reset) ----------
+    # Any SMTP server, e.g. Gmail: smtp.gmail.com, port 587, your address and an App Password.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    # true: implicit TLS (usually port 465). false: STARTTLS (usually port 587).
+    smtp_ssl: bool = False
+    # Sender shown to customers (usually the same address as SMTP_USERNAME).
+    mail_from_email: str = ""
+    mail_from_name: str = "Ansita Beauty Parlour"
+    # Optional, for the email template (app/email_templates): a public https link to the
+    # logo, and the address customers are told to write to (default: the sender).
+    mail_logo_url: str = ""
+    mail_contact: str = ""
+    # Look up the email's domain (MX/A records) before sending a code, so typos like
+    # "gmial.com" are caught. Turn off only for tests or offline development.
+    email_check_deliverability: bool = True
+    email_code_ttl_minutes: int = 10
+    # How long a verified email stays usable for sign-up or an email change.
+    email_verified_token_minutes: int = 30
 
     # Phone notifications through Expo's push service. Off in tests. The access token
     # is only needed if "Enhanced push security" is turned on for the Expo project.
@@ -45,11 +68,17 @@ class Settings(BaseSettings):
     admin_name: str = "Ansita Shrestha"
     admin_phone: str = "+9779854028392"
 
-    @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", "cors_origin_regex", mode="before")
+    @field_validator("jwt_secret", "database_url", "public_url", "cors_origins", "cors_origin_regex",
+                     "smtp_host", "smtp_username", "smtp_password", "mail_from_email", "mail_logo_url",
+                     "mail_contact", mode="before")
     @classmethod
     def _strip(cls, value):
         # Values pasted into a dashboard often carry a stray space or newline.
         return value.strip() if isinstance(value, str) else value
+
+    @property
+    def mail_configured(self) -> bool:
+        return bool(self.mail_from_email and self.smtp_host)
 
     @property
     def sqlalchemy_url(self) -> str:

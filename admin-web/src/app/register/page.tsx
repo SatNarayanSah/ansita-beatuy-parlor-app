@@ -7,9 +7,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthShowcase } from "@/components/layout/auth-showcase";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { Button, fadeUp, Input, staggerParent } from "@/components/ui";
+import { Button, EmailVerification, fadeUp, Input, isEmailVerified, staggerParent, type VerifiedEmail } from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { homeFor, useAuth } from "@/lib/auth";
+import { mobileNumberError, phoneHint } from "@/lib/phone";
 
 function IconInput({
   icon: Icon,
@@ -21,7 +22,7 @@ function IconInput({
       <span className="text-xs font-medium text-ink-2">{label}</span>
       <div className="group relative">
         <Icon className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted transition-colors group-focus-within:text-primary" />
-        <Input {...props} className="h-12 pl-7" />
+        <Input {...props} className="h-12 pl-10" />
       </div>
     </motion.label>
   );
@@ -35,7 +36,9 @@ export default function RegisterPage() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const [verified, setVerified] = useState<VerifiedEmail | null>(null);
+  const hint = phoneHint(form.phone);
+  const set =(key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   useEffect(() => {
     if (status === "signed-in" && user && !loading) router.replace(homeFor(user));
@@ -44,8 +47,11 @@ export default function RegisterPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (form.password.length < 6) {
-      setError("Use at least 6 characters for your password.");
+    const problem = !verified || !isEmailVerified(form.email, verified)
+      ? "Verify your email with the code we send you."
+      : mobileNumberError(form.phone) || (form.password.length < 6 ? "Use at least 6 characters for your password." : "");
+    if (problem) {
+      setError(problem);
       shake.start({ x: [0, -12, 12, -8, 8, -4, 0], transition: { duration: 0.5 } });
       return;
     }
@@ -56,6 +62,7 @@ export default function RegisterPage() {
         email: form.email.trim(),
         phone: form.phone.trim(),
         password: form.password,
+        emailVerificationToken: verified!.token,
       });
       router.replace(homeFor(created));
     } catch (err) {
@@ -94,7 +101,13 @@ export default function RegisterPage() {
           <motion.div animate={shake} className="flex flex-col gap-4">
             <IconInput icon={UserIcon} label="Full name" required minLength={2} autoComplete="name" value={form.name} onChange={set("name")} placeholder="Sita Sharma" />
             <IconInput icon={Mail} label="Email" type="email" required autoComplete="email" value={form.email} onChange={set("email")} placeholder="you@example.com" />
-            <IconInput icon={Phone} label="Phone" type="tel" required minLength={5} autoComplete="tel" value={form.phone} onChange={set("phone")} placeholder="98XXXXXXXX" />
+            <motion.div variants={fadeUp}>
+              <EmailVerification email={form.email} verified={verified} onVerified={setVerified} />
+            </motion.div>
+            <div className="flex flex-col gap-1.5">
+              <IconInput icon={Phone} label="Mobile (NTC or Ncell)" type="tel" required minLength={5} autoComplete="tel" value={form.phone} onChange={set("phone")} placeholder="98XXXXXXXX" />
+              {hint && <p className={hint.error ? "text-xs text-danger" : "text-xs text-success"}>{hint.text}</p>}
+            </div>
             <motion.label variants={fadeUp} className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-ink-2">Password</span>
               <div className="group relative">
@@ -106,7 +119,7 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={set("password")}
                   placeholder="At least 6 characters"
-                  className="h-12 pr-8 pl-7"
+                  className="h-12 pr-11 pl-10"
                 />
                 <button
                   type="button"

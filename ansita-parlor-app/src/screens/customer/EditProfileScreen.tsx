@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { PhotoSheet } from '@/components/customer/PhotoSheet';
+import { EmailVerification, isEmailVerified, normalizeEmail, type VerifiedEmail } from '@/components/form/EmailVerification';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Avatar, Button, DatePickerField, QueryState, Screen, SegmentedControl, SkeletonCard, Text, useToast, type SegmentOption } from '@/components/ui';
 import { useServiceQuery } from '@/hooks/useServiceQuery';
@@ -46,9 +47,10 @@ export const EditProfileScreen = ({ navigation }: Props) => {
   const customerId = user?.customerId ?? '';
   const [photoOpen, setPhotoOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [verified, setVerified] = useState<VerifiedEmail | null>(null);
   const query = useServiceQuery(() => customerService.getCustomer(customerId), [customerId]);
 
-  const { control, handleSubmit, reset, formState } = useForm<ProfileValues, unknown, z.output<typeof profileSchema>>({
+  const { control, handleSubmit, reset, formState, setError } = useForm<ProfileValues, unknown, z.output<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: { name: '', email: '', phone: '', gender: 'female', dob: null, addressLine: '', city: '' },
     mode: 'onTouched',
@@ -71,13 +73,26 @@ export const EditProfileScreen = ({ navigation }: Props) => {
     }
   }, [query.data, reset]);
 
+  const email = useWatch({ control, name: 'email' });
+  // A new sign-in email has to be confirmed with an emailed code; the current one doesn't.
+  const emailChanged = Boolean(user) && normalizeEmail(email) !== normalizeEmail(user?.email ?? '');
+
   const save = handleSubmit(async (values) => {
     const customer = query.data;
     if (!customer) return;
+    if (emailChanged && !isEmailVerified(values.email, verified)) {
+      setError('email', { message: 'Verify your new email with the code we send you' }, { shouldFocus: true });
+      return;
+    }
     setSaving(true);
     try {
       // Account fields (also mirrored to the customer record), then profile-only fields.
-      await authService.updateProfile({ name: values.name, email: values.email, phone: values.phone });
+      await authService.updateProfile({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        emailVerificationToken: emailChanged ? verified?.token : undefined,
+      });
       await customerService.updateCustomer(customer.id, {
         gender: values.gender,
         dob: values.dob,
@@ -106,7 +121,10 @@ export const EditProfileScreen = ({ navigation }: Props) => {
             </View>
             <FormInput control={control} name="name" label="Full name" required leftIcon="person-outline" autoComplete="name" />
             <FormInput control={control} name="email" label="Email" required leftIcon="mail-outline" keyboardType="email-address" autoCapitalize="none" />
-            <FormPhoneInput control={control} name="phone" required />
+            {emailChanged ? (
+              <EmailVerification email={email} emailValid={emailSchema.safeParse(email).success} verified={verified} onVerified={setVerified} />
+            ) : null}
+            <FormPhoneInput control={control} name="phone" required helperText="NTC or Ncell mobile number." />
             <View style={{ gap: spacing.xs + 2 }}>
               <Text variant="label" tone="secondary">
                 Gender

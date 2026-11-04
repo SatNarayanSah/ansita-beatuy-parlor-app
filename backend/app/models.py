@@ -56,6 +56,17 @@ class PasswordReset(Base):
     attempts: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class EmailVerification(Base):
+    """A pending 6-digit code sent to prove someone owns an email address."""
+
+    __tablename__ = "email_verifications"
+
+    email: Mapped[str] = mapped_column(String(254), primary_key=True)
+    code_hash: Mapped[str] = mapped_column(String(128))
+    expires_at: Mapped[float] = mapped_column(Float)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Customer(EntityMixin, Base):
     __tablename__ = "customers"
 

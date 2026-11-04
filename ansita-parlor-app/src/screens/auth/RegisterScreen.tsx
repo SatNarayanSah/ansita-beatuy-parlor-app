@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
+import { EmailVerification, isEmailVerified, type VerifiedEmail } from '@/components/form/EmailVerification';
 import { FormInput, FormPhoneInput } from '@/components/form/FormFields';
 import { Button, Text } from '@/components/ui';
 import { useAsyncAction } from '@/hooks/useAsyncAction';
@@ -35,15 +37,23 @@ type Props = RootStackScreenProps<'Register'>;
  */
 export const RegisterScreen = ({ navigation }: Props) => {
   const register = useAsyncAction(authService.register);
+  const [verified, setVerified] = useState<VerifiedEmail | null>(null);
 
-  const { control, handleSubmit } = useForm<RegisterValues, unknown, z.output<typeof registerSchema>>({
+  const { control, handleSubmit, setError } = useForm<RegisterValues, unknown, z.output<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', email: '', phone: '', password: '', confirmPassword: '' },
     mode: 'onTouched',
   });
 
-  const submit = handleSubmit(({ name, email, phone, password }) => {
-    void register.run({ name, email, phone, password });
+  const email = useWatch({ control, name: 'email' });
+  const emailValid = emailSchema.safeParse(email).success;
+
+  const submit = handleSubmit(({ name, email: address, phone, password }) => {
+    if (!verified || !isEmailVerified(address, verified)) {
+      setError('email', { message: 'Verify your email with the code we send you' }, { shouldFocus: true });
+      return;
+    }
+    void register.run({ name, email: address, phone, password, emailVerificationToken: verified.token });
   });
 
   return (
@@ -74,7 +84,8 @@ export const RegisterScreen = ({ navigation }: Props) => {
         autoComplete="email"
         textContentType="emailAddress"
       />
-      <FormPhoneInput control={control} name="phone" required helperText="We send booking reminders to this number." />
+      <EmailVerification email={email} emailValid={emailValid} verified={verified} onVerified={setVerified} />
+      <FormPhoneInput control={control} name="phone" required helperText="NTC or Ncell. We send booking reminders here." />
       <FormInput
         control={control}
         name="password"

@@ -36,10 +36,21 @@ const check = (label: string, condition: boolean, detail = ''): void => {
 const run = async (): Promise<void> => {
   const stamp = Date.now().toString(36);
   const customerEmail = `e2e-${stamp}@example.com`;
-  const phone = `98${String(Date.now()).slice(-8)}`;
+  const phone = `981${String(Date.now()).slice(-7)}`; // Ncell range
 
   console.log('Customer signs up');
-  const customer = await authService.register({ name: 'Test Customer', email: customerEmail, phone, password: 'secret123' });
+  // Needs a backend without an email provider (codes come back as `demoCode`) and
+  // EMAIL_CHECK_DELIVERABILITY=false, since example.com does not accept mail.
+  const sent = await authService.sendEmailCode(customerEmail);
+  check('email code is issued', /^\d{6}$/.test(sent.demoCode), 'set EMAIL_CHECK_DELIVERABILITY=false, no mail provider');
+  const { verificationToken } = await authService.verifyEmailCode(customerEmail, sent.demoCode);
+  const customer = await authService.register({
+    name: 'Test Customer',
+    email: customerEmail,
+    phone,
+    password: 'secret123',
+    emailVerificationToken: verificationToken,
+  });
   check('register returns a customer account', customer.role === 'customer' && customer.customerId !== null);
   check('session saved', useAuthStore.getState().token !== null);
   check('catalogue cached after sign-in', useServiceStore.getState().services.length > 0 && useStaffStore.getState().staff.length > 0);

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isValidContactPhone, isValidPhone as isValidE164Phone, normalizePhone } from './phone';
+import { isValidContactPhone, mobileNumberError, normalizePhone } from './phone';
 
 /** Reusable zod field schemas shared by every form. */
 
@@ -19,13 +19,16 @@ export const emailSchema = z
 /** Optional email: empty string allowed. */
 export const optionalEmailSchema = z.union([z.literal(''), emailSchema]);
 
-/** Mobile number in any supported country (Nepal by default); output is E.164. */
+/** Mobile number in any supported country (Nepal by default; NTC or Ncell); output is E.164. */
 export const phoneSchema = z
   .string()
   .trim()
   .min(1, { error: 'Enter a mobile number' })
   .transform((value) => normalizePhone(value))
-  .refine(isValidE164Phone, { error: 'Enter a valid mobile number' });
+  .superRefine((value, ctx) => {
+    const message = mobileNumberError(value);
+    if (message) ctx.addIssue({ code: 'custom', message });
+  });
 
 /** Business contact number: a mobile or a Nepal landline (e.g. 041-520123). Output is E.164. */
 export const contactPhoneSchema = z

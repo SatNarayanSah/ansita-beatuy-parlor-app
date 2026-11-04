@@ -21,5 +21,22 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      # Email codes (sign-up verification, password reset) over SMTP, e.g. Gmail with an
+      # App Password. Render's free plan blocks outgoing SMTP: use a paid instance.
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM_EMAIL
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Ansita Beauty Parlour
+      - key: MAIL_LOGO_URL
+        sync: false
+      # Only used while no email provider is set: shows codes on screen instead of emailing.
       - key: EXPOSE_RESET_CODE
         value: "true"

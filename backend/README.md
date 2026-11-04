@@ -74,7 +74,8 @@ All endpoints except auth and public catalogue reads need `Authorization: Bearer
 
 | App service function | Endpoint |
 | --- | --- |
-| `authService.login` / `register` | `POST /auth/login`, `POST /auth/register` |
+| `authService.login` / `register` | `POST /auth/login`, `POST /auth/register` (needs `emailVerificationToken`) |
+| `sendEmailCode` / `verifyEmailCode` | `POST /auth/email/send-code` `{email}`, `POST /auth/email/verify` `{email, code}` → `{verificationToken}` |
 | `getCurrentUser` / `updateProfile` | `GET /auth/me`, `PATCH /auth/me` |
 | `changePassword` | `POST /auth/change-password` (returns a new `token`; old tokens stop working) |
 | `requestPasswordReset` / `resetPassword` | `POST /auth/password-reset/request`, `POST /auth/password-reset/confirm` |
@@ -102,14 +103,15 @@ Not on the server: the demo-only helpers `loginAsDemo`, `switchDemoRole`, `getDe
 
 ## Security notes
 
-- **Forgotten admin password:** run `python -m app.set_password <admin email>` on the server (Render: the service's Shell tab). Admin accounts never receive a reset code through the API.
-- **Reset codes:** `EXPOSE_RESET_CODE=true` returns customer reset codes in the API response so the app can show them. Anyone who knows a customer's email could then reset that password. Set it to `false` once codes are sent by email/SMS.
+- **Forgotten admin password:** run `python -m app.set_password <admin email>` on the server (Render: the service's Shell tab). With email configured, the admin also gets reset codes by email (to the admin's own inbox); without it, admin codes are never returned.
+- **Email verification:** sign-up and changing the sign-in email need a 6-digit code emailed to the address (`POST /auth/email/send-code`, then `/auth/email/verify`, which returns a 30-minute `verificationToken`). The domain is checked with a DNS lookup first (`EMAIL_CHECK_DELIVERABILITY`). Emails go out over SMTP (`SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM_EMAIL`; see `.env.example`). The design is the editable template in `app/email_templates/` (preview with `python -m app.preview_email > preview.html`).
+- **Codes on screen (dev):** while no email provider is configured, `EXPOSE_RESET_CODE=true` returns verification and customer reset codes in the API response so the app can show them. Anyone who knows a customer's email could then reset that password. Configure email before going live; codes are never returned once it is.
+- **Mobile numbers:** Nepali numbers (+977) must be NTC (984, 985, 986, 974, 975, 976) or Ncell (980, 981, 982, 970, 971) — checked at sign-up, profile changes and when adding customers (`app/utils.py`, `NEPAL_OPERATOR_PREFIXES`). Numbers saved earlier keep working until changed.
 - **Rate limits** (`app/rate_limit.py`, in memory, per process): failed logins, reset requests and codes, sign-ups and the contact form. Requests over the limit get HTTP 429.
 - Set `CORS_ORIGINS` to the website's address and `PUBLIC_URL` to the API's address in production.
 
 ## Not done yet
 
 - **Connecting the app.** Follow the app README's *Backend Migration Guide*: replace `simulateRequest` with a `fetch` wrapper that uses `EXPO_PUBLIC_API_URL` and stores the token in `expo-secure-store`, then swap each service body for the matching call above.
-- **Email/SMS** for password-reset codes. Until then `EXPOSE_RESET_CODE=true` returns the code in the response, as the demo does. Set it to `false` once sending works.
 - **Push notifications** (Expo push tokens) and real eSewa/Khalti payment verification.
 - **Database migrations.** Tables are created automatically on start. Add Alembic before changing columns on a live database.

@@ -9,7 +9,7 @@ from ..queries import ACTIVE_STATUSES, upcoming_appointments
 from ..schemas import CustomerInput, CustomerUpdate
 from ..security import assert_customer_access, get_current_user, require_admin
 from ..serializers import apply, changes, to_dict
-from ..utils import generate_id, now_iso, normalize_phone, today_iso
+from ..utils import generate_id, mobile_error, now_iso, normalize_phone, today_iso
 
 router = APIRouter(prefix="/customers", tags=["customers"])
 
@@ -29,6 +29,12 @@ def _assert_phone_available(db: Session, phone: str, except_id: str | None = Non
         stmt = stmt.where(Customer.id != except_id)
     if db.scalar(stmt.limit(1)):
         raise ApiError("CONFLICT", "A customer with this phone number already exists.")
+
+
+def _assert_mobile(phone: str) -> None:
+    error = mobile_error(phone)
+    if error:
+        raise ApiError("VALIDATION", error)
 
 
 def _normalize(values: dict) -> dict:
@@ -66,6 +72,7 @@ def create_customer(body: CustomerInput, _: User = Depends(require_admin), db: S
     values = _normalize({**body.model_dump(), **changes(body), "address": body.address.model_dump(by_alias=True)})
     if not values["phone"]:
         raise ApiError("VALIDATION", "Enter a phone number.")
+    _assert_mobile(values["phone"])
     _assert_phone_available(db, values["phone"])
     customer = Customer(id=generate_id("cus"), loyalty_points=0, joined_at=now_iso(), **values)
     db.add(customer)
@@ -84,6 +91,8 @@ def update_customer(id_: str, body: CustomerUpdate, user: User = Depends(get_cur
         values.pop("tags", None)
         values.pop("notes", None)
     if "phone" in values:
+        if values["phone"] != customer.phone:  # numbers saved before these rules stay editable
+            _assert_mobile(values["phone"])
         _assert_phone_available(db, values["phone"], id_)
     apply(customer, values)
 

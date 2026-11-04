@@ -5,9 +5,28 @@ import { BellRing, Building2, CalendarOff, Gift, KeyRound, Landmark, Plus, Save,
 import { useState } from "react";
 import { OpenFromUrl } from "@/components/layout/open-from-url";
 import { AccountDetails } from "@/components/payments/payment-requests";
-import { Avatar, Button, Card, EmptyState, ErrorState, Field, ImageUpload, Input, PageHeader, Skeleton, Switch, Tabs, Textarea } from "@/components/ui";
+import {
+  Avatar,
+  Button,
+  Card,
+  EmailVerification,
+  EmptyState,
+  ErrorState,
+  Field,
+  ImageUpload,
+  Input,
+  isEmailVerified,
+  normalizeEmail,
+  PageHeader,
+  Skeleton,
+  Switch,
+  Tabs,
+  Textarea,
+  type VerifiedEmail,
+} from "@/components/ui";
 import { api, tokenStore } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { mobileNumberError, phoneHint } from "@/lib/phone";
 import { formatDate, label, money, ONLINE_METHODS, relativeDay, todayISO } from "@/lib/format";
 import { useAction, useSettings } from "@/lib/queries";
 import type { AdminAlerts, BusinessProfile, BusinessSettings, LoyaltyRules, OnlineMethod, PaymentAccount, PaymentSettings, User } from "@/lib/types";
@@ -381,11 +400,19 @@ function AccountSection() {
   const { user, setUser } = useAuth();
   const [form, setForm] = useState({ name: user?.name ?? "", email: user?.email ?? "", phone: user?.phone ?? "" });
   const [pw, setPw] = useState({ currentPassword: "", newPassword: "", confirm: "" });
-  const saveProfile = useAction(() => api.patch<User>("/auth/me", form), {
+  const [verified, setVerified] = useState<VerifiedEmail | null>(null);
+  const emailChanged = normalizeEmail(form.email) !== normalizeEmail(user?.email ?? "");
+  const phoneChanged = form.phone.trim() !== (user?.phone ?? "");
+  const hint = phoneChanged ? phoneHint(form.phone) : null;
+  const blocked = (emailChanged && !isEmailVerified(form.email, verified)) || (phoneChanged && Boolean(mobileNumberError(form.phone)));
+  const saveProfile = useAction(
+    () => api.patch<User>("/auth/me", { ...form, ...(emailChanged && verified ? { emailVerificationToken: verified.token } : {}) }),
+    {
     invalidate: [],
     success: "Account updated",
     onSuccess: (me) => setUser(me),
-  });
+    },
+  );
   const changePassword = useAction(
     () => api.post<{ token: string }>("/auth/change-password", { currentPassword: pw.currentPassword, newPassword: pw.newPassword }),
     {
@@ -406,7 +433,7 @@ function AccountSection() {
         title="Your account"
         description="Name and contact details for your admin login."
         footer={
-          <Button icon={<Save className="h-4 w-4" />} loading={saveProfile.isPending} disabled={form.name.trim().length < 2} onClick={() => saveProfile.mutate()}>
+          <Button icon={<Save className="h-4 w-4" />} loading={saveProfile.isPending} disabled={form.name.trim().length < 2 || blocked} onClick={() => saveProfile.mutate()}>
             Save
           </Button>
         }
@@ -422,11 +449,14 @@ function AccountSection() {
           <Field label="Name">
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </Field>
-          <Field label="Email" hint="Used to sign in.">
-            <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-          </Field>
-          <Field label="Phone">
-            <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+          <div className="flex flex-col gap-2">
+            <Field label="Email" hint={emailChanged ? "Confirm the new address with a code before saving." : "Used to sign in."}>
+              <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            </Field>
+            {emailChanged && <EmailVerification email={form.email} verified={verified} onVerified={setVerified} />}
+          </div>
+          <Field label="Mobile (NTC or Ncell)" error={hint?.error ? hint.text : undefined} hint={hint && !hint.error ? hint.text : undefined}>
+            <Input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
           </Field>
         </div>
       </Panel>

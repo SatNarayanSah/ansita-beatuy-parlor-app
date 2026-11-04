@@ -122,7 +122,7 @@ export function SearchInput({
   return (
     <div className={cn("group relative", className)}>
       <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted transition-colors group-focus-within:text-primary" />
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="pr-6 pl-6" />
+      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="pr-9 pl-9" />
       {value && (
         <button
           type="button"

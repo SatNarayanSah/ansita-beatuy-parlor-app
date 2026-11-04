@@ -190,3 +190,46 @@ def normalize_phone(value: str, default_dial_code: str = "977") -> str:
         if digits.startswith(dial) and pattern.match(digits[len(dial):]):
             return f"+{digits}"
     return f"+{default_dial_code}{digits.lstrip('0')}"
+
+
+# ---------- Nepal mobile operators ----------
+
+# First three digits of a 10-digit Nepali mobile number. Only NTC and Ncell run mobile
+# networks today; Smart Cell (961/962/988) and UTL (972) no longer operate.
+NEPAL_OPERATOR_PREFIXES: dict[str, tuple[str, ...]] = {
+    "NTC": ("984", "985", "986", "974", "975", "976"),
+    "Ncell": ("980", "981", "982", "970", "971"),
+}
+_OPERATOR_BY_PREFIX = {prefix: name for name, prefixes in NEPAL_OPERATOR_PREFIXES.items() for prefix in prefixes}
+
+
+def nepal_operator(e164: str) -> str | None:
+    """"NTC" or "Ncell" for a valid Nepali mobile number in E.164, otherwise None."""
+    if not e164.startswith("+977"):
+        return None
+    national = e164[4:]
+    if len(national) != 10 or not national.isdigit():
+        return None
+    return _OPERATOR_BY_PREFIX.get(national[:3])
+
+
+def mobile_error(e164: str) -> str | None:
+    """Why `e164` is not an acceptable mobile number, or None when it is.
+
+    Nepali numbers must be on NTC or Ncell; numbers from the other supported
+    countries only need the right shape for that country.
+    """
+    if not e164:
+        return "Enter a mobile number."
+    if e164.startswith("+977"):
+        national = e164[4:]
+        if len(national) != 10 or not national.isdigit():
+            return "A Nepali mobile number has 10 digits, e.g. 9812345678."
+        if nepal_operator(e164) is None:
+            return "Enter an NTC (984, 985, 986, 974, 975, 976) or Ncell (980, 981, 982, 970, 971) mobile number."
+        return None
+    digits = e164[1:]
+    for dial, pattern in _BY_DIAL_LENGTH:
+        if digits.startswith(dial):
+            return None if pattern.match(digits[len(dial):]) else "Enter a valid mobile number."
+    return "Enter a valid mobile number."

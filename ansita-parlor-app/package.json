@@ -60,7 +60,8 @@
     "start:clear": "expo start -c",
     "verify:api": "node --no-warnings --import ./scripts/verify/register.mjs scripts/verify/api-flows.ts",
     "verify:contrast": "node --no-warnings --import ./scripts/verify/register.mjs scripts/verify/contrast.ts",
-    "verify": "npm run typecheck && npm run lint && npm run verify:contrast"
+    "verify": "npm run typecheck && npm run lint && npm run verify:contrast",
+    "build:apk": "node scripts/build-apk.mjs"
   },
   "private": true,
   "engines": {

@@ -83,7 +83,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@ansita.com"
-                  className="h-12 pl-7"
+                  className="h-12 pl-10"
                 />
               </div>
             </motion.label>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 pr-8 pl-7"
+                  className="h-12 pr-11 pl-10"
                 />
                 <button
                   type="button"
