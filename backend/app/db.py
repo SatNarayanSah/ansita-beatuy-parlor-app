@@ -34,6 +34,7 @@ def init_db() -> None:
     _strip_upload_hosts()
     _add_payment_accounts()
     _add_service_benefits()
+    _update_support_email()
 
 
 def _add_service_benefits() -> None:
@@ -52,6 +53,18 @@ def _add_service_benefits() -> None:
                              {"b": json.dumps(DEFAULT_BENEFITS[id_]), "id": id_})
             elif current is None:
                 conn.execute(text("UPDATE services SET benefits = :b WHERE id = :id"), {"b": "[]", "id": id_})
+
+
+def _update_support_email() -> None:
+    """The parlour's public email moved from the old placeholder to the support address.
+    Only the old placeholder is replaced, so an email the admin typed in is kept."""
+    with engine.begin() as conn:
+        for id_, value in conn.execute(text("SELECT id, profile FROM business_settings")).all():
+            profile = json.loads(value) if isinstance(value, str) else value
+            if isinstance(profile, dict) and profile.get("email") == "hello@ansita.com":
+                profile["email"] = "support@anitabeautyparlor.com"
+                conn.execute(text("UPDATE business_settings SET profile = :p WHERE id = :id"),
+                             {"p": json.dumps(profile), "id": id_})
 
 
 def _add_payment_accounts() -> None:

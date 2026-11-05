@@ -43,7 +43,6 @@ export default function ServicesPage() {
 
   return (
     <>
-      <title>Services · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="Our menu"
         title={

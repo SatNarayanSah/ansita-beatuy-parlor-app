@@ -128,7 +128,6 @@ export default function TeamPage() {
 
   return (
     <>
-      <title>Our team · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="The people behind the glow"
         title={

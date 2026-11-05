@@ -15,7 +15,6 @@ export default function OffersPage() {
 
   return (
     <>
-      <title>Offers · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="Offers & promo codes"
         title={

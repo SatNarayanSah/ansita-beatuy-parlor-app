@@ -38,7 +38,6 @@ export default function AboutPage() {
 
   return (
     <>
-      <title>About · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="Our story"
         title={

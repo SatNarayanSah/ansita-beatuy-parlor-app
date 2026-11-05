@@ -208,7 +208,6 @@ export default function AcademyPage() {
 
   return (
     <>
-      <title>Academy · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="Ansita Academy"
         title={

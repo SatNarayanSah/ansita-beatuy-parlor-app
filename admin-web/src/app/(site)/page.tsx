@@ -615,10 +615,8 @@ function VisitAndCta() {
 }
 
 export default function HomePage() {
-  const settings = usePublicSettings();
   return (
     <>
-      <title>{settings.data?.profile.name ?? "Ansita Beauty Parlour"}</title>
       <Hero />
       <Categories />
       <PopularServices />

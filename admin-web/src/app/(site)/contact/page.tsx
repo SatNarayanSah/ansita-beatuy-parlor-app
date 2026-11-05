@@ -26,7 +26,6 @@ export default function ContactPage() {
 
   return (
     <>
-      <title>Contact · Ansita Beauty Parlour</title>
       <PageHero
         eyebrow="Get in touch"
         title={
