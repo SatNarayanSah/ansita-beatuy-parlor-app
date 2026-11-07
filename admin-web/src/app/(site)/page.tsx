@@ -19,6 +19,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CategoryIcon, OfferBanner, ServiceCard, StaffCard } from "@/components/site/cards";
+import { LocalSeo } from "@/components/site/local-seo";
 import { Container, openStatus, Reveal, SectionHeading } from "@/components/site/section";
 import { AnimatedNumber, Avatar, Badge, Button, Skeleton, Stars } from "@/components/ui";
 import { label, money, time12 } from "@/lib/format";
@@ -96,6 +97,14 @@ function Hero() {
           </motion.div>
 
           <h1 className="font-display text-5xl leading-[1.05] font-bold text-ink sm:text-6xl xl:text-7xl">
+            {/* The parlour's name and town in the main heading: what people type into Google. */}
+            <motion.span
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 block text-base font-semibold tracking-wide text-primary sm:text-lg"
+            >
+              {name}, Janakpur
+            </motion.span>
             {words.map((word, i) => (
               <motion.span
                 key={word}
@@ -124,8 +133,8 @@ function Hero() {
             transition={{ delay: 0.75 }}
             className="mt-4 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg"
           >
-            {profile?.tagline ? `${profile.tagline}. ` : ""}Hair, skin, nails and bridal care at {name}, plus a beauty
-            academy that trains the next generation of artists.
+            {profile?.tagline ? `${profile.tagline}. ` : ""}Hair, skin, nails and bridal care at {name} in Ramanand
+            Chowk, Janakpur, plus a beauty academy that trains the next generation of artists.
           </motion.p>
 
           <motion.div
@@ -624,6 +633,7 @@ export default function HomePage() {
       <AcademyTeaser />
       <TeamPreview />
       <Testimonials />
+      <LocalSeo />
       <VisitAndCta />
     </>
   );

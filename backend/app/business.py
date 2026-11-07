@@ -12,7 +12,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
         "tagline": "Beauty Parlour & Training Centre",
         "phone": "+9779854028392",
         "whatsapp": "+9779766323138",
-        "email": "support@anitabeautyparlor.com",
+        "email": "support@ansitabeautyparlor.com",
         "address": "Ramanand Chowk, Janakpur-8, Dhanusha 45600",
         "openTime": "10:00",
         "closeTime": "19:00",

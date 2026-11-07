@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { time12 } from "@/lib/format";
 import { usePublicSettings } from "@/lib/queries";
+import { ADDRESS_LINE, OPENING_HOURS, PHONE, PHONE_DISPLAY, SUPPORT_EMAIL } from "@/lib/seo";
 import { Container, whatsappLink } from "./section";
 import { SITE_LINKS, SiteLogo } from "./site-header";
 
@@ -14,6 +15,13 @@ const noopSubscribe = () => () => {};
 export function SiteFooter() {
   const settings = usePublicSettings();
   const profile = settings.data?.profile;
+  // Until the live settings load (and in the HTML search engines read), show the parlour's known details.
+  const address = profile ? profile.address : ADDRESS_LINE;
+  const phone = profile ? profile.phone : PHONE;
+  const phoneLabel = profile ? profile.phone : PHONE_DISPLAY;
+  const email = profile ? profile.email : SUPPORT_EMAIL;
+  const openTime = profile?.openTime ?? OPENING_HOURS.opens;
+  const closeTime = profile?.closeTime ?? OPENING_HOURS.closes;
   // Read the clock only in the browser: the page shell is prerendered at build time.
   const year = useSyncExternalStore(noopSubscribe, () => new Date().getFullYear(), () => null);
 
@@ -61,17 +69,17 @@ export function SiteFooter() {
         <div>
           <h3 className="mb-4 text-xs font-semibold tracking-[0.2em] text-gold-text uppercase">Visit us</h3>
           <ul className="flex flex-col gap-3 text-sm text-ink-2">
-            {profile?.address && (
+            {address && (
               <li className="flex gap-2.5">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {profile.address}
+                {address}
               </li>
             )}
-            {profile?.phone && (
+            {phone && (
               <li>
-                <a href={`tel:${profile.phone}`} className="flex gap-2.5 hover:text-primary">
+                <a href={`tel:${phone}`} className="flex gap-2.5 hover:text-primary">
                   <Phone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  {profile.phone}
+                  {phoneLabel}
                 </a>
               </li>
             )}
@@ -83,11 +91,11 @@ export function SiteFooter() {
                 </a>
               </li>
             )}
-            {profile?.email && (
+            {email && (
               <li>
-                <a href={`mailto:${profile.email}`} className="flex gap-2.5 break-all hover:text-primary">
+                <a href={`mailto:${email}`} className="flex gap-2.5 break-all hover:text-primary">
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  {profile.email}
+                  {email}
                 </a>
               </li>
             )}
@@ -96,20 +104,16 @@ export function SiteFooter() {
 
         <div>
           <h3 className="mb-4 text-xs font-semibold tracking-[0.2em] text-gold-text uppercase">Opening hours</h3>
-          {profile ? (
-            <div className="flex items-start gap-2.5 text-sm text-ink-2">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <p>
-                Every day
-                <span className="block font-semibold text-ink">
-                  {time12(profile.openTime)} – {time12(profile.closeTime)}
-                </span>
-                <span className="mt-1 block text-xs text-muted">Closed on public holidays we announce.</span>
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-muted">—</p>
-          )}
+          <div className="flex items-start gap-2.5 text-sm text-ink-2">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p>
+              Every day
+              <span className="block font-semibold text-ink">
+                {time12(openTime)} – {time12(closeTime)}
+              </span>
+              <span className="mt-1 block text-xs text-muted">Closed on public holidays we announce.</span>
+            </p>
+          </div>
         </div>
       </Container>
       <div className="border-t border-line">

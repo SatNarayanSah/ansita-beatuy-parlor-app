@@ -56,13 +56,15 @@ def _add_service_benefits() -> None:
 
 
 def _update_support_email() -> None:
-    """The parlour's public email moved from the old placeholder to the support address.
-    Only the old placeholder is replaced, so an email the admin typed in is kept."""
+    """The parlour's public email moved from the old placeholders (including a misspelt domain,
+    "anitabeautyparlor.com", that doesn't exist) to the real support address.
+    Only the old placeholders are replaced, so an email the admin typed in is kept."""
+    old = {"hello@ansita.com", "support@anitabeautyparlor.com"}
     with engine.begin() as conn:
         for id_, value in conn.execute(text("SELECT id, profile FROM business_settings")).all():
             profile = json.loads(value) if isinstance(value, str) else value
-            if isinstance(profile, dict) and profile.get("email") == "hello@ansita.com":
-                profile["email"] = "support@anitabeautyparlor.com"
+            if isinstance(profile, dict) and profile.get("email") in old:
+                profile["email"] = "support@ansitabeautyparlor.com"
                 conn.execute(text("UPDATE business_settings SET profile = :p WHERE id = :id"),
                              {"p": json.dumps(profile), "id": id_})
 
